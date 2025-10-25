@@ -1,0 +1,40 @@
+<% if @is_waitlisted %>
+Waitlist Confirmation - <%= @event.name %>
+<% else %>
+Event Enrollment Confirmation - <%= @event.name %>
+<% end %>
+
+Dear <%= @user.name %>,
+
+<% if @is_waitlisted %>
+⚠️ You have been added to the waitlist
+
+The event is currently full. You will be automatically enrolled if a spot becomes available.
+<% else %>
+You have successfully enrolled in the following event:
+<% end %>
+
+Event: <%= @event.name %>
+Time: <%= @event.event_time.strftime('%B %d, %Y at %H:%M') %>
+
+<% if @event.location_name.present? %>Location: <%= @event.location_name %><% end %>
+<% if @event.formatted_address.present? %>Address: <%= @event.formatted_address %><% end %>
+<% if @organizer.phone_number.present? %>Organizer Phone: <%= @organizer.phone_number %><% end %>
+Organizer: <%= @organizer.name %>
+
+<% if @event.description.present? %>Event Description:
+<%= @event.description %>
+<% end %>
+
+<% if @event.google_maps_url.present? %>Google Maps: <%= @event.google_maps_url %><% end %>
+
+If you have any questions, please contact the event organizer.
+
+<% if @is_waitlisted %>
+We will notify you if a spot becomes available.
+<% else %>
+We look forward to seeing you at the event!
+<% end %>
+
+---
+This is an automated message, please do not reply directly to this email.
