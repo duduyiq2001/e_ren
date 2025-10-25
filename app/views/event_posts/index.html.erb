@@ -1,0 +1,22 @@
+<div class="container">
+  <h1>Campus Events</h1>
+
+  <div class="events-list">
+    <% @event_posts&.each do |event| %>
+      <div class="event-card">
+        <h2><%= event.name %></h2>
+        <p><strong>Category:</strong> <%= event.event_category.name %></p>
+        <p><strong>When:</strong> <%= event.event_time.strftime("%B %d, %Y at %I:%M %p") %></p>
+        <p><strong>Where:</strong> <%= event.location_name %></p>
+        <p><strong>Organizer:</strong> <%= event.organizer.name %></p>
+        <p><%= event.description %></p>
+        <p><strong>Capacity:</strong> <%= event.registrations_count %> / <%= event.capacity %> attendees</p>
+        <% if event.attendees.any? %>
+          <p><strong>Attendees:</strong>
+            <%= event.attendees.map(&:name).join(", ") %>
+          </p>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

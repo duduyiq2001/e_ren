@@ -2,12 +2,27 @@ class EventPost < ApplicationRecord
   # Associations
   belongs_to :event_category
   belongs_to :organizer, class_name: 'User', foreign_key: 'organizer_id'
-  has_many :event_registrations, dependent: :async_destroy
+  has_many :event_registrations, dependent: :destroy_async
   has_many :attendees, through: :event_registrations, source: :user
 
   # Geocoding
   geocoded_by :location_name
   after_validation :geocode, if: :should_geocode?
+
+  # Scopes for filtering
+  scope :search_by_name, ->(query) { where("name ILIKE ?", "%#{query}%") if query.present? }
+  scope :by_category, ->(category_id) { where(event_category_id: category_id) if category_id.present? }
+  scope :upcoming, -> { where("event_time >= ?", Time.current).order(event_time: :asc) }
+  scope :today, -> { where(event_time: Time.current.beginning_of_day..Time.current.end_of_day) }
+  scope :this_week, -> { where(event_time: Time.current.beginning_of_week..Time.current.end_of_week) }
+  scope :between_dates, ->(start_date, end_date) {
+    if start_date.present? && end_date.present?
+      where(event_time: start_date.to_date.beginning_of_day..end_date.to_date.end_of_day)
+    end
+  }
+  scope :near_location, ->(latitude, longitude, radius_miles = 10) {
+    near([latitude, longitude], radius_miles) if latitude.present? && longitude.present?
+  }
 
   # Validations
   validates :name, presence: true, length: { maximum: 255 }
