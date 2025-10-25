@@ -1,0 +1,48 @@
+<div class="container">
+  <div class="user-profile">
+    <h1><%= @user.name %></h1>
+    <p><strong>Email:</strong> <%= @user.email %></p>
+    <p><strong>Phone:</strong> <%= @user.phone_number %></p>
+    <p><strong>E-Score:</strong> <%= @user.e_score %> points</p>
+  </div>
+
+  <div class="organized-events">
+    <h2>Events Organized</h2>
+    <% if @organized_events.any? %>
+      <div class="events-list">
+        <% @organized_events.each do |event| %>
+          <div class="event-card">
+            <h3><%= event.name %></h3>
+            <p><strong>Category:</strong> <%= event.event_category.name %></p>
+            <p><strong>When:</strong> <%= event.event_time.strftime("%B %d, %Y at %I:%M %p") %></p>
+            <p><strong>Where:</strong> <%= event.location_name %></p>
+            <p><%= event.description %></p>
+            <p><strong>Attendees:</strong> <%= event.registrations_count %> / <%= event.capacity %></p>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p>No events organized yet.</p>
+    <% end %>
+  </div>
+
+  <div class="attended-events">
+    <h2>Events Attending</h2>
+    <% if @attended_events.any? %>
+      <div class="events-list">
+        <% @attended_events.each do |event| %>
+          <div class="event-card">
+            <h3><%= event.name %></h3>
+            <p><strong>Category:</strong> <%= event.event_category.name %></p>
+            <p><strong>When:</strong> <%= event.event_time.strftime("%B %d, %Y at %I:%M %p") %></p>
+            <p><strong>Where:</strong> <%= event.location_name %></p>
+            <p><strong>Organizer:</strong> <%= event.organizer.name %></p>
+            <p><%= event.description %></p>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p>Not attending any events yet.</p>
+    <% end %>
+  </div>
+</div>

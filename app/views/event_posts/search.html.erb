@@ -1,0 +1,112 @@
+<div class="container">
+  <h1>Search Events</h1>
+
+  <form action="<%= event_posts_search_path %>" method="get" class="search-form">
+    <!-- Search by name -->
+    <div class="form-group">
+      <label for="q">Event Name:</label>
+      <input type="text" id="q" name="q" placeholder="Search events by name..." value="<%= params[:q] %>" />
+    </div>
+
+    <!-- Filter by category -->
+    <div class="form-group">
+      <label for="category_id">Category:</label>
+      <select id="category_id" name="category_id">
+        <option value="">All Categories</option>
+        <% @event_categories&.each do |category| %>
+          <option value="<%= category.id %>" <%= 'selected' if params[:category_id] == category.id.to_s %>>
+            <%= category.name %>
+          </option>
+        <% end %>
+      </select>
+    </div>
+
+    <!-- Filter by time -->
+    <div class="form-group">
+      <label for="time_filter">When:</label>
+      <select id="time_filter" name="time_filter">
+        <option value="upcoming" <%= 'selected' if params[:time_filter] == 'upcoming' %>>Upcoming Events</option>
+        <option value="today" <%= 'selected' if params[:time_filter] == 'today' %>>Today</option>
+        <option value="this_week" <%= 'selected' if params[:time_filter] == 'this_week' %>>This Week</option>
+        <option value="custom" <%= 'selected' if params[:time_filter] == 'custom' %>>Custom Date Range</option>
+      </select>
+    </div>
+
+    <!-- Custom date range (shown when "Custom Date Range" is selected) -->
+    <div class="form-group date-range" id="date-range-inputs">
+      <label for="start_date">From:</label>
+      <input type="date" id="start_date" name="start_date" value="<%= params[:start_date] %>" />
+
+      <label for="end_date">To:</label>
+      <input type="date" id="end_date" name="end_date" value="<%= params[:end_date] %>" />
+    </div>
+
+    <!-- Filter by location -->
+    <div class="form-group">
+      <label for="location_search">Near Location:</label>
+      <input type="text" id="location_search" placeholder="Enter address or place..." />
+      <input type="hidden" id="latitude" name="latitude" value="<%= params[:latitude] %>" />
+      <input type="hidden" id="longitude" name="longitude" value="<%= params[:longitude] %>" />
+    </div>
+
+    <div class="form-group">
+      <label for="radius">Within (miles):</label>
+      <select id="radius" name="radius">
+        <option value="5" <%= 'selected' if params[:radius] == '5' %>>5 miles</option>
+        <option value="10" <%= 'selected' if params[:radius] == '10' || params[:radius].blank? %>>10 miles</option>
+        <option value="25" <%= 'selected' if params[:radius] == '25' %>>25 miles</option>
+        <option value="50" <%= 'selected' if params[:radius] == '50' %>>50 miles</option>
+      </select>
+    </div>
+
+    <button type="submit">Search</button>
+    <a href="<%= event_posts_search_path %>">Clear Filters</a>
+  </form>
+
+  <!-- Results -->
+  <h2>Results (<%= @event_posts&.count || 0 %>)</h2>
+
+  <% if @event_posts&.any? %>
+    <div class="events-list">
+      <% @event_posts.each do |event| %>
+        <div class="event-card">
+          <h3><%= event.name %></h3>
+          <p><strong>Category:</strong> <%= event.event_category.name %></p>
+          <p><strong>When:</strong> <%= event.event_time.strftime("%B %d, %Y at %I:%M %p") %></p>
+          <p><strong>Where:</strong> <%= event.location_name %></p>
+          <p><strong>Organizer:</strong> <%= event.organizer.name %></p>
+          <p><%= event.description %></p>
+          <p><strong>Capacity:</strong> <%= event.registrations_count %> / <%= event.capacity %> attendees</p>
+          <% if event.attendees.any? %>
+            <p><strong>Attendees:</strong>
+              <%= event.attendees.map(&:name).join(", ") %>
+            </p>
+          <% end %>
+          <% if event.latitude.present? && event.longitude.present? %>
+            <p><strong>Distance:</strong>
+              <% if params[:latitude].present? && params[:longitude].present? %>
+                <%= event.distance.round(1) %> miles away
+              <% end %>
+            </p>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% elsif params[:q].present? || params[:category_id].present? || params[:latitude].present? %>
+    <p>No events found matching your criteria. Try adjusting your filters.</p>
+  <% else %>
+    <p>Use the filters above to search for events.</p>
+  <% end %>
+</div>
+
+<script>
+  // Show/hide date range inputs based on time filter selection
+  document.getElementById('time_filter').addEventListener('change', function() {
+    const dateRangeInputs = document.getElementById('date-range-inputs');
+    dateRangeInputs.style.display = this.value === 'custom' ? 'block' : 'none';
+  });
+
+  // Initialize date range visibility
+  const timeFilter = document.getElementById('time_filter').value;
+  document.getElementById('date-range-inputs').style.display = timeFilter === 'custom' ? 'block' : 'none';
+</script>

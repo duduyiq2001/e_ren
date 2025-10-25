@@ -1,0 +1,27 @@
+<div class="container">
+  <h1>Search Users</h1>
+
+  <form action="<%= search_users_path %>" method="get">
+    <input type="text" name="q" placeholder="Search by name..." value="<%= params[:q] %>" />
+    <button type="submit">Search</button>
+  </form>
+
+  <% if params[:q].present? %>
+    <h2>Search Results for "<%= params[:q] %>"</h2>
+
+    <% if @users.any? %>
+      <div class="users-list">
+        <% @users.each do |user| %>
+          <div class="user-card">
+            <h3><%= user.name %></h3>
+            <p><strong>Email:</strong> <%= user.email %></p>
+            <p><strong>E-Score:</strong> <%= user.e_score %> points</p>
+            <a href="<%= user_path(user) %>">View Full Profile</a>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p>No users found matching "<%= params[:q] %>"</p>
+    <% end %>
+  <% end %>
+</div>
