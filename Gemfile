@@ -27,7 +27,7 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
-
+gem "rails-controller-testing"
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
 
@@ -47,6 +47,9 @@ group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
 
+  # Pry debugger
+  gem "pry-byebug"
+
   # Audits gems for known security defects (use config/bundler-audit.yml to ignore issues)
   gem "bundler-audit", require: false
 
@@ -59,7 +62,8 @@ group :development, :test do
   # RSpec for testing
   gem "rspec-rails", "~> 7.1"
   gem "factory_bot_rails", "~> 6.4"
-end
+  gem "shoulda-matchers", "~> 6.0"
+  end
 
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
