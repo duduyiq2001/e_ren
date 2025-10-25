@@ -7,7 +7,8 @@ class EventRegistration < ApplicationRecord
   validates :user_id, uniqueness: { scope: :event_post_id, message: "has already registered for this event" }
   validate :event_not_full, on: :create
 
-  before_validation :set_registered_at, on: :create
+  after_create :send_enrollment_notification
+  after_update :send_waitlist_to_confirmed_notification, if: -> { saved_change_to_status? && confirmed? && status_before_last_save == 'waitlisted' }
 
   private
 
@@ -18,9 +19,18 @@ class EventRegistration < ApplicationRecord
   def event_not_full
     return unless event_post
 
-    if event_post.full? && status != 'waitlisted'
+    if event_post.full? && !waitlisted?
       errors.add(:base, "Event is full. You have been added to the waitlist.")
       self.status = :waitlisted
     end
   end
+
+  def send_enrollment_notification
+    EnrollmentNotificationJob.perform_later(id)
+  end
+
+  #def send_waitlist_to_confirmed_notification
+    # when user who stay in waiting list change to 
+    #EventNotificationService.send_waitlist_confirmation(self)
+  #end
 end
