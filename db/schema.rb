@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_25_154157) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_25_220845) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,6 +46,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_25_154157) do
   end
 
   create_table "event_registrations", force: :cascade do |t|
+    t.boolean "attendance_confirmed", default: false, null: false
     t.datetime "created_at", null: false
     t.bigint "event_post_id", null: false
     t.datetime "registered_at", null: false
