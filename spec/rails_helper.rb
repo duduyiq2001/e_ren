@@ -70,6 +70,9 @@ RSpec.configure do |config|
 
   # FactoryBot configuration
   config.include FactoryBot::Syntax::Methods
+
+  # Controller test helpers
+  config.include ControllerHelpers, type: :controller
 end
 
 # Shoulda Matchers configuration

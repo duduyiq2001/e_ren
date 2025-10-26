@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title><%= content_for(:title) || "E Ren" %></title>
+    <meta charset="UTF-8">
+    <title><%= content_for(:title) || "WashU ESpace - Campus Events" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="E Ren">
+    <meta name="application-name" content="WashU ESpace">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -18,12 +19,71 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
+    <%# Tailwind CSS CDN %>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'washu-red': '#BA0C2F',
+              'washu-green': '#215732',
+              'washu-gray': '#3D3D3D',
+              'washu-tan': '#E1C4AC'
+            },
+            fontFamily: {
+              'sans': ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+      .gothic-pattern {
+        background-image:
+          linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+          linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%),
+          linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
+        background-size: 20px 20px;
+        background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+      }
+
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .fade-in {
+        animation: fadeIn 0.5s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .slide-in {
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+    </style>
+
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body class="bg-gray-50 font-sans">
     <%= yield %>
   </body>
 </html>

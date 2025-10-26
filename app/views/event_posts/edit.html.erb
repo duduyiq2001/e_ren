@@ -1,0 +1,106 @@
+<div class="container mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Edit Event</h1>
+        <p class="text-lg text-gray-600 mt-1">Update your event details</p>
+      </div>
+      <%= link_to "← Back to Event", event_post_path(@event_post), class: "px-4 py-2 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600" %>
+    </div>
+  </div>
+
+  <!-- Event Form -->
+  <div class="bg-white rounded-lg shadow-lg p-8">
+    <%= form_with(model: @event_post, local: true, class: "space-y-6") do |form| %>
+      <!-- Error Messages -->
+      <% if @event_post.errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">
+                <%= pluralize(@event_post.errors.count, "error") %> prohibited this event from being saved:
+              </h3>
+              <div class="mt-2 text-sm text-red-700">
+                <ul class="list-disc pl-5 space-y-1">
+                  <% @event_post.errors.full_messages.each do |message| %>
+                    <li><%= message %></li>
+                  <% end %>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Event Name -->
+      <div>
+        <%= form.label :name, "Event Name", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.text_field :name, class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-200 outline-none", placeholder: "Enter event name", required: true %>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <%= form.label :description, class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.text_area :description, rows: 4, class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-200 outline-none", placeholder: "Describe your event..." %>
+      </div>
+
+      <!-- Category and Date Row -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Event Category -->
+        <div>
+          <%= form.label :event_category_id, "Category", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.collection_select :event_category_id, @event_categories, :id, :name,
+              { prompt: "Select a category" },
+              { class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-200 outline-none", required: true } %>
+        </div>
+
+        <!-- Event Date & Time -->
+        <div>
+          <%= form.label :event_time, "Date & Time", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.datetime_local_field :event_time, class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-200 outline-none", required: true %>
+        </div>
+      </div>
+
+      <!-- Location Details -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Location Name -->
+        <div>
+          <%= form.label :location_name, "Location", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.text_field :location_name, class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-200 outline-none", placeholder: "e.g., Athletic Complex", required: true %>
+        </div>
+
+        <!-- Capacity -->
+        <div>
+          <%= form.label :capacity, class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.number_field :capacity, min: 1, class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-200 outline-none", placeholder: "Maximum attendees", required: true %>
+        </div>
+      </div>
+
+      <!-- Google Maps URL -->
+      <div>
+        <%= form.label :google_maps_url, "Google Maps Link (Optional)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.url_field :google_maps_url, class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-200 outline-none", placeholder: "https://maps.google.com/..." %>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4 pt-6">
+        <%= form.submit "Update Event", class: "w-full sm:w-auto px-8 py-4 bg-red-600 text-white rounded-lg font-bold text-lg hover:bg-red-700 shadow-lg transition-colors" %>
+
+        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+          <%= link_to "Cancel", event_post_path(@event_post), class: "w-full sm:w-auto px-6 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 text-center" %>
+
+          <%= button_to "Delete Event", event_post_path(@event_post),
+              method: :delete,
+              data: { confirm: "Are you sure you want to delete this event? This action cannot be undone." },
+              class: "w-full sm:w-auto px-6 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

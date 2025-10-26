@@ -24,12 +24,35 @@ RSpec.describe EventPost, type: :model do
         expect(event.errors[:event_time]).to include("can't be in the past")
       end
 
-      it "is valid when event_time is in the future" do
+      it "is valid when event_time is in the future on create" do
         event = build(:event_post, event_time: 1.day.from_now)
         expect(event).to be_valid
       end
 
-   end
+      it "allows updating events even if event_time is in the past" do
+        # Create event with future time
+        event = create(:event_post, event_time: 1.day.from_now)
+
+        # Simulate time passing - event is now in the past
+        # Update the event (e.g., change capacity)
+        event.capacity = 50
+        event.event_time = 2.days.ago  # Past time
+
+        # Should still be valid on update
+        expect(event).to be_valid
+        expect(event.save).to be true
+      end
+
+      it "allows querying and displaying past events" do
+        # Create event with future time, then manually update to past
+        event = create(:event_post, event_time: 1.day.from_now)
+        event.update_column(:event_time, 2.days.ago)  # Bypass validations
+
+        # Should be able to find and display past events
+        expect(EventPost.find(event.id)).to eq(event)
+        expect(event.reload.event_time).to be < Time.current
+      end
+    end
 
     context "google_maps_url format" do
       it "is valid with http URL" do

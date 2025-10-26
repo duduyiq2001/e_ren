@@ -1,8 +1,26 @@
 Rails.application.routes.draw do
+  # Event posts
   get "event_posts/index"
   get "event_posts/find"
   get "event_posts/search"
-  get "event_posts/post"
+  resources :event_posts, only: [:show, :new, :create, :edit, :update, :destroy] do
+    resources :event_registrations, only: [:create, :destroy] do
+      # Confirm attendance (for organizers)
+      patch 'confirm_attendance', on: :member
+    end
+    # Registrations list for organizers
+    get 'registrations', on: :member
+  end
+
+  # Leaderboard
+  get '/leaderboard', to: 'leaderboard#index'
+
+  # Authentication
+  get '/signup', to: 'users#new'
+  post '/signup', to: 'users#create'
+  get '/login', to: 'sessions#new'
+  post '/login', to: 'sessions#create'
+  delete '/logout', to: 'sessions#destroy'
 
   # User profiles
   get 'users/search', to: 'users#search', as: :search_users

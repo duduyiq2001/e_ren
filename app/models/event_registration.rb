@@ -7,8 +7,10 @@ class EventRegistration < ApplicationRecord
   validates :user_id, uniqueness: { scope: :event_post_id, message: "has already registered for this event" }
   validate :event_not_full, on: :create
 
+  before_validation :set_registered_at, on: :create
   after_create :send_enrollment_notification
   after_update :send_waitlist_to_confirmed_notification, if: -> { saved_change_to_status? && confirmed? && status_before_last_save == 'waitlisted' }
+  after_update :award_e_score, if: -> { saved_change_to_attendance_confirmed? && attendance_confirmed? }
 
   private
 
@@ -30,7 +32,12 @@ class EventRegistration < ApplicationRecord
   end
 
   #def send_waitlist_to_confirmed_notification
-    # when user who stay in waiting list change to 
+    # when user who stay in waiting list change to
     #EventNotificationService.send_waitlist_confirmation(self)
   #end
+
+  def award_e_score
+    # Award 10 points for attending an event
+    user.increment!(:e_score, 10)
+  end
 end

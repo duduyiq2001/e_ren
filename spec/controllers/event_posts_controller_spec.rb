@@ -12,6 +12,11 @@ RSpec.describe EventPostsController, type: :controller do
     Geocoder::Lookup::Test.reset
   end
 
+  # Login user before each test
+  before do
+    login_user
+  end
+
   describe "GET #index" do
     let!(:sports_category) { create(:event_category, :sports) }
     let!(:food_category) { create(:event_category, :food) }
@@ -39,6 +44,43 @@ RSpec.describe EventPostsController, type: :controller do
       events = assigns(:event_posts)
       expect(events[0].event_time).to be <= events[1].event_time
       expect(events[1].event_time).to be <= events[2].event_time
+    end
+
+    context "user registrations" do
+      let(:user) { login_user }
+
+      it "loads user's registrations for displayed events" do
+        registration = create(:event_registration, user: user, event_post: event1)
+
+        get :index
+
+        expect(assigns(:user_registrations)).to be_present
+        expect(assigns(:user_registrations)[event1.id]).to eq(registration)
+      end
+
+      it "indexes registrations by event_post_id for efficient lookup" do
+        reg1 = create(:event_registration, user: user, event_post: event1)
+        reg2 = create(:event_registration, user: user, event_post: event2)
+
+        get :index
+
+        user_regs = assigns(:user_registrations)
+        expect(user_regs[event1.id]).to eq(reg1)
+        expect(user_regs[event2.id]).to eq(reg2)
+        expect(user_regs[event3.id]).to be_nil
+      end
+
+      it "only loads registrations for the current user" do
+        other_user = create(:user)
+        create(:event_registration, user: other_user, event_post: event1)
+        user_reg = create(:event_registration, user: user, event_post: event2)
+
+        get :index
+
+        user_regs = assigns(:user_registrations)
+        expect(user_regs[event1.id]).to be_nil
+        expect(user_regs[event2.id]).to eq(user_reg)
+      end
     end
   end
 
@@ -272,6 +314,55 @@ RSpec.describe EventPostsController, type: :controller do
       end
     end
 
+    context "user registrations" do
+      let(:user) { login_user }
+
+      it "loads user's registrations for search results" do
+        registration = create(:event_registration, user: user, event_post: soccer_event)
+
+        get :search
+
+        expect(assigns(:user_registrations)).to be_present
+        expect(assigns(:user_registrations)[soccer_event.id]).to eq(registration)
+      end
+
+      it "indexes registrations by event_post_id for efficient lookup" do
+        reg1 = create(:event_registration, user: user, event_post: soccer_event)
+        reg2 = create(:event_registration, user: user, event_post: pizza_event)
+
+        get :search
+
+        user_regs = assigns(:user_registrations)
+        expect(user_regs[soccer_event.id]).to eq(reg1)
+        expect(user_regs[pizza_event.id]).to eq(reg2)
+        expect(user_regs[study_event.id]).to be_nil
+      end
+
+      it "only loads registrations for the current user" do
+        other_user = create(:user)
+        create(:event_registration, user: other_user, event_post: soccer_event)
+        user_reg = create(:event_registration, user: user, event_post: pizza_event)
+
+        get :search
+
+        user_regs = assigns(:user_registrations)
+        expect(user_regs[soccer_event.id]).to be_nil
+        expect(user_regs[pizza_event.id]).to eq(user_reg)
+      end
+
+      it "loads registrations even with search filters applied" do
+        registration = create(:event_registration, user: user, event_post: soccer_event)
+
+        get :search, params: {
+          q: "soccer",
+          category_id: sports_category.id
+        }
+
+        user_regs = assigns(:user_registrations)
+        expect(user_regs[soccer_event.id]).to eq(registration)
+      end
+    end
+
     it "always orders results by event_time ascending" do
       get :search
       events = assigns(:event_posts)
@@ -293,15 +384,154 @@ RSpec.describe EventPostsController, type: :controller do
     end
   end
 
-  describe "GET #post" do
+  describe "GET #show" do
+    let(:event_post) { create(:event_post) }
+
     it "returns http success" do
-      get :post
+      get :show, params: { id: event_post.id }
       expect(response).to have_http_status(:success)
     end
 
-    it "renders the post template" do
-      get :post
-      expect(response).to render_template(:post)
+    it "renders the show template" do
+      get :show, params: { id: event_post.id }
+      expect(response).to render_template(:show)
+    end
+
+    it "assigns the requested event to @event_post" do
+      get :show, params: { id: event_post.id }
+      expect(assigns(:event_post)).to eq(event_post)
+    end
+
+    it "finds user's registration if they're registered" do
+      user = login_user
+      registration = create(:event_registration, user: user, event_post: event_post)
+
+      get :show, params: { id: event_post.id }
+      expect(assigns(:registration)).to eq(registration)
+    end
+
+    it "sets @registration to nil if user is not registered" do
+      login_user
+
+      get :show, params: { id: event_post.id }
+      expect(assigns(:registration)).to be_nil
+    end
+  end
+
+  describe "GET #new" do
+    it "returns http success" do
+      get :new
+      expect(response).to have_http_status(:success)
+    end
+
+    it "renders the new template" do
+      get :new
+      expect(response).to render_template(:new)
+    end
+
+    it "assigns a new EventPost to @event_post" do
+      get :new
+      expect(assigns(:event_post)).to be_a_new(EventPost)
+    end
+
+    it "loads all event categories" do
+      sports = create(:event_category, :sports)
+      food = create(:event_category, :food)
+
+      get :new
+      expect(assigns(:event_categories)).to include(sports, food)
+    end
+  end
+
+  describe "POST #create" do
+    let(:valid_params) do
+      {
+        event_post: {
+          name: "Test Event",
+          description: "Test description",
+          event_category_id: create(:event_category).id,
+          event_time: 2.days.from_now,
+          capacity: 20,
+          location_name: "Test Location"
+        }
+      }
+    end
+
+    context "with valid parameters" do
+      it "creates a new event post" do
+        expect {
+          post :create, params: valid_params
+        }.to change(EventPost, :count).by(1)
+      end
+
+      it "assigns the event to the current user as organizer" do
+        user = login_user
+        post :create, params: valid_params
+
+        expect(EventPost.last.organizer).to eq(user)
+      end
+
+      it "redirects to the event page" do
+        post :create, params: valid_params
+        expect(response).to redirect_to(event_post_path(EventPost.last))
+      end
+
+      it "sets a success notice" do
+        post :create, params: valid_params
+        expect(flash[:notice]).to eq("Event created successfully!")
+      end
+    end
+
+    context "with invalid parameters" do
+      let(:invalid_params) do
+        {
+          event_post: {
+            name: "",
+            capacity: -5,
+            event_time: nil
+          }
+        }
+      end
+
+      it "does not create a new event post" do
+        expect {
+          post :create, params: invalid_params
+        }.not_to change(EventPost, :count)
+      end
+
+      it "renders the new template" do
+        post :create, params: invalid_params
+        expect(response).to render_template(:new)
+      end
+
+      it "returns unprocessable entity status" do
+        post :create, params: invalid_params
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it "loads event categories for the form" do
+        sports = create(:event_category, :sports)
+        post :create, params: invalid_params
+
+        expect(assigns(:event_categories)).to include(sports)
+      end
+    end
+
+    context "when not logged in" do
+      before do
+        session.delete(:user_id)
+      end
+
+      it "redirects to login page" do
+        post :create, params: valid_params
+        expect(response).to redirect_to(login_path)
+      end
+
+      it "does not create an event" do
+        expect {
+          post :create, params: valid_params
+        }.not_to change(EventPost, :count)
+      end
     end
   end
 end
