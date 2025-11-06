@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'pry-byebug'
 
 RSpec.describe EventRegistrationsController, type: :controller do
   let(:user) { create(:user) }
@@ -87,7 +88,57 @@ RSpec.describe EventRegistrationsController, type: :controller do
           post :create, params: { event_post_id: full_event.id }
         }.to change(EventRegistration, :count).by(1)
       end
+
+      it "registration gets confirmed after the vacancy" do
+        delete full_event.event_registration.first
+        expect(EventRegistration.last.status).to eq("confirmed")
+      end
     end
+
+
+    context "when event is full and requires approval" do
+      let(:full_event) { create(:event_post, :need_approve, capacity: 2, registrations_count: 0) }
+
+      before do
+        create(:event_registration, event_post: full_event, status: :confirmed)
+        create(:event_registration, event_post: full_event, status: :confirmed)
+        full_event.reload
+      end
+
+      it "creates a registration with waitlisted status" do
+        post :create, params: { event_post_id: full_event.id }
+        expect(EventRegistration.last.status).to eq("waitlisted")
+      end
+
+      it "sets a waitlist notice" do
+        post :create, params: { event_post_id: full_event.id }
+        expect(flash[:notice]).to eq("Event is full. You've been added to the waitlist.")
+      end
+
+      it "still creates the registration" do
+        expect {
+          post :create, params: { event_post_id: full_event.id }
+        }.to change(EventRegistration, :count).by(1)
+      end
+
+      it "registration does not get auto-promoted after vacancy (requires manual approval)" do
+        waitlisted_registration = create(:event_registration, event_post: full_event, status: :waitlisted)
+        confirmed_registration = full_event.event_registrations.confirmed.first
+
+        confirmed_registration.destroy
+
+        expect(waitlisted_registration.reload.status).to eq("waitlisted")
+      end
+
+      it "registration gets confirmed after manual approval" do
+        waitlisted_registration = create(:event_registration, event_post: full_event, status: :waitlisted)
+
+        waitlisted_registration.update(status: :confirmed)
+
+        expect(waitlisted_registration.reload.status).to eq("confirmed")
+      end
+    end
+
 
     context "when not logged in" do
       before do
@@ -186,7 +237,7 @@ RSpec.describe EventRegistrationsController, type: :controller do
   describe "PATCH #confirm_attendance" do
     let(:organizer) { create(:user) }
     let(:attendee) { create(:user, e_score: 0) }
-    let(:past_event) { create(:event_post, organizer: organizer, event_time: 2.hours.ago) }
+    let(:past_event) { create(:event_post, organizer: organizer).tap { |e| e.update_column(:event_time, 2.hours.ago) } }
     let(:future_event) { create(:event_post, organizer: organizer, event_time: 2.hours.from_now) }
     let!(:registration) { create(:event_registration, user: attendee, event_post: past_event, attendance_confirmed: false) }
 
@@ -289,4 +340,4 @@ RSpec.describe EventRegistrationsController, type: :controller do
       end
     end
   end
-end
+  # add tests for testing waitlist feature

@@ -13,7 +13,10 @@ FactoryBot.define do
     google_place_id { nil }
     formatted_address { nil }
     registrations_count { 0 }
-
+    requires_approval {false}
+    trait :need_approve do
+      requires_approval {true}
+    end
     trait :today do
       event_time { 1.day.from_now.change(hour: 18) }
     end

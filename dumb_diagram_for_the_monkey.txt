@@ -1,0 +1,98 @@
+E-Ren Simple Architecture Diagram
+=================================
+
+                    ┌────────────┐
+                    │   Users    │
+                    └─────┬──────┘
+                          │
+                          ▼
+        ┌─────────────────────────────────────────────┐
+        │     AWS EKS Cluster (Kubernetes)            │
+        │                                             │
+        │  ┌──────────────────────────────────────┐   │
+        │  │  Datadog Agent (DaemonSet)           │   │
+        │  │  - Runs on each EKS node             │   │
+        │  │  - Monitors all pods on that node    │   │
+        │  └──────────────────────────────────────┘   │
+        │                                             │
+        │  ┌──────────────────────────────────────┐   │
+        │  │  Rails Application Pod               │   │
+        │  │                                      │   │
+        │  │  ┌────────────────────────────────┐  │   │
+        │  │  │  Rails App Container           │  │   │
+        │  │  │  (Ruby on Rails)               │  │   │
+        │  │  │  - Handles web requests        │  │   │
+        │  │  │  - Processes events            │  │   │
+        │  │  │  - Sentry gem (monitoring)     │  │   │
+        │  │  └─────────────┬──────────────────┘  │   │
+        │  │                │                     │   │
+        │  │  ┌─────────────▼──────────────────┐  │   │
+        │  │  │  PgBouncer Sidecar Container   │  │   │
+        │  │  │  (Connection Pooling)          │  │   │
+        │  │  └────────────────────────────────┘  │   │
+        │  └──────────────────┬───────────────────┘   │
+        └─────────────────────┼───────────────────────┘
+                            │
+                            │ (database queries)
+                            ▼
+                 ┌──────────────────────┐
+                 │   RDS PostgreSQL     │
+                 │   (Managed Database) │
+                 │   - Stores all data  │
+                 └──────────────────────┘
+
+
+What Each Component Does:
+==========================
+
+1. Users
+   - Students accessing the E-Ren event platform
+
+2. EKS Cluster (Kubernetes)
+   - AWS managed container orchestration
+   - Runs our application pods
+
+3. Datadog Agent (DaemonSet)
+   - Runs on each EKS node (not inside Rails pod)
+   - Monitors all pods on that node
+   - Collects metrics, logs, and traces
+   - Sends data to Datadog for analysis
+
+4. Rails Application Pod
+   - Contains 2 containers working together:
+
+   a) Rails App Container
+      - Main application code
+      - Handles user requests
+      - Processes event data
+      - Includes Sentry gem for error tracking
+
+   b) PgBouncer Sidecar Container
+      - Manages database connections
+      - Prevents connection overload
+      - Improves performance
+
+5. RDS PostgreSQL
+   - Managed database service from AWS
+   - Stores all application data
+   - Automatically backed up
+
+
+Request Flow:
+=============
+
+User → EKS Cluster → Rails App → PgBouncer → RDS PostgreSQL
+
+Monitoring Flow:
+- Datadog Agent (on EKS node) monitors Rails pod
+- Sentry gem (inside Rails app) captures errors and sends to Sentry
+
+
+Key Benefits:
+=============
+
+- EKS: Automatic scaling and container management
+- PgBouncer: Efficient database connection handling
+- Datadog DaemonSet: Real-time performance monitoring (node-level)
+- Sentry gem: Error tracking and crash reporting (app-level)
+- RDS: Managed database with automatic backups

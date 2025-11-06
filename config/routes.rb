@@ -1,15 +1,24 @@
 Rails.application.routes.draw do
   # Event posts
-  get "event_posts/index"
-  get "event_posts/find"
-  get "event_posts/search"
-  resources :event_posts, only: [:show, :new, :create, :edit, :update, :destroy] do
-    resources :event_registrations, only: [:create, :destroy] do
-      # Confirm attendance (for organizers)
-      patch 'confirm_attendance', on: :member
+  resources :event_posts do
+    collection do
+      get :find
+      get :search
     end
-    # Registrations list for organizers
-    get 'registrations', on: :member
+
+    member do
+      # Registrations list for organizers
+      get :registrations
+    end
+
+    resources :event_registrations, only: [:create, :destroy] do
+      member do
+        # Approve registration (for organizers)
+        patch :approve_registration
+        # Confirm attendance (for organizers)
+        patch :confirm_attendance
+      end
+    end
   end
 
   # Leaderboard

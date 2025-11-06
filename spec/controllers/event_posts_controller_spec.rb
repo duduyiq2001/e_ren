@@ -534,4 +534,295 @@ RSpec.describe EventPostsController, type: :controller do
       end
     end
   end
+
+  describe "GET #edit" do
+    let(:organizer) { create(:user) }
+    let(:event_post) { create(:event_post, organizer: organizer) }
+
+    context "when organizer accesses edit" do
+      before do
+        login_user(organizer)
+      end
+
+      it "returns http success" do
+        get :edit, params: { id: event_post.id }
+        expect(response).to have_http_status(:success)
+      end
+
+      it "renders the edit template" do
+        get :edit, params: { id: event_post.id }
+        expect(response).to render_template(:edit)
+      end
+
+      it "assigns the event_post" do
+        get :edit, params: { id: event_post.id }
+        expect(assigns(:event_post)).to eq(event_post)
+      end
+
+      it "loads event categories" do
+        sports = create(:event_category, :sports)
+        get :edit, params: { id: event_post.id }
+        expect(assigns(:event_categories)).to include(sports)
+      end
+    end
+
+    context "when non-organizer tries to edit" do
+      let(:other_user) { create(:user) }
+
+      before do
+        login_user(other_user)
+      end
+
+      it "redirects to event page" do
+        get :edit, params: { id: event_post.id }
+        expect(response).to redirect_to(event_post)
+      end
+
+      it "sets an authorization error alert" do
+        get :edit, params: { id: event_post.id }
+        expect(flash[:alert]).to eq("You are not authorized to edit this event.")
+      end
+    end
+
+    context "when not logged in" do
+      before do
+        session.delete(:user_id)
+      end
+
+      it "redirects to login page" do
+        get :edit, params: { id: event_post.id }
+        expect(response).to redirect_to(login_path)
+      end
+    end
+  end
+
+  describe "PATCH #update" do
+    let(:organizer) { create(:user) }
+    let(:event_post) { create(:event_post, organizer: organizer, name: "Old Name") }
+    let(:valid_params) do
+      {
+        id: event_post.id,
+        event_post: {
+          name: "Updated Name",
+          description: "Updated description",
+          capacity: 50
+        }
+      }
+    end
+
+    context "when organizer updates event" do
+      before do
+        login_user(organizer)
+      end
+
+      it "updates the event" do
+        patch :update, params: valid_params
+        event_post.reload
+        expect(event_post.name).to eq("Updated Name")
+        expect(event_post.description).to eq("Updated description")
+        expect(event_post.capacity).to eq(50)
+      end
+
+      it "redirects to event page" do
+        patch :update, params: valid_params
+        expect(response).to redirect_to(event_post)
+      end
+
+      it "sets a success notice" do
+        patch :update, params: valid_params
+        expect(flash[:notice]).to eq("Event updated successfully!")
+      end
+    end
+
+    context "with invalid parameters" do
+      let(:invalid_params) do
+        {
+          id: event_post.id,
+          event_post: {
+            name: "",
+            capacity: -5
+          }
+        }
+      end
+
+      before do
+        login_user(organizer)
+      end
+
+      it "does not update the event" do
+        patch :update, params: invalid_params
+        event_post.reload
+        expect(event_post.name).to eq("Old Name")
+      end
+
+      it "renders the edit template" do
+        patch :update, params: invalid_params
+        expect(response).to render_template(:edit)
+      end
+
+      it "returns unprocessable entity status" do
+        patch :update, params: invalid_params
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    context "when non-organizer tries to update" do
+      let(:other_user) { create(:user) }
+
+      before do
+        login_user(other_user)
+      end
+
+      it "does not update the event" do
+        patch :update, params: valid_params
+        event_post.reload
+        expect(event_post.name).to eq("Old Name")
+      end
+
+      it "redirects to event page" do
+        patch :update, params: valid_params
+        expect(response).to redirect_to(event_post)
+      end
+
+      it "sets an authorization error alert" do
+        patch :update, params: valid_params
+        expect(flash[:alert]).to eq("You are not authorized to update this event.")
+      end
+    end
+  end
+
+  describe "DELETE #destroy" do
+    let(:organizer) { create(:user) }
+    let!(:event_post) { create(:event_post, organizer: organizer) }
+
+    context "when organizer deletes event" do
+      before do
+        login_user(organizer)
+      end
+
+      it "destroys the event" do
+        expect {
+          delete :destroy, params: { id: event_post.id }
+        }.to change(EventPost, :count).by(-1)
+      end
+
+      it "redirects to events index" do
+        delete :destroy, params: { id: event_post.id }
+        expect(response).to redirect_to(event_posts_path)
+      end
+
+      it "sets a success notice" do
+        delete :destroy, params: { id: event_post.id }
+        expect(flash[:notice]).to eq("Event deleted successfully.")
+      end
+    end
+
+    context "when non-organizer tries to delete" do
+      let(:other_user) { create(:user) }
+
+      before do
+        login_user(other_user)
+      end
+
+      it "does not destroy the event" do
+        expect {
+          delete :destroy, params: { id: event_post.id }
+        }.not_to change(EventPost, :count)
+      end
+
+      it "redirects to events index" do
+        delete :destroy, params: { id: event_post.id }
+        expect(response).to redirect_to(event_posts_path)
+      end
+
+      it "sets an authorization error alert" do
+        delete :destroy, params: { id: event_post.id }
+        expect(flash[:alert]).to eq("You are not authorized to delete this event.")
+      end
+    end
+
+    context "when not logged in" do
+      before do
+        session.delete(:user_id)
+      end
+
+      it "redirects to login page" do
+        delete :destroy, params: { id: event_post.id }
+        expect(response).to redirect_to(login_path)
+      end
+
+      it "does not destroy the event" do
+        expect {
+          delete :destroy, params: { id: event_post.id }
+        }.not_to change(EventPost, :count)
+      end
+    end
+  end
+
+  describe "GET #registrations" do
+    let(:organizer) { create(:user) }
+    let(:event_post) { create(:event_post, organizer: organizer) }
+    let!(:confirmed_reg) { create(:event_registration, event_post: event_post, status: :confirmed) }
+    let!(:waitlisted_reg) { create(:event_registration, event_post: event_post, status: :waitlisted) }
+
+    context "when organizer views registrations" do
+      before do
+        login_user(organizer)
+      end
+
+      it "returns http success" do
+        get :registrations, params: { id: event_post.id }
+        expect(response).to have_http_status(:success)
+      end
+
+      it "renders the registrations template" do
+        get :registrations, params: { id: event_post.id }
+        expect(response).to render_template(:registrations)
+      end
+
+      it "assigns all registrations" do
+        get :registrations, params: { id: event_post.id }
+        expect(assigns(:registrations)).to match_array([confirmed_reg, waitlisted_reg])
+      end
+
+      it "assigns confirmed registrations" do
+        get :registrations, params: { id: event_post.id }
+        expect(assigns(:confirmed_registrations)).to eq([confirmed_reg])
+      end
+
+      it "assigns waitlisted registrations" do
+        get :registrations, params: { id: event_post.id }
+        expect(assigns(:waitlisted_registrations)).to eq([waitlisted_reg])
+      end
+    end
+
+    context "when non-organizer tries to view registrations" do
+      let(:other_user) { create(:user) }
+
+      before do
+        login_user(other_user)
+      end
+
+      it "redirects to event page" do
+        get :registrations, params: { id: event_post.id }
+        expect(response).to redirect_to(event_post)
+      end
+
+      it "sets an authorization error alert" do
+        get :registrations, params: { id: event_post.id }
+        expect(flash[:alert]).to eq("You are not authorized to view registrations for this event.")
+      end
+    end
+
+    context "when not logged in" do
+      before do
+        session.delete(:user_id)
+      end
+
+      it "redirects to login page" do
+        get :registrations, params: { id: event_post.id }
+        expect(response).to redirect_to(login_path)
+      end
+    end
+  end
 end

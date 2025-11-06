@@ -5,6 +5,11 @@ class EventPost < ApplicationRecord
   has_many :event_registrations, dependent: :destroy_async
   has_many :attendees, through: :event_registrations, source: :user
 
+  # Filtered associations by registration status
+  has_many :confirmed_registrations, -> { where(status: :confirmed) }, class_name: 'EventRegistration'
+  has_many :pending_registrations, -> { where(status: :pending) }, class_name: 'EventRegistration'
+  has_many :waitlisted_registrations, -> { where(status: :waitlisted) }, class_name: 'EventRegistration'
+
   # Geocoding
   geocoded_by :location_name
   after_validation :geocode, if: :should_geocode?
@@ -18,6 +23,10 @@ class EventPost < ApplicationRecord
   scope :between_dates, ->(start_date, end_date) {
     if start_date.present? && end_date.present?
       where(event_time: start_date.to_date.beginning_of_day..end_date.to_date.end_of_day)
+    elsif start_date.present?
+      where("event_time >= ?", start_date.to_date.beginning_of_day)
+    elsif end_date.present?
+      where("event_time <= ?", end_date.to_date.end_of_day)
     end
   }
   scope :near_location, ->(latitude, longitude, radius_miles = 10) {

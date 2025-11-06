@@ -1,0 +1,92 @@
+E-Ren Simple Architecture Diagram
+=================================
+
+                    ┌────────────┐
+                    │   Users    │
+                    └─────┬──────┘
+                          │
+                          ▼
+        ┌─────────────────────────────────────┐
+        │     AWS EKS Cluster                 │
+        │     (Kubernetes)                    │
+        │                                     │
+        │  ┌────────────────────────────────┐ │
+        │  │  Rails Application Pod         │ │
+        │  │                                │ │
+        │  │  ┌──────────────────────────┐  │ │
+        │  │  │  Rails App               │  │ │
+        │  │  │  (Ruby on Rails)         │  │ │
+        │  │  │  - Handles web requests  │  │ │
+        │  │  │  - Processes events      │  │ │
+        │  │  └───────────┬──────────────┘  │ │
+        │  │              │                  │ │
+        │  │  ┌───────────▼──────────────┐  │ │
+        │  │  │  PgBouncer Sidecar       │  │ │
+        │  │  │  (Connection Pooling)    │  │ │
+        │  │  └───────────┬──────────────┘  │ │
+        │  │              │                  │ │
+        │  │  ┌───────────▼──────────────┐  │ │
+        │  │  │  Datadog Agent Sidecar   │  │ │
+        │  │  │  (Monitoring)            │  │ │
+        │  │  └──────────────────────────┘  │ │
+        │  └────────────────┬───────────────┘ │
+        └───────────────────┼─────────────────┘
+                            │
+                            │ (database queries)
+                            ▼
+                 ┌──────────────────────┐
+                 │   RDS PostgreSQL     │
+                 │   (Managed Database) │
+                 │   - Stores all data  │
+                 └──────────────────────┘
+
+
+What Each Component Does:
+==========================
+
+1. Users
+   - Students accessing the E-Ren event platform
+
+2. EKS Cluster (Kubernetes)
+   - AWS managed container orchestration
+   - Runs our application pods
+
+3. Rails Application Pod
+   - Contains 3 containers working together:
+
+   a) Rails App Container
+      - Main application code
+      - Handles user requests
+      - Processes event data
+
+   b) PgBouncer Sidecar Container
+      - Manages database connections
+      - Prevents connection overload
+      - Improves performance
+
+   c) Datadog Agent Sidecar Container
+      - Monitors application performance
+      - Collects metrics and logs
+      - Sends data to Datadog for analysis
+
+4. RDS PostgreSQL
+   - Managed database service from AWS
+   - Stores all application data
+   - Automatically backed up
+
+
+Request Flow:
+=============
+
+User → EKS Cluster → Rails App → PgBouncer → RDS PostgreSQL
+                         │
+                         └──→ Datadog Agent (monitoring)
+
+
+Key Benefits:
+=============
+
+- EKS: Automatic scaling and container management
+- PgBouncer: Efficient database connection handling
+- Datadog: Real-time performance monitoring
+- RDS: Managed database with automatic backups

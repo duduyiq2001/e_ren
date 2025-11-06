@@ -109,12 +109,12 @@ class EventPostsController < ApplicationController
 
     # Only allow organizer to delete
     unless current_user == @event_post.organizer
-      redirect_to event_posts_index_path, alert: "You are not authorized to delete this event."
+      redirect_to event_posts_path, alert: "You are not authorized to delete this event."
       return
     end
 
     @event_post.destroy
-    redirect_to event_posts_index_path, notice: "Event deleted successfully."
+    redirect_to event_posts_path, notice: "Event deleted successfully."
   end
 
   def registrations

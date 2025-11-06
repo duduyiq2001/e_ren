@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'pry-byebug'
 
 RSpec.describe EventPost, type: :model do
   describe "associations" do
@@ -198,29 +199,35 @@ RSpec.describe EventPost, type: :model do
         Geocoder::Lookup::Test.reset
       end
 
-      let!(:event_nov_1) { create(:event_post, event_time: Date.new(2025, 11, 1).noon, event_category: sports_category) }
-      let!(:event_nov_15) { create(:event_post, event_time: Date.new(2025, 11, 15).noon, event_category: sports_category) }
-      let!(:event_nov_30) { create(:event_post, event_time: Date.new(2025, 11, 30).noon, event_category: sports_category) }
-      let!(:event_dec_1) { create(:event_post, event_time: Date.new(2025, 12, 1).noon, event_category: sports_category) }
+      let(:start_date) { Time.current + 1.day }
+      let(:mid_date) { Time.current + 15.days }
+      let(:end_date) { Time.current + 30.days }
+      let(:after_end_date) { Time.current + 31.days }
+
+      let!(:event_1) { create(:event_post, event_time: start_date, event_category: sports_category) }
+      let!(:event_15) { create(:event_post, event_time: mid_date, event_category: sports_category) }
+      let!(:event_30) { create(:event_post, event_time: end_date, event_category: sports_category) }
+      let!(:event_31) { create(:event_post, event_time: after_end_date, event_category: sports_category) }
 
       it "returns events within date range" do
-        results = EventPost.between_dates(Date.new(2025, 11, 1), Date.new(2025, 11, 30))
-        expect(results).to include(event_nov_1, event_nov_15, event_nov_30)
-        expect(results).not_to include(event_dec_1)
+        results = EventPost.between_dates(start_date, end_date)
+        expect(results).to include(event_1, event_15, event_30)
+        expect(results).not_to include(event_31)
       end
 
       it "includes events on boundary dates" do
-        results = EventPost.between_dates(Date.new(2025, 11, 1), Date.new(2025, 11, 15))
-        expect(results).to include(event_nov_1, event_nov_15)
+        results = EventPost.between_dates(start_date, mid_date)
+        expect(results).to include(event_1, event_15)
       end
 
       it "returns all events when start_date is nil" do
-        results = EventPost.between_dates(nil, Date.new(2025, 11, 30))
-        expect(results.count).to eq(4)
+        
+        results = EventPost.between_dates(nil, end_date)
+        expect(results.count).to eq(3)
       end
 
       it "returns all events when end_date is nil" do
-        results = EventPost.between_dates(Date.new(2025, 11, 1), nil)
+        results = EventPost.between_dates(start_date, nil)
         expect(results.count).to eq(4)
       end
 
