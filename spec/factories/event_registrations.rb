@@ -2,7 +2,6 @@ FactoryBot.define do
   factory :event_registration do
     association :user
     association :event_post
-    status { :confirmed }
     registered_at { Time.current }
 
     trait :pending do

@@ -44,7 +44,7 @@
 <main class="container mx-auto px-4 py-8">
   <!-- Search Form -->
   <div class="bg-white rounded-lg shadow-lg p-8 mb-8 fade-in">
-    <%= form_with(url: event_posts_search_path, method: :get, class: "space-y-6") do |f| %>
+    <%= form_with(url: search_event_posts_path, method: :get, class: "space-y-6") do |f| %>
       <!-- Search by Name -->
       <div>
         <label for="q" class="block text-sm font-medium text-gray-700 mb-2">Event Name</label>
@@ -129,7 +129,7 @@
         <button type="submit" class="flex-1 px-6 py-3 bg-washu-red text-white rounded-lg font-bold text-lg hover:bg-red-700 shadow-lg transition-all duration-300">
           Search Events
         </button>
-        <%= link_to "Clear Filters", event_posts_search_path, class: "flex-1 text-center px-6 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors" %>
+        <%= link_to "Clear Filters", search_event_posts_path, class: "flex-1 text-center px-6 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors" %>
       </div>
     <% end %>
   </div>

@@ -122,13 +122,7 @@ RSpec.describe EventRegistration, type: :model do
           create(:event_registration, event_post: event_post)
         }.not_to change { event_post.reload.registrations_count }
       end
-
-      it "adds validation error message when waitlisted" do
-        waitlisted_registration = build(:event_registration, event_post: event_post)
-        waitlisted_registration.valid?
-        expect(waitlisted_registration.errors[:base]).to include("Event is full. You have been added to the waitlist.")
-      end
-    end
+   end
 
     describe "waitlist promotion" do
       let!(:reg1) { create(:event_registration, event_post: event_post, status: :confirmed) }

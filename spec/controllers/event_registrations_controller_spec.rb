@@ -67,10 +67,10 @@ RSpec.describe EventRegistrationsController, type: :controller do
     end
 
     context "when event is full" do
-      let(:full_event) { create(:event_post, capacity: 1, registrations_count: 1) }
+      let(:full_event) { create(:event_post, capacity: 1) }
 
       before do
-        create(:event_registration, event_post: full_event)
+        create(:event_registration, event_post: full_event, status: :confirmed)
       end
 
       it "creates a registration with waitlisted status" do
@@ -90,8 +90,12 @@ RSpec.describe EventRegistrationsController, type: :controller do
       end
 
       it "registration gets confirmed after the vacancy" do
-        delete full_event.event_registration.first
-        expect(EventRegistration.last.status).to eq("confirmed")
+        waitlisted = create(:event_registration, event_post: full_event, status: :waitlisted)
+        confirmed_reg = full_event.event_registrations.confirmed.first
+
+        confirmed_reg.destroy
+
+        expect(waitlisted.reload.status).to eq("confirmed")
       end
     end
 
@@ -340,4 +344,4 @@ RSpec.describe EventRegistrationsController, type: :controller do
       end
     end
   end
-  # add tests for testing waitlist feature
+end

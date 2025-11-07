@@ -58,10 +58,9 @@ class EventRegistration < ApplicationRecord
 
   def event_not_full
     return unless event_post
-    return unless confirmed? # Only check capacity for confirmed registrations
+    return if !confirmed? && !event_post.requires_approval? # Only check capacity for confirmed registrations
 
     if event_post.full?
-      errors.add(:base, "Event is full. You have been added to the waitlist.")
       self.status = :waitlisted
     end
   end

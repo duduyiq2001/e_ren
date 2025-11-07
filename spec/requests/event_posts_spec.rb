@@ -1,12 +1,19 @@
 require 'rails_helper'
 
 RSpec.describe "EventPosts", type: :request do
+  let(:user) { create(:user) }
+
+  before do
+    # Log in user for request specs
+    post login_path, params: { email: user.email, password: 'password123' }
+  end
+
   describe "GET /event_posts/index" do
     let!(:sports_category) { create(:event_category, :sports) }
     let!(:food_category) { create(:event_category, :food) }
     let!(:event1) { create(:event_post, :today, event_category: sports_category) }
     let!(:event2) { create(:event_post, :tomorrow, event_category: food_category) }
-    let!(:event3) { create(:event_post, :this_week, event_category: sports_category, :with_attendees) }
+    let!(:event3) { create(:event_post, :this_week, :with_attendees, event_category: sports_category) }
 
     it "returns http success" do
       get "/event_posts/index"
