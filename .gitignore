@@ -16,7 +16,7 @@
 /tmp/*
 !/log/.keep
 !/tmp/.keep
-
+notes.md
 # Ignore pidfiles, but keep the directory.
 /tmp/pids/*
 !/tmp/pids/
