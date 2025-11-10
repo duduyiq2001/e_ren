@@ -12,8 +12,16 @@ class UsersController < ApplicationController
     case @event_filter
     when 'registered'
       # Show upcoming registered events (not organized by user)
-      @filtered_events = @attended_events.where('event_time > ?', Time.current)
-                                        .where.not(organizer_id: @user.id)
+      # Split into confirmed and pending registrations
+      all_upcoming_registrations = @user.event_registrations
+                                        .includes(event_post: [:event_category, :organizer])
+                                        .joins(:event_post)
+                                        .where('event_posts.event_time > ?', Time.current)
+                                        .order('event_posts.event_time ASC')
+
+      @confirmed_registrations = all_upcoming_registrations.confirmed.map(&:event_post)
+      @pending_registrations = all_upcoming_registrations.pending.map(&:event_post)
+      @filtered_events = @confirmed_registrations + @pending_registrations
     when 'organized'
       # Show upcoming organized events
       @filtered_events = @organized_events.where('event_time > ?', Time.current)

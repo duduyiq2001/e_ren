@@ -1,14 +1,8 @@
 require 'rails_helper'
-
+require 'pry-byebug'
 RSpec.describe "EventPosts", type: :request do
-  let(:user) { create(:user) }
-
-  before do
-    # Log in user for request specs
-    post login_path, params: { email: user.email, password: 'password123' }
-  end
-
   describe "GET /event_posts/index" do
+    binding.pry
     let!(:sports_category) { create(:event_category, :sports) }
     let!(:food_category) { create(:event_category, :food) }
     let!(:event1) { create(:event_post, :today, event_category: sports_category) }

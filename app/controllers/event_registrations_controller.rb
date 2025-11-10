@@ -8,6 +8,8 @@ class EventRegistrationsController < ApplicationController
     if @registration.save
       if @registration.waitlisted?
         redirect_to @event_post, notice: "Event is full. You've been added to the waitlist."
+      elsif @registration.pending?
+        redirect_to @event_post, notice: "Successfully created a pending registration. Waiting for organizer approval."
       else
         redirect_to @event_post, notice: "Successfully registered for the event!"
       end

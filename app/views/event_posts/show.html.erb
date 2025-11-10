@@ -122,11 +122,32 @@
     </div>
 
     <!-- Category Tags -->
-    <div class="mb-6">
+    <div class="mb-6 flex flex-wrap items-center gap-3">
       <span class="inline-block bg-washu-red text-white px-4 py-2 rounded-full text-sm font-medium">
         <%= @event_post.event_category.name %>
       </span>
+
+      <% if @event_post.requires_approval %>
+        <span class="inline-block bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium">
+          🔒 Requires Approval
+        </span>
+      <% end %>
     </div>
+
+    <% if @event_post.requires_approval %>
+      <!-- Approval Notice -->
+      <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+          <svg class="w-5 h-5 text-purple-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+          <div>
+            <p class="text-purple-800 font-semibold">Registration Requires Approval</p>
+            <p class="text-purple-700 text-sm mt-1">Your registration will be pending until the organizer reviews and approves it.</p>
+          </div>
+        </div>
+      </div>
+    <% end %>
 
     <!-- Organizer -->
     <div class="mb-6">

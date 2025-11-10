@@ -170,4 +170,57 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
       expect(rendered).to have_button("Delete Event")
     end
   end
+
+  context "when event requires approval" do
+    let(:current_user) { attendee }
+    let(:approval_event) do
+      create(:event_post,
+        name: "Exclusive Event",
+        description: "Application-based event",
+        location_name: "VIP Room",
+        capacity: 10,
+        registrations_count: 5,
+        event_category: category,
+        organizer: organizer,
+        event_time: 2.days.from_now,
+        requires_approval: true
+      )
+    end
+
+    before do
+      assign(:event_post, approval_event)
+      assign(:registration, nil)
+      render
+    end
+
+    it "shows requires approval badge" do
+      expect(rendered).to have_content("🔒 Requires Approval")
+    end
+
+    it "shows approval notice" do
+      expect(rendered).to have_content("Registration Requires Approval")
+      expect(rendered).to have_content("Your registration will be pending until the organizer reviews and approves it")
+    end
+
+    it "still shows register button" do
+      expect(rendered).to have_button("Register for Event")
+    end
+  end
+
+  context "when event does not require approval" do
+    let(:current_user) { attendee }
+
+    before do
+      assign(:registration, nil)
+      render
+    end
+
+    it "does not show requires approval badge" do
+      expect(rendered).not_to have_content("🔒 Requires Approval")
+    end
+
+    it "does not show approval notice" do
+      expect(rendered).not_to have_content("Registration Requires Approval")
+    end
+  end
 end

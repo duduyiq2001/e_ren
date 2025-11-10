@@ -124,6 +124,25 @@
         </div>
       </div>
 
+      <!-- Registration Settings Section -->
+      <div>
+        <h2 class="text-xl font-bold text-washu-gray mb-6">Registration Settings</h2>
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
+          <div class="flex items-start space-x-3">
+            <%= form.check_box :requires_approval, class: "mt-1 h-5 w-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500" %>
+            <div class="flex-1">
+              <%= form.label :requires_approval, class: "block text-sm font-medium text-gray-900 cursor-pointer" do %>
+                Require Approval for Registrations
+              <% end %>
+              <p class="text-sm text-gray-600 mt-1">
+                When enabled, you must manually approve each registration. Participants will be notified when their registration is approved.
+                Leave unchecked for automatic confirmation.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Action Buttons -->
       <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4 pt-6">
         <%= form.submit "Create Event", class: "w-full sm:w-auto px-8 py-4 bg-washu-red text-white rounded-lg font-bold text-lg hover:bg-red-700 shadow-lg transition-all duration-300" %>

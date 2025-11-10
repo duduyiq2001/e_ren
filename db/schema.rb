@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_05_194523) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_07_220933) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -44,6 +44,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_05_194523) do
     t.index ["event_time"], name: "index_event_posts_on_event_time"
     t.index ["latitude", "longitude"], name: "index_event_posts_on_latitude_and_longitude"
     t.index ["organizer_id"], name: "index_event_posts_on_organizer_id"
+    t.index ["requires_approval"], name: "index_event_posts_on_requires_approval"
   end
 
   create_table "event_registrations", force: :cascade do |t|

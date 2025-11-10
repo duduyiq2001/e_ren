@@ -100,6 +100,26 @@ RSpec.describe EventRegistrationsController, type: :controller do
     end
 
 
+    context "when event requires approval (not full)" do
+      let(:approval_event) { create(:event_post, :need_approve, capacity: 10, registrations_count: 0) }
+
+      it "creates a registration with pending status" do
+        post :create, params: { event_post_id: approval_event.id }
+        expect(EventRegistration.last.status).to eq("pending")
+      end
+
+      it "sets a pending approval notice" do
+        post :create, params: { event_post_id: approval_event.id }
+        expect(flash[:notice]).to eq("Successfully created a pending registration. Waiting for organizer approval.")
+      end
+
+      it "still creates the registration" do
+        expect {
+          post :create, params: { event_post_id: approval_event.id }
+        }.to change(EventRegistration, :count).by(1)
+      end
+    end
+
     context "when event is full and requires approval" do
       let(:full_event) { create(:event_post, :need_approve, capacity: 2, registrations_count: 0) }
 

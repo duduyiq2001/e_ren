@@ -28,6 +28,11 @@ class EventPostsController < ApplicationController
     @event_posts = @event_posts.search_by_name(params[:q]) if params[:q].present?
     @event_posts = @event_posts.by_category(params[:category_id]) if params[:category_id].present?
 
+    # Requires approval filter
+    if params[:requires_approval].present?
+      @event_posts = @event_posts.where(requires_approval: params[:requires_approval] == 'true')
+    end
+
     # Time filters
     if params[:time_filter] == 'today'
       @event_posts = @event_posts.today
@@ -144,7 +149,8 @@ class EventPostsController < ApplicationController
       :event_time,
       :capacity,
       :location_name,
-      :google_maps_url
+      :google_maps_url,
+      :requires_approval
     )
   end
 end

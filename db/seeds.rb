@@ -101,6 +101,39 @@ events = [
     capacity: 16,
     organizer: users[2],
     event_category: categories[:sports]
+  ),
+
+  EventPost.create!(
+    name: "Exclusive Leadership Workshop",
+    description: "Limited spots available. Application-based workshop for student leaders. Organizer will review and approve registrations.",
+    location_name: "Executive Conference Room",
+    event_time: 8.days.from_now.change(hour: 13),
+    capacity: 12,
+    organizer: users[0],
+    event_category: categories[:academic],
+    requires_approval: true
+  ),
+
+  EventPost.create!(
+    name: "Advanced Research Seminar",
+    description: "Graduate-level research discussion. Registration requires approval to ensure appropriate background.",
+    location_name: "Research Lab Building A",
+    event_time: 10.days.from_now.change(hour: 11),
+    capacity: 8,
+    organizer: users[3],
+    event_category: categories[:academic],
+    requires_approval: true
+  ),
+
+  EventPost.create!(
+    name: "VIP Networking Dinner",
+    description: "Invitation-only dinner with industry leaders. Registration subject to approval.",
+    location_name: "Faculty Dining Hall",
+    event_time: 12.days.from_now.change(hour: 18, min: 30),
+    capacity: 20,
+    organizer: users[1],
+    event_category: categories[:social],
+    requires_approval: true
   )
 ]
 

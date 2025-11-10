@@ -57,7 +57,7 @@
       </div>
 
       <!-- Filters Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Category Filter -->
         <div>
           <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
@@ -96,6 +96,18 @@
             <option value="10" <%= 'selected' if params[:radius] == '10' || params[:radius].blank? %>>10 miles</option>
             <option value="25" <%= 'selected' if params[:radius] == '25' %>>25 miles</option>
             <option value="50" <%= 'selected' if params[:radius] == '50' %>>50 miles</option>
+          </select>
+        </div>
+
+        <!-- Requires Approval Filter -->
+        <div>
+          <label for="requires_approval" class="block text-sm font-medium text-gray-700 mb-2">Registration Type</label>
+          <select id="requires_approval"
+                  name="requires_approval"
+                  class="search-focus w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none transition-all">
+            <option value="">All Events</option>
+            <option value="false" <%= 'selected' if params[:requires_approval] == 'false' %>>Open Registration</option>
+            <option value="true" <%= 'selected' if params[:requires_approval] == 'true' %>>Approval Required</option>
           </select>
         </div>
       </div>

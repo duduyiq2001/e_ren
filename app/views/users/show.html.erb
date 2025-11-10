@@ -69,7 +69,75 @@
     </div>
 
     <!-- Events List -->
-    <% if @filtered_events.any? %>
+    <% if @event_filter == 'registered' %>
+      <!-- Confirmed Registrations -->
+      <% if @confirmed_registrations.any? %>
+        <h4 class="text-lg font-semibold text-gray-900 mb-4">Confirmed Registrations</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <% @confirmed_registrations.each do |event| %>
+            <div class="bg-white rounded-lg shadow-md p-6 border border-green-200 hover:shadow-lg transition-shadow">
+              <div class="flex items-center justify-between mb-4">
+                <span class="bg-green-700 text-white px-3 py-1 rounded-full text-sm font-medium">
+                  <%= event.event_category.name %>
+                </span>
+                <span class="text-sm text-gray-500">
+                  <%= event.event_time.strftime("%b %d") %>
+                </span>
+              </div>
+              <h3 class="text-lg font-bold text-red-600 mb-2">
+                <%= link_to event.name, event_post_path(event), class: "hover:underline" %>
+              </h3>
+              <p class="text-gray-600 text-sm mb-3"><%= event.location_name %></p>
+              <p class="text-gray-500 text-sm"><%= event.event_time.strftime("%I:%M %p") %></p>
+              <div class="mt-3">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  ✓ Confirmed
+                </span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Pending Registrations -->
+      <% if @pending_registrations.any? %>
+        <h4 class="text-lg font-semibold text-gray-900 mb-4">Pending Approval</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <% @pending_registrations.each do |event| %>
+            <div class="bg-white rounded-lg shadow-md p-6 border border-yellow-200 hover:shadow-lg transition-shadow">
+              <div class="flex items-center justify-between mb-4">
+                <span class="bg-green-700 text-white px-3 py-1 rounded-full text-sm font-medium">
+                  <%= event.event_category.name %>
+                </span>
+                <span class="text-sm text-gray-500">
+                  <%= event.event_time.strftime("%b %d") %>
+                </span>
+              </div>
+              <h3 class="text-lg font-bold text-red-600 mb-2">
+                <%= link_to event.name, event_post_path(event), class: "hover:underline" %>
+              </h3>
+              <p class="text-gray-600 text-sm mb-3"><%= event.location_name %></p>
+              <p class="text-gray-500 text-sm"><%= event.event_time.strftime("%I:%M %p") %></p>
+              <div class="mt-3">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                  ⏱ Pending Approval
+                </span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- No events message -->
+      <% if @confirmed_registrations.empty? && @pending_registrations.empty? %>
+        <div class="text-center py-12">
+          <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p class="text-gray-500 text-lg">No registered events</p>
+        </div>
+      <% end %>
+    <% elsif @filtered_events.any? %>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <% @filtered_events.each do |event| %>
           <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
