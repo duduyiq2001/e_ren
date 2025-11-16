@@ -23,8 +23,10 @@ Devise.setup do |config|
   # ==> Configuration for :rememberable
   config.expire_all_remember_me_on_sign_out = true
 
-  # ==> Configuration for :reconfirmable
+  # ==> Configuration for :confirmable
+  config.confirm_within = 3.days
   config.reconfirmable = true
+  config.allow_unconfirmed_access_for = 0.days # Users must confirm email before accessing
 
   # ==> Navigation configuration
   config.sign_out_via = :delete

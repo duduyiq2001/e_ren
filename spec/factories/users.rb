@@ -22,5 +22,13 @@ FactoryBot.define do
     trait :without_phone do
       phone_number { nil }
     end
+
+    trait :confirmed do
+      confirmed_at { Time.current }
+    end
+
+    trait :unconfirmed do
+      confirmed_at { nil }
+    end
   end
 end
