@@ -12,7 +12,11 @@ RSpec.describe "users/show.html.erb", type: :view do
       total_organized: 3,
       e_points: 50
     })
-    allow(view).to receive(:current_user).and_return(user)
+    # Stub controller helper methods as external dependencies
+    without_partial_double_verification do
+      allow(view).to receive(:current_user).and_return(user)
+      allow(view).to receive(:logged_in?).and_return(true)
+    end
   end
 
   context "when viewing registered events with confirmed registrations" do
