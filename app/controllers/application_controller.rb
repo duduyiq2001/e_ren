@@ -5,31 +5,17 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
-  # Authentication helpers
-  helper_method :current_user, :logged_in?
+  # Devise provides current_user and user_signed_in? automatically
+  # No need for custom authentication helpers
 
   private
 
-  def current_user
-    @current_user ||= User.find_by(id: session[:user_id]) if session[:user_id]
+  # Custom redirect paths after sign in/out
+  def after_sign_in_path_for(resource)
+    root_path
   end
 
-  def logged_in?
-    current_user.present?
-  end
-
-  def require_login
-    unless logged_in?
-      redirect_to login_path, alert: "You must be logged in to access this page."
-    end
-  end
-
-  def log_in(user)
-    session[:user_id] = user.id
-  end
-
-  def log_out
-    session.delete(:user_id)
-    @current_user = nil
+  def after_sign_out_path_for(resource_or_scope)
+    root_path
   end
 end

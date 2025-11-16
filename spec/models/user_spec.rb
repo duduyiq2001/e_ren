@@ -11,7 +11,8 @@ RSpec.describe User, type: :model do
     subject { build(:user) }
 
     it { should validate_presence_of(:email) }
-    it { should validate_uniqueness_of(:email) }
+    # Devise validates email uniqueness case-insensitively by default
+    it { should validate_uniqueness_of(:email).case_insensitive }
     it { should validate_presence_of(:name) }
     it { should validate_length_of(:name).is_at_most(100) }
     it { should validate_numericality_of(:e_score).only_integer.is_greater_than_or_equal_to(0) }
@@ -71,15 +72,15 @@ RSpec.describe User, type: :model do
     end
   end
 
-  describe "#authenticate" do
+  describe "#valid_password?" do
     let(:user) { create(:user, password: "password123") }
 
-    it "returns user when password is correct" do
-      expect(user.authenticate("password123")).to eq(user)
+    it "returns true when password is correct" do
+      expect(user.valid_password?("password123")).to be true
     end
 
     it "returns false when password is incorrect" do
-      expect(user.authenticate("wrong_password")).to be false
+      expect(user.valid_password?("wrong_password")).to be false
     end
   end
 

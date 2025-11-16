@@ -1,5 +1,5 @@
 class EventRegistrationsController < ApplicationController
-  before_action :require_login
+  before_action :authenticate_user!
 
   def create
     @event_post = EventPost.find(params[:event_post_id])

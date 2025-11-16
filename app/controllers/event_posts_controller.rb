@@ -1,5 +1,5 @@
 class EventPostsController < ApplicationController
-  before_action :require_login
+  before_action :authenticate_user!
 
   def index
     @event_posts = EventPost.includes(:event_category, :organizer, :attendees).order(event_time: :asc)
