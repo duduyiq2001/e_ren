@@ -195,7 +195,7 @@
               <%= event.registrations_count %> / <%= event.capacity %> registered
             </div>
 
-            <% if event.latitude.present? && event.longitude.present? && params[:latitude].present? && params[:longitude].present? %>
+            <% if event.latitude.present? && event.longitude.present? && params[:latitude].present? && params[:longitude].present? && event.respond_to?(:distance) && event.distance.present? %>
               <div class="flex items-center text-gray-600 text-sm">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>

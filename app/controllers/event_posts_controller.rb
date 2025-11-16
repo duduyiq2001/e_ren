@@ -48,8 +48,12 @@ class EventPostsController < ApplicationController
 
     # Location filter
     if params[:latitude].present? && params[:longitude].present?
-      radius = params[:radius].presence || 10
-      @event_posts = @event_posts.near_location(params[:latitude], params[:longitude], radius)
+      radius = (params[:radius].presence || 10).to_f
+      @event_posts = @event_posts.near_location(
+        params[:latitude].to_f,
+        params[:longitude].to_f,
+        radius
+      )
     end
 
     @event_posts = @event_posts.order(event_time: :asc)
