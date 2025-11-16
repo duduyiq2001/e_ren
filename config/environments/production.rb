@@ -58,14 +58,14 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "yourapp.com" }
+  config.action_mailer.default_url_options = { host: ENV["APP_HOST"] || "yourapp.com" }
   config.action_mailer.delivery_method = :smtp
 
   # SendGrid SMTP configuration
   config.action_mailer.smtp_settings = {
     address: "smtp.sendgrid.net",
     port: 587,
-    domain: "yourapp.com",
+    domain: ENV["APP_DOMAIN"] || "yourapp.com",
     user_name: ENV["SENDGRID_USERNAME"],
     password: ENV["SENDGRID_PASSWORD"],
     authentication: :plain,
