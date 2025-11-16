@@ -1,4 +1,10 @@
 Rails.application.routes.draw do
+  # Devise authentication routes
+  devise_for :users, controllers: {
+    sessions: 'users/sessions',
+    registrations: 'users/registrations'
+  }
+
   # Event posts
   resources :event_posts do
     collection do
@@ -23,13 +29,6 @@ Rails.application.routes.draw do
 
   # Leaderboard
   get '/leaderboard', to: 'leaderboard#index'
-
-  # Authentication
-  get '/signup', to: 'users#new'
-  post '/signup', to: 'users#create'
-  get '/login', to: 'sessions#new'
-  post '/login', to: 'sessions#create'
-  delete '/logout', to: 'sessions#destroy'
 
   # User profiles
   get 'users/search', to: 'users#search', as: :search_users

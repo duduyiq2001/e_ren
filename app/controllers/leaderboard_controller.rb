@@ -1,5 +1,5 @@
 class LeaderboardController < ApplicationController
-  before_action :require_login
+  before_action :authenticate_user!
 
   def index
     # Get time period from params (defaults to 'weekly')

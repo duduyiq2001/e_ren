@@ -1,7 +1,7 @@
 module RequestHelpers
   def sign_in_as(user)
-    allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(user)
-    allow_any_instance_of(ApplicationController).to receive(:logged_in?).and_return(true)
+    # Use Devise's sign_in helper for request specs
+    sign_in user
   end
 end
 
