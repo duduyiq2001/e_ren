@@ -77,6 +77,31 @@ RSpec.configure do |config|
 
   # Controller test helpers
   config.include ControllerHelpers, type: :controller
+
+  # Set Devise mapping for Devise controller tests
+  config.before(:each, type: :controller) do
+    if described_class
+      controller_class = described_class
+      # Check if it's a Devise controller or inherits from one
+      # Users::SessionsController and Users::RegistrationsController inherit from Devise controllers
+      is_devise_controller = false
+      klass = controller_class
+      while klass && klass != Object
+        if klass.name&.include?('Devise::') || klass.name == 'DeviseController'
+          is_devise_controller = true
+          break
+        end
+        klass = klass.superclass
+      end
+      
+      # Also check for Sessions or Registrations in the class name
+      is_devise_controller ||= controller_class.name&.include?('Sessions') || controller_class.name&.include?('Registrations')
+      
+      if is_devise_controller
+        @request.env["devise.mapping"] = Devise.mappings[:user]
+      end
+    end
+  end
 end
 
 # Shoulda Matchers configuration
