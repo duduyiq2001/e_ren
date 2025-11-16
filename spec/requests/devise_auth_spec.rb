@@ -79,11 +79,11 @@ RSpec.describe "Devise Authentication", type: :request do
     end
 
     context "when user does not exist" do
-      it "shows 'User not found' message" do
+      it "shows a generic error message" do
         post user_session_path, params: { user: { email: "nonexistent@wustl.edu", password: "password123" } }
         expect(response).to redirect_to(new_user_session_path)
         follow_redirect!
-        expect(response.body).to match(/User not found/i)
+        expect(response.body).to match(/Invalid|error/i)
       end
 
       it "does not sign in any user" do
