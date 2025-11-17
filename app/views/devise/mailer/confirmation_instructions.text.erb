@@ -1,0 +1,8 @@
+Hello <%= @email %>!
+
+You can confirm your account email through the link below:
+
+<%= confirmation_url(@resource, confirmation_token: @token) %>
+
+If you didn't create an account, please ignore this email.
+

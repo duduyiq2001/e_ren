@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :user do
-    sequence(:email) { |n| "user#{n}@university.edu" }
+    sequence(:email) { |n| "user#{n}@wustl.edu" }
     sequence(:name) { |n| "User #{n}" }
     password { "password123" }
     password_confirmation { "password123" }
@@ -21,6 +21,14 @@ FactoryBot.define do
 
     trait :without_phone do
       phone_number { nil }
+    end
+
+    trait :confirmed do
+      confirmed_at { Time.current }
+    end
+
+    trait :unconfirmed do
+      confirmed_at { nil }
     end
   end
 end

@@ -1,7 +1,8 @@
 class User < ApplicationRecord
   # Devise modules
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
+         :recoverable, :rememberable, :validatable,
+         :confirmable
 
   # Associations
   has_many :organized_events, class_name: 'EventPost', foreign_key: 'organizer_id', dependent: :destroy

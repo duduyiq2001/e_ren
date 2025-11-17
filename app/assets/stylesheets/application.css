@@ -8,3 +8,13 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+/* Form input styles for Devise forms */
+.form-input {
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  border-color: #BA0C2F;
+  box-shadow: 0 0 0 3px rgba(186, 12, 47, 0.1);
+}
