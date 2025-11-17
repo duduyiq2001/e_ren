@@ -20,7 +20,11 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
 
   before do
     assign(:event_post, event_post)
-    allow(view).to receive(:current_user).and_return(current_user)
+    # Stub controller helper methods as external dependencies
+    without_partial_double_verification do
+      allow(view).to receive(:current_user).and_return(current_user)
+      allow(view).to receive(:logged_in?).and_return(true)
+    end
   end
 
   context "when user is not registered" do
@@ -46,7 +50,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "shows register button when not full" do
-      expect(rendered).to have_button("Register for Event")
+      expect(rendered).to have_button("Register for Event", visible: :all)
     end
 
     it "hides organizer contact info" do
@@ -55,7 +59,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "does not show unregister button" do
-      expect(rendered).not_to have_button("Unregister")
+      expect(rendered).not_to have_button("Unregister", visible: :all)
     end
 
     it "does not show registered badge" do
@@ -77,7 +81,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "shows unregister button" do
-      expect(rendered).to have_button("Unregister")
+      expect(rendered).to have_button("Unregister", visible: :all)
     end
 
     it "shows organizer contact info" do
@@ -86,7 +90,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "does not show register button" do
-      expect(rendered).not_to have_button("Register for Event")
+      expect(rendered).not_to have_button("Register for Event", visible: :all)
     end
   end
 
@@ -108,7 +112,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "shows unregister button" do
-      expect(rendered).to have_button("Unregister")
+      expect(rendered).to have_button("Unregister", visible: :all)
     end
   end
 
@@ -130,11 +134,11 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "shows join waitlist button" do
-      expect(rendered).to have_button("Join Waitlist")
+      expect(rendered).to have_button("Join Waitlist", visible: :all)
     end
 
     it "does not show register button" do
-      expect(rendered).not_to have_button("Register for Event")
+      expect(rendered).not_to have_button("Register for Event", visible: :all)
     end
   end
 
@@ -147,9 +151,9 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "shows organizer action buttons" do
-      expect(rendered).to have_link("View Registrations")
-      expect(rendered).to have_link("Edit Event")
-      expect(rendered).to have_button("Delete Event")
+      expect(rendered).to have_link("View Registrations", visible: :all)
+      expect(rendered).to have_link("Edit Event", visible: :all)
+      expect(rendered).to have_button("Delete Event", visible: :all)
     end
   end
 
@@ -164,10 +168,10 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
 
     it "shows both registration and organizer actions" do
       expect(rendered).to have_content("✓ Registered")
-      expect(rendered).to have_button("Unregister")
-      expect(rendered).to have_link("View Registrations")
-      expect(rendered).to have_link("Edit Event")
-      expect(rendered).to have_button("Delete Event")
+      expect(rendered).to have_button("Unregister", visible: :all)
+      expect(rendered).to have_link("View Registrations", visible: :all)
+      expect(rendered).to have_link("Edit Event", visible: :all)
+      expect(rendered).to have_button("Delete Event", visible: :all)
     end
   end
 
@@ -203,7 +207,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "still shows register button" do
-      expect(rendered).to have_button("Register for Event")
+      expect(rendered).to have_button("Register for Event", visible: :all)
     end
   end
 

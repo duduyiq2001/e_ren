@@ -7,7 +7,11 @@ RSpec.describe "event_posts/index.html.erb", type: :view do
   let(:current_user) { create(:user, name: "Current User") }
 
   before do
-    allow(view).to receive(:current_user).and_return(current_user)
+    # Stub controller helper methods as external dependencies
+    without_partial_double_verification do
+      allow(view).to receive(:current_user).and_return(current_user)
+      allow(view).to receive(:logged_in?).and_return(true)
+    end
   end
 
   context "with multiple events" do

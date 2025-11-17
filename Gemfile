@@ -63,7 +63,9 @@ group :development, :test do
   gem "rspec-rails", "~> 7.1"
   gem "factory_bot_rails", "~> 6.4"
   gem "shoulda-matchers", "~> 6.0"
-  end
+
+  gem 'capybara'     
+end
 
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
