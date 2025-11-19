@@ -27,6 +27,10 @@ spec:
 """
         }
     }
+        triggers {
+        // Poll SCM every 5 minutes. Replace with desired cron.
+        pollSCM('H/5 * * * *')
+    }
     stages {
         stage('Checkout') {
             steps {
