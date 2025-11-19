@@ -30,5 +30,21 @@ FactoryBot.define do
     trait :unconfirmed do
       confirmed_at { nil }
     end
+
+    # Role-based traits (emails auto-sequenced with wustl.edu)
+    trait :organizer do
+      sequence(:name) { |n| "Organizer #{n}" }
+      sequence(:email) { |n| "organizer#{n}@wustl.edu" }
+    end
+
+    trait :attendee do
+      sequence(:name) { |n| "Attendee #{n}" }
+      sequence(:email) { |n| "attendee#{n}@wustl.edu" }
+    end
+
+    trait :admin do
+      sequence(:name) { |n| "Admin #{n}" }
+      sequence(:email) { |n| "admin#{n}@wustl.edu" }
+    end
   end
 end

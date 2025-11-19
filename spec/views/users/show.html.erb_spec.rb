@@ -1,9 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe "users/show.html.erb", type: :view do
-  let(:user) { create(:user, name: "Test User", email: "test@example.com", e_score: 50) }
+  let(:user) { create(:user, e_score: 50) }
   let(:category) { create(:event_category, name: "Sports") }
-  let(:organizer) { create(:user, name: "Event Organizer") }
+  let(:organizer) { create(:user, :organizer) }
 
   before do
     assign(:user, user)

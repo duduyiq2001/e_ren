@@ -1,5 +1,5 @@
 require 'rails_helper'
-
+require 'pry-byebug'
 RSpec.describe EventPostsController, type: :controller do
   # Mock Geocoder to avoid API calls
   before(:all) do
@@ -541,10 +541,12 @@ RSpec.describe EventPostsController, type: :controller do
 
     context "when organizer accesses edit" do
       before do
+        # binding.pry
         login_user(organizer)
       end
 
       it "returns http success" do
+        # binding.pry
         get :edit, params: { id: event_post.id }
         expect(response).to have_http_status(:success)
       end

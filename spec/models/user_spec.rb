@@ -44,7 +44,7 @@ RSpec.describe User, type: :model do
 
     context "email format" do
       it "is valid with a proper email format" do
-        user = build(:user, email: "test@example.com")
+        user = build(:user)  # uses sequence: userN@wustl.edu
         expect(user).to be_valid
       end
 

@@ -3,8 +3,8 @@ require 'pry-byebug'
 
 RSpec.describe "event_posts/show.html.erb", type: :view do
   let(:category) { create(:event_category) }
-  let(:organizer) { create(:user, name: "John Organizer", email: "organizer@example.com") }
-  let(:attendee) { create(:user, name: "Jane Attendee") }
+  let(:organizer) { create(:user, :organizer) }
+  let(:attendee) { create(:user, :attendee) }
   let(:event_post) do
     create(:event_post,
       name: "Test Event",
@@ -55,7 +55,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
 
     it "hides organizer contact info" do
       expect(rendered).to have_content("Register to view organizer contact")
-      expect(rendered).not_to have_content("organizer@example.com")
+      expect(rendered).not_to have_content(organizer.email)
     end
 
     it "does not show unregister button" do
@@ -85,7 +85,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "shows organizer contact info" do
-      expect(rendered).to have_content("organizer@example.com")
+      expect(rendered).to have_content(organizer.email)
       expect(rendered).not_to have_content("Register to view organizer contact")
     end
 

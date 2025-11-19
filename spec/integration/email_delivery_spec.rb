@@ -17,7 +17,7 @@ RSpec.describe "Email Delivery Integration", type: :feature do
       u.e_score = 0
     end
 
-    organizer = User.find_or_create_by!(email: "organizer@example.com") do |u|
+    organizer = User.find_or_create_by!(email: "organizer@wustl.edu") do |u|
       u.name = "Tech Events Team"
       u.phone_number = "+1 (314) 935-5000"
       u.e_score = 0
