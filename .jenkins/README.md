@@ -4,25 +4,9 @@ This directory contains all Jenkins pipeline definitions for the E-Ren project.
 
 ## Prerequisites
 
-### Required: Bundle Cache PVC
+### Required: Jenkins Agent with Docker
 
-The CI pipeline requires a persistent volume for caching Ruby gems between builds.
-
-**Create the PVC:**
-```bash
-kubectl apply -f .jenkins/k8s/bundle-cache-pvc.yaml
-```
-
-**Verify:**
-```bash
-kubectl get pvc jenkins-bundle-cache -n jenkins
-```
-
-Expected output:
-```
-NAME                    STATUS   CAPACITY   ACCESS MODES   STORAGECLASS
-jenkins-bundle-cache    Bound    10Gi       RWO            gp2
-```
+Jenkins agents must have Docker installed and accessible. The pipelines use `agent any` and run Docker commands directly on the agent node.
 
 ---
 
@@ -38,33 +22,48 @@ jenkins-bundle-cache    Bound    10Gi       RWO            gp2
 - PR comment containing "retest" or "rebuild"
 
 **Stages:**
-1. **Initialize** - Clone Hext CLI (Docker-in-Docker orchestration tool)
-2. **CI Tests** (Parallel - 4 concurrent containers)
+1. **Initialize** - Clone Hext CLI, start Rails + Postgres containers once
+2. **CI Tests** (Parallel - 4 concurrent test suites)
    - Models tests (`spec/models`)
    - Controllers tests (`spec/controllers`)
    - Requests/Views/Integration tests (`spec/requests`, `spec/views`, `spec/integration`)
    - Rubocop linting
 3. **Build Docker Image** (main branch only)
 
-**Performance:**
-- **First run:** ~8-10 minutes (bundle install from scratch)
-- **Subsequent runs:** ~3-5 minutes (cached gems)
-- **Parallelization:** 3-4x faster than sequential tests
-
-**Bundle Caching:**
-- Gems cached to PVC at `/bundle-cache`
-- Shared across all parallel test containers
-- Reduces build time by 2-3 minutes after first run
+**Architecture:**
+- Single `hext up` starts Rails + Postgres containers
+- All parallel test stages reuse the same containers
+- Direct Docker socket access (no Docker-in-Docker)
 
 **GitHub Status:** Reports to GitHub as `continuous-integration/jenkins/pr-merge`
 
 ---
 
-### 2. Deploy Pipeline (`deploy.Jenkinsfile`)
+### 2. CD Pipeline (`cd.Jenkinsfile`)
+
+**Purpose:** Continuous Deployment to production
+
+**Triggers:**
+- Push to `release` branch (automatic)
+
+**Stages:**
+1. **Build Production Image** - Build and push Docker image with semantic version tag
+2. **Deploy to Production** - Update Kubernetes deployment
+
+**GitHub Status:** Reports to GitHub as `continuous-integration/jenkins/branch`
+
+**Workflow:**
+```
+main branch → PR merged → create release branch → automatic production deploy
+```
+
+---
+
+### 3. Deploy Pipeline (`deploy.Jenkinsfile`)
 
 **Purpose:** Manual deployment to staging or production
 
-**Triggers:** Manual only (parameterized build)
+**Triggers:** Manual only (not automatic)
 
 **Parameters:**
 - `ENVIRONMENT`: staging | production
@@ -84,21 +83,34 @@ jenkins-bundle-cache    Bound    10Gi       RWO            gp2
 
 ```
 .jenkins/
-├── ci.Jenkinsfile           # Main CI pipeline (with test parallelization)
-├── deploy.Jenkinsfile       # Deployment pipeline
+├── ci.Jenkinsfile           # CI: Tests on main branch & PRs
+├── cd.Jenkinsfile           # CD: Auto-deploy on release branch
+├── deploy.Jenkinsfile       # Manual deployment tool
 ├── k8s/
-│   └── bundle-cache-pvc.yaml # PVC for bundle cache
+│   └── bundle-cache-pvc.yaml # Legacy: PVC for bundle cache (not used)
 ├── shared/
-│   ├── pods.groovy         # Kubernetes pod templates (legacy, not used)
-│   └── helpers.groovy      # Shared helper functions (legacy, not used)
+│   ├── pods.groovy         # Legacy: Kubernetes pod templates (not used)
+│   └── helpers.groovy      # Legacy: Shared helper functions (not used)
 └── README.md               # This file
 ```
+
+---
+
+## Pipeline Trigger Summary
+
+| Pipeline | Automatic Triggers | Manual Trigger |
+|----------|-------------------|----------------|
+| **CI** | Push to `main`, PR to `main`, `/retest` comment | ✅ Yes |
+| **CD** | Push to `release` branch | ✅ Yes |
+| **Deploy** | None | ✅ Manual only |
 
 ---
 
 ## Jenkins Job Setup
 
 ### Job 1: `e_ren-ci` (Multibranch Pipeline)
+
+**Runs:** CI tests on `main` branch and PRs to `main`
 
 ```
 Type: Multibranch Pipeline
@@ -108,6 +120,10 @@ Branch Sources:
     Repository: https://github.com/duduyiq2001/e_ren
     Credentials: github-pat
 
+  Behaviors:
+    - Discover branches: main only
+    - Discover PRs: from origin (targeting main)
+
 Build Configuration:
   Script Path: .jenkins/ci.Jenkinsfile
 
@@ -115,7 +131,31 @@ Scan Triggers:
   (Controlled by Jenkinsfile properties block)
 ```
 
-### Job 2: `e_ren-deploy` (Pipeline)
+### Job 2: `e_ren-cd` (Multibranch Pipeline)
+
+**Runs:** Automatic production deployment on `release` branch
+
+```
+Type: Multibranch Pipeline
+
+Branch Sources:
+  - GitHub
+    Repository: https://github.com/duduyiq2001/e_ren
+    Credentials: github-pat
+
+  Behaviors:
+    - Discover branches: release only
+
+Build Configuration:
+  Script Path: .jenkins/cd.Jenkinsfile
+
+Scan Triggers:
+  (Controlled by Jenkinsfile properties block)
+```
+
+### Job 3: `e_ren-deploy` (Pipeline)
+
+**Runs:** Manual deployments to staging or production
 
 ```
 Type: Pipeline
@@ -133,51 +173,6 @@ Parameters:
 
 Build Triggers:
   None (manual only)
-```
-
----
-
-## Shared Resources
-
-### Pod Templates (`shared/pods.groovy`)
-
-Reusable Kubernetes pod definitions:
-
-- `rubyPod()` - Ruby + Postgres (for tests with DB)
-- `rubyOnlyPod()` - Ruby only (for linting)
-- `dockerPod()` - Docker-in-Docker (for image builds)
-- `kubectlPod()` - Kubectl (for deployments)
-
-**Usage:**
-```groovy
-def pods = load '.jenkins/shared/pods.groovy'
-
-agent {
-  kubernetes {
-    yaml pods.rubyPod()
-  }
-}
-```
-
-### Helper Functions (`shared/helpers.groovy`)
-
-Common operations:
-
-- `waitForPostgres(timeout)` - Wait for Postgres to be ready
-- `setupDatabase()` - Create and load test DB schema
-- `installBundler()` - Install gems with caching
-- `runRspec(pattern, outputFile)` - Run RSpec with JUnit output
-- `runRubocop()` - Run Rubocop linter
-- `notifyGitHub(context, status, description)` - Send GitHub status
-
-**Usage:**
-```groovy
-def helpers = load '.jenkins/shared/helpers.groovy'
-
-helpers.installBundler()
-helpers.waitForPostgres()
-helpers.setupDatabase()
-helpers.runRspec()
 ```
 
 ---
@@ -234,49 +229,6 @@ Available in all pipelines:
 
 ---
 
-## Customization
-
-### Adding a New Pipeline
-
-1. Create `.jenkins/my-pipeline.Jenkinsfile`
-2. Load shared resources:
-   ```groovy
-   def pods = load '.jenkins/shared/pods.groovy'
-   def helpers = load '.jenkins/shared/helpers.groovy'
-   ```
-3. Create Jenkins job pointing to new Jenkinsfile
-
-### Adding a New Pod Template
-
-Edit `.jenkins/shared/pods.groovy`:
-
-```groovy
-def myCustomPod() {
-  return """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: my-tool
-    image: my-tool:latest
-    command: ['sleep']
-    args: ['infinity']
-"""
-}
-```
-
-### Adding a New Helper Function
-
-Edit `.jenkins/shared/helpers.groovy`:
-
-```groovy
-def myHelper(String arg) {
-  sh "echo ${arg}"
-}
-```
-
----
-
 ## Troubleshooting
 
 ### CI Pipeline Not Triggering
@@ -291,14 +243,15 @@ def myHelper(String arg) {
 3. Verify credentials:
    - Manage Jenkins → Credentials → `github-pat`
 
-### Tests Failing on Postgres Connection
+### Tests Failing
 
-- Increase `waitForPostgres()` timeout
-- Check pod logs: `kubectl logs <pod-name> -c postgres`
+- Check Docker is running on Jenkins agent
+- Verify hext repo is accessible
+- Check Docker logs: `docker logs <container-name>`
 
 ### Deploy Pipeline Fails
 
-- Verify `kubectl` has permissions (ServiceAccount)
+- Verify `kubectl` is installed on Jenkins agent
 - Check namespace exists
 - Verify image exists in registry
 
@@ -306,12 +259,10 @@ def myHelper(String arg) {
 
 ## Best Practices
 
-1. **Always use shared resources** - Don't duplicate pod templates
-2. **Keep Jenkinsfiles DRY** - Extract common logic to helpers
-3. **Test locally first** - Use Docker Compose to test before pushing
-4. **Use semantic versioning** - Tag releases with `v1.2.3`
-5. **Production deployments** - Always review changes before confirming
-6. **Monitor builds** - Check Jenkins regularly for failures
+1. **Test locally first** - Use `hext` CLI to test before pushing
+2. **Use semantic versioning** - Tag releases with `v1.2.3`
+3. **Production deployments** - Always review changes before merging to release branch
+4. **Monitor builds** - Check Jenkins regularly for failures
 
 ---
 

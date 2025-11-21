@@ -1,8 +1,8 @@
-// E-Ren CI Pipeline using Hext (Docker-in-Docker with Test Parallelization)
-// Runs on: Push to any branch, Pull Requests, PR comments (/retest)
+// E-Ren CI Pipeline using Hext (Direct Docker socket access with test parallelization)
+// Runs on: Push to main branch, Pull Requests to main, PR comments (/retest)
 
 pipeline {
-  agent none
+  agent any
 
   properties([
     // GitHub integration
@@ -11,7 +11,7 @@ pipeline {
     // Build retention
     buildDiscarder(logRotator(numToKeepStr: '10')),
 
-    // Triggers
+    // Triggers - ONLY for main branch pushes and PRs targeting main
     pipelineTriggers([
       githubPush(),
       issueCommentTrigger('.*(?:retest|rebuild).*')
@@ -25,123 +25,47 @@ pipeline {
   }
 
   stages {
-    stage('Setup & Test') {
-      agent {
-        kubernetes {
-          yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  volumes:
-  - name: hext-shared
-    emptyDir: {}
-  - name: docker-graph-storage
-    emptyDir: {}
-  - name: bundle-cache
-    persistentVolumeClaim:
-      claimName: jenkins-bundle-cache
-  containers:
-  - name: setup
-    image: docker:24-dind
-    securityContext:
-      privileged: true
-    command: ['dockerd-entrypoint.sh']
-    volumeMounts:
-    - name: hext-shared
-      mountPath: /hext
-    - name: docker-graph-storage
-      mountPath: /var/lib/docker
-    - name: bundle-cache
-      mountPath: /bundle-cache
-  - name: test-models
-    image: docker:24-dind
-    securityContext:
-      privileged: true
-    command: ['dockerd-entrypoint.sh']
-    volumeMounts:
-    - name: hext-shared
-      mountPath: /hext
-    - name: docker-graph-storage
-      mountPath: /var/lib/docker
-    - name: bundle-cache
-      mountPath: /bundle-cache
-  - name: test-controllers
-    image: docker:24-dind
-    securityContext:
-      privileged: true
-    command: ['dockerd-entrypoint.sh']
-    volumeMounts:
-    - name: hext-shared
-      mountPath: /hext
-    - name: docker-graph-storage
-      mountPath: /var/lib/docker
-    - name: bundle-cache
-      mountPath: /bundle-cache
-  - name: test-requests
-    image: docker:24-dind
-    securityContext:
-      privileged: true
-    command: ['dockerd-entrypoint.sh']
-    volumeMounts:
-    - name: hext-shared
-      mountPath: /hext
-    - name: docker-graph-storage
-      mountPath: /var/lib/docker
-    - name: bundle-cache
-      mountPath: /bundle-cache
-  - name: rubocop
-    image: docker:24-dind
-    securityContext:
-      privileged: true
-    command: ['dockerd-entrypoint.sh']
-    volumeMounts:
-    - name: hext-shared
-      mountPath: /hext
-    - name: docker-graph-storage
-      mountPath: /var/lib/docker
-    - name: bundle-cache
-      mountPath: /bundle-cache
-"""
+    // Skip entire pipeline if not main branch or PR to main
+    stage('Check Branch') {
+      when {
+        anyOf {
+          branch 'main'
+          changeRequest target: 'main'
         }
       }
       stages {
         // ========== Stage 1: Initialize ==========
         stage('Initialize') {
           steps {
-            container('setup') {
-              echo "Building branch: ${env.BRANCH_NAME}"
-              echo "Commit: ${env.GIT_COMMIT}"
+            echo "Building branch: ${env.BRANCH_NAME}"
+            echo "Commit: ${env.GIT_COMMIT}"
 
-              script {
-                if (env.CHANGE_ID) {
-                  echo "Pull Request: #${env.CHANGE_ID}"
-                  echo "PR Title: ${env.CHANGE_TITLE}"
-                  echo "PR Author: ${env.CHANGE_AUTHOR}"
-                }
+            script {
+              if (env.CHANGE_ID) {
+                echo "Pull Request: #${env.CHANGE_ID}"
+                echo "PR Title: ${env.CHANGE_TITLE}"
+                echo "PR Author: ${env.CHANGE_AUTHOR}"
+                echo "PR Target: ${env.CHANGE_TARGET}"
               }
-
-              // Wait for Docker daemon
-              sh 'timeout 30 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
-              echo '✅ Docker daemon ready'
-
-              // Clone hext repo ONCE into shared volume
-              sh '''
-                apk add --no-cache git python3
-                cd /hext
-                git clone https://github.com/duduyiq2001/hext.git .
-                chmod +x hext setup.sh
-                ls -la
-                echo "✅ Hext CLI cloned to /hext"
-              '''
-
-              // Configure hext to use bundle cache
-              sh '''
-                # Update docker-compose.yml to use bundle cache volume
-                cd /hext
-                sed -i 's|bundle_cache:|bundle_cache:\\n      driver_opts:\\n        type: none\\n        o: bind\\n        device: /bundle-cache|g' docker-compose.yml || true
-                echo "✅ Bundle cache configured"
-              '''
             }
+
+            // Clone hext repo
+            sh '''
+              cd /tmp
+              rm -rf hext
+              git clone https://github.com/duduyiq2001/hext.git
+              cd hext
+              chmod +x hext setup.sh
+              ls -la
+              echo "✅ Hext CLI cloned"
+            '''
+
+            // Start Rails + Postgres containers ONCE
+            sh '''
+              cd $WORKSPACE
+              /tmp/hext/hext up
+              echo "✅ Rails and Postgres containers started"
+            '''
           }
         }
 
@@ -151,32 +75,18 @@ spec:
             // Models Tests
             stage('Models Tests') {
               steps {
-                container('test-models') {
-                  echo 'Running Models tests...'
-
-                  sh 'timeout 30 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
-                  sh 'apk add --no-cache python3'
-
-                  sh '''
-                    cd /workspace
-                    /hext/hext up
-                    /hext/hext test spec/models \
-                      --format progress \
-                      --format RspecJunitFormatter \
-                      --out test-results/models.xml
-                  '''
-                }
+                echo 'Running Models tests...'
+                sh '''
+                  cd $WORKSPACE
+                  /tmp/hext/hext test spec/models \
+                    --format progress \
+                    --format RspecJunitFormatter \
+                    --out test-results/models.xml
+                '''
               }
               post {
                 always {
-                  container('test-models') {
-                    junit 'test-results/models.xml'
-                  }
-                }
-                cleanup {
-                  container('test-models') {
-                    sh 'cd /workspace && /hext/hext down || true'
-                  }
+                  junit 'test-results/models.xml'
                 }
               }
             }
@@ -184,32 +94,18 @@ spec:
             // Controllers Tests
             stage('Controllers Tests') {
               steps {
-                container('test-controllers') {
-                  echo 'Running Controllers tests...'
-
-                  sh 'timeout 30 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
-                  sh 'apk add --no-cache python3'
-
-                  sh '''
-                    cd /workspace
-                    /hext/hext up
-                    /hext/hext test spec/controllers \
-                      --format progress \
-                      --format RspecJunitFormatter \
-                      --out test-results/controllers.xml
-                  '''
-                }
+                echo 'Running Controllers tests...'
+                sh '''
+                  cd $WORKSPACE
+                  /tmp/hext/hext test spec/controllers \
+                    --format progress \
+                    --format RspecJunitFormatter \
+                    --out test-results/controllers.xml
+                '''
               }
               post {
                 always {
-                  container('test-controllers') {
-                    junit 'test-results/controllers.xml'
-                  }
-                }
-                cleanup {
-                  container('test-controllers') {
-                    sh 'cd /workspace && /hext/hext down || true'
-                  }
+                  junit 'test-results/controllers.xml'
                 }
               }
             }
@@ -217,32 +113,18 @@ spec:
             // Requests/Views/Integration Tests
             stage('Requests & Integration Tests') {
               steps {
-                container('test-requests') {
-                  echo 'Running Requests, Views, and Integration tests...'
-
-                  sh 'timeout 30 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
-                  sh 'apk add --no-cache python3'
-
-                  sh '''
-                    cd /workspace
-                    /hext/hext up
-                    /hext/hext test spec/requests spec/views spec/integration \
-                      --format progress \
-                      --format RspecJunitFormatter \
-                      --out test-results/requests.xml
-                  '''
-                }
+                echo 'Running Requests, Views, and Integration tests...'
+                sh '''
+                  cd $WORKSPACE
+                  /tmp/hext/hext test spec/requests spec/views spec/integration \
+                    --format progress \
+                    --format RspecJunitFormatter \
+                    --out test-results/requests.xml
+                '''
               }
               post {
                 always {
-                  container('test-requests') {
-                    junit 'test-results/requests.xml'
-                  }
-                }
-                cleanup {
-                  container('test-requests') {
-                    sh 'cd /workspace && /hext/hext down || true'
-                  }
+                  junit 'test-results/requests.xml'
                 }
               }
             }
@@ -250,77 +132,49 @@ spec:
             // Rubocop Linting
             stage('Rubocop') {
               steps {
-                container('rubocop') {
-                  echo 'Running Rubocop...'
-
-                  sh 'timeout 30 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
-                  sh 'apk add --no-cache python3'
-
-                  sh '''
-                    cd /workspace
-                    /hext/hext up
-                    /hext/hext shell -c "bundle exec rubocop --format simple"
-                  '''
-                }
-              }
-              post {
-                cleanup {
-                  container('rubocop') {
-                    sh 'cd /workspace && /hext/hext down || true'
-                  }
-                }
+                echo 'Running Rubocop...'
+                sh '''
+                  cd $WORKSPACE
+                  /tmp/hext/hext shell -c "bundle exec rubocop --format simple"
+                '''
               }
             }
           }
         }
-      }
-    }
 
-    // ========== Build Docker Image (Main Branch) ==========
-    stage('Build Docker Image') {
-      when {
-        branch 'main'
-      }
-      agent {
-        kubernetes {
-          yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: docker
-    image: docker:24-dind
-    securityContext:
-      privileged: true
-    command: ['dockerd-entrypoint.sh']
-"""
-        }
-      }
-      steps {
-        container('docker') {
-          echo 'Waiting for Docker daemon...'
-          sh 'timeout 30 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
+        // ========== Build Docker Image (Main Branch Only) ==========
+        stage('Build Docker Image') {
+          when {
+            branch 'main'
+          }
+          steps {
+            echo 'Building production Docker image...'
+            sh """
+              docker build -t e_ren:\${GIT_COMMIT:0:7} .
+              docker tag e_ren:\${GIT_COMMIT:0:7} e_ren:latest
+              echo "✅ Image built: e_ren:\${GIT_COMMIT:0:7}"
+            """
 
-          echo 'Building production Docker image...'
-          sh """
-            docker build -t e_ren:\${GIT_COMMIT:0:7} .
-            docker tag e_ren:\${GIT_COMMIT:0:7} e_ren:latest
-            echo "✅ Image built: e_ren:\${GIT_COMMIT:0:7}"
-          """
-
-          // TODO: Push to registry when ready
-          // sh "docker push your-registry/e_ren:\${GIT_COMMIT:0:7}"
+            // TODO: Push to registry when ready
+            // sh "docker push your-registry/e_ren:\${GIT_COMMIT:0:7}"
+          }
         }
       }
     }
   }
 
   post {
+    always {
+      sh 'cd $WORKSPACE && /tmp/hext/hext down || true'
+    }
     success {
       echo '✅ CI Pipeline succeeded!'
     }
     failure {
       echo '❌ CI Pipeline failed!'
+    }
+    aborted {
+      echo '⚠️ CI Pipeline skipped (not main branch or PR to main)'
     }
     cleanup {
       echo 'Pipeline cleanup complete'
