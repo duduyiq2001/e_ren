@@ -1,29 +1,25 @@
 // E-Ren CI Pipeline using Hext (Direct Docker socket access with test parallelization)
 // Runs on: Push to main branch, Pull Requests to main, PR comments (/retest)
 
+properties([
+  // GitHub integration
+  githubProjectProperty(projectUrlStr: 'https://github.com/duduyiq2001/e_ren'),
+
+  // Build retention
+  buildDiscarder(logRotator(numToKeepStr: '10')),
+
+  // Triggers - ONLY for main branch pushes and PRs targeting main
+  pipelineTriggers([
+    githubPush(),
+    issueCommentTrigger('.*(?:retest|rebuild).*')
+  ])
+])
+
 pipeline {
   agent any
 
-  properties([
-    // GitHub integration
-    githubProjectProperty(projectUrlStr: 'https://github.com/duduyiq2001/e_ren'),
-
-    // Build retention
-    buildDiscarder(logRotator(numToKeepStr: '10')),
-
-    // Triggers - ONLY for main branch pushes and PRs targeting main
-    pipelineTriggers([
-      githubPush(),
-      issueCommentTrigger('.*(?:retest|rebuild).*')
-    ])
-  ])
-
   options {
     timeout(time: 30, unit: 'MINUTES')
-    timestamps()
-    ansiColor('xterm')
-    // GitHub Checks API integration - shows detailed build info on GitHub PRs
-    githubChecks()
   }
 
   stages {
