@@ -4,25 +4,13 @@
 pipeline {
   agent any
 
-  properties([
-    // GitHub integration
-    githubProjectProperty(projectUrlStr: 'https://github.com/duduyiq2001/e_ren'),
-
-    // Build retention
-    buildDiscarder(logRotator(numToKeepStr: '10')),
-
-    // Triggers - ONLY for main branch pushes and PRs targeting main
-    pipelineTriggers([
-      githubPush(),
-      ])
-  ])
+  triggers {
+    githubPush()
+  }
 
   options {
     timeout(time: 30, unit: 'MINUTES')
-    timestamps()
-    ansiColor('xterm')
-    // GitHub Checks API integration - shows detailed build info on GitHub PRs
-    githubChecks()
+    buildDiscarder(logRotator(numToKeepStr: '10'))
   }
 
   stages {
