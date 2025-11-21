@@ -63,8 +63,6 @@ pipeline {
                 }
               }
             }
-          }
-        }
 
         // ========== Stage 2: Parallel CI Tests ==========
         stage('CI Tests') {
