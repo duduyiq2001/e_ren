@@ -1,12 +1,9 @@
-// E-Ren CI Pipeline using Hext (Custom agent with test parallelization)
+// E-Ren CI Pipeline using Hext (Static agent pod)
 // Runs on: Push to main branch, Pull Requests to main, PR comments (/retest)
 
 pipeline {
   agent {
-    kubernetes {
-      label 'jenkins-static-agent'
-      defaultContainer 'agent'
-    }
+    label 'agent'
   }
 
   triggers {
@@ -28,41 +25,43 @@ pipeline {
         }
       }
       stages {
-        // ========== Stage 1: Initialize ==========
-        stage('Initialize') {
-          steps {
-            container('agent') {
-              echo "Building branch: ${env.BRANCH_NAME}"
-              echo "Commit: ${env.GIT_COMMIT}"
+            // ========== Stage 1: Initialize ==========
+            stage('Initialize') {
+              steps {
+                container('agent') {
+                  echo "Building branch: ${env.BRANCH_NAME}"
+                  echo "Commit: ${env.GIT_COMMIT}"
 
-              script {
-                if (env.CHANGE_ID) {
-                  echo "Pull Request: #${env.CHANGE_ID}"
-                  echo "PR Title: ${env.CHANGE_TITLE}"
-                  echo "PR Author: ${env.CHANGE_AUTHOR}"
-                  echo "PR Target: ${env.CHANGE_TARGET}"
+                  script {
+                    if (env.CHANGE_ID) {
+                      echo "Pull Request: #${env.CHANGE_ID}"
+                      echo "PR Title: ${env.CHANGE_TITLE}"
+                      echo "PR Author: ${env.CHANGE_AUTHOR}"
+                      echo "PR Target: ${env.CHANGE_TARGET}"
+                    }
+                  }
+
+                  // Verify tools
+                  sh 'python --version && docker --version && git --version'
+
+                  // Clone hext repo
+                  sh '''
+                    cd /tmp
+                    rm -rf hext
+                    git clone https://github.com/duduyiq2001/hext.git
+                    cd hext
+                    chmod +x hext setup.sh
+                    echo "✅ Hext CLI cloned"
+                  '''
+
+                  // Start Rails + Postgres containers ONCE
+                  sh '''
+                    cd $WORKSPACE
+                    /tmp/hext/hext up
+                    echo "✅ Rails and Postgres containers started"
+                  '''
                 }
               }
-
-              // Verify tools
-              sh 'python --version && docker --version && git --version'
-
-              // Clone hext repo
-              sh '''
-                cd /tmp
-                rm -rf hext
-                git clone https://github.com/duduyiq2001/hext.git
-                cd hext
-                chmod +x hext setup.sh
-                echo "✅ Hext CLI cloned"
-              '''
-
-              // Start Rails + Postgres containers ONCE
-              sh '''
-                cd $WORKSPACE
-                /tmp/hext/hext up
-                echo "✅ Rails and Postgres containers started"
-              '''
             }
           }
         }
