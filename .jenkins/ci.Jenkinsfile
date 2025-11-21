@@ -1,4 +1,4 @@
-// E-Ren CI Pipeline using Hext (Direct Docker socket access with test parallelization)
+// E-Ren CI Pipeline using Hext (Docker-in-Docker with test parallelization)
 // Runs on: Push to main branch, Pull Requests to main, PR comments (/retest)
 
 pipeline {
@@ -9,18 +9,18 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
+  - name: docker
+    image: docker:24-dind
+    securityContext:
+      privileged: true
+    command: ['dockerd-entrypoint.sh']
   - name: agent
     image: python:3.11-slim
     command: ['cat']
     tty: true
-    volumeMounts:
-    - name: docker-sock
-      mountPath: /var/run/docker.sock
-  volumes:
-  - name: docker-sock
-    hostPath:
-      path: /var/run/docker.sock
-      type: Socket
+    env:
+    - name: DOCKER_HOST
+      value: tcp://localhost:2375
 """
     }
   }
@@ -64,8 +64,11 @@ spec:
               sh '''
                 apt-get update
                 apt-get install -y docker.io git
-                docker --version
               '''
+
+              // Wait for Docker daemon to be ready
+              sh 'timeout 60 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
+              echo '✅ Docker daemon ready'
 
               // Clone hext repo
               sh '''
