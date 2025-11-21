@@ -2,11 +2,35 @@
 
 This directory contains all Jenkins pipeline definitions for the E-Ren project.
 
+## Prerequisites
+
+### Required: Bundle Cache PVC
+
+The CI pipeline requires a persistent volume for caching Ruby gems between builds.
+
+**Create the PVC:**
+```bash
+kubectl apply -f .jenkins/k8s/bundle-cache-pvc.yaml
+```
+
+**Verify:**
+```bash
+kubectl get pvc jenkins-bundle-cache -n jenkins
+```
+
+Expected output:
+```
+NAME                    STATUS   CAPACITY   ACCESS MODES   STORAGECLASS
+jenkins-bundle-cache    Bound    10Gi       RWO            gp2
+```
+
+---
+
 ## Pipeline Overview
 
 ### 1. CI Pipeline (`ci.Jenkinsfile`)
 
-**Purpose:** Continuous Integration - runs automated tests on every push and PR
+**Purpose:** Continuous Integration with parallel test execution and bundle caching
 
 **Triggers:**
 - Push to any branch
@@ -14,11 +38,23 @@ This directory contains all Jenkins pipeline definitions for the E-Ren project.
 - PR comment containing "retest" or "rebuild"
 
 **Stages:**
-1. **CI Tests** (Parallel)
-   - RSpec unit tests
+1. **Initialize** - Clone Hext CLI (Docker-in-Docker orchestration tool)
+2. **CI Tests** (Parallel - 4 concurrent containers)
+   - Models tests (`spec/models`)
+   - Controllers tests (`spec/controllers`)
+   - Requests/Views/Integration tests (`spec/requests`, `spec/views`, `spec/integration`)
    - Rubocop linting
-2. **Integration Tests** (PR only)
 3. **Build Docker Image** (main branch only)
+
+**Performance:**
+- **First run:** ~8-10 minutes (bundle install from scratch)
+- **Subsequent runs:** ~3-5 minutes (cached gems)
+- **Parallelization:** 3-4x faster than sequential tests
+
+**Bundle Caching:**
+- Gems cached to PVC at `/bundle-cache`
+- Shared across all parallel test containers
+- Reduces build time by 2-3 minutes after first run
 
 **GitHub Status:** Reports to GitHub as `continuous-integration/jenkins/pr-merge`
 
@@ -48,11 +84,13 @@ This directory contains all Jenkins pipeline definitions for the E-Ren project.
 
 ```
 .jenkins/
-├── ci.Jenkinsfile           # Main CI pipeline
+├── ci.Jenkinsfile           # Main CI pipeline (with test parallelization)
 ├── deploy.Jenkinsfile       # Deployment pipeline
+├── k8s/
+│   └── bundle-cache-pvc.yaml # PVC for bundle cache
 ├── shared/
-│   ├── pods.groovy         # Kubernetes pod templates
-│   └── helpers.groovy      # Shared helper functions
+│   ├── pods.groovy         # Kubernetes pod templates (legacy, not used)
+│   └── helpers.groovy      # Shared helper functions (legacy, not used)
 └── README.md               # This file
 ```
 

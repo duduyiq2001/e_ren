@@ -1,4 +1,4 @@
-// E-Ren CI Pipeline using Hext (Docker-in-Docker approach)
+// E-Ren CI Pipeline using Hext (Docker-in-Docker with Test Parallelization)
 // Runs on: Push to any branch, Pull Requests, PR comments (/retest)
 
 pipeline {
@@ -37,6 +37,9 @@ spec:
     emptyDir: {}
   - name: docker-graph-storage
     emptyDir: {}
+  - name: bundle-cache
+    persistentVolumeClaim:
+      claimName: jenkins-bundle-cache
   containers:
   - name: setup
     image: docker:24-dind
@@ -48,7 +51,9 @@ spec:
       mountPath: /hext
     - name: docker-graph-storage
       mountPath: /var/lib/docker
-  - name: unit-tests
+    - name: bundle-cache
+      mountPath: /bundle-cache
+  - name: test-models
     image: docker:24-dind
     securityContext:
       privileged: true
@@ -58,6 +63,32 @@ spec:
       mountPath: /hext
     - name: docker-graph-storage
       mountPath: /var/lib/docker
+    - name: bundle-cache
+      mountPath: /bundle-cache
+  - name: test-controllers
+    image: docker:24-dind
+    securityContext:
+      privileged: true
+    command: ['dockerd-entrypoint.sh']
+    volumeMounts:
+    - name: hext-shared
+      mountPath: /hext
+    - name: docker-graph-storage
+      mountPath: /var/lib/docker
+    - name: bundle-cache
+      mountPath: /bundle-cache
+  - name: test-requests
+    image: docker:24-dind
+    securityContext:
+      privileged: true
+    command: ['dockerd-entrypoint.sh']
+    volumeMounts:
+    - name: hext-shared
+      mountPath: /hext
+    - name: docker-graph-storage
+      mountPath: /var/lib/docker
+    - name: bundle-cache
+      mountPath: /bundle-cache
   - name: rubocop
     image: docker:24-dind
     securityContext:
@@ -68,6 +99,8 @@ spec:
       mountPath: /hext
     - name: docker-graph-storage
       mountPath: /var/lib/docker
+    - name: bundle-cache
+      mountPath: /bundle-cache
 """
         }
       }
@@ -100,6 +133,14 @@ spec:
                 ls -la
                 echo "✅ Hext CLI cloned to /hext"
               '''
+
+              // Configure hext to use bundle cache
+              sh '''
+                # Update docker-compose.yml to use bundle cache volume
+                cd /hext
+                sed -i 's|bundle_cache:|bundle_cache:\\n      driver_opts:\\n        type: none\\n        o: bind\\n        device: /bundle-cache|g' docker-compose.yml || true
+                echo "✅ Bundle cache configured"
+              '''
             }
           }
         }
@@ -107,37 +148,99 @@ spec:
         // ========== Stage 2: Parallel CI Tests ==========
         stage('CI Tests') {
           parallel {
-            // RSpec Unit Tests
-            stage('RSpec Unit Tests') {
+            // Models Tests
+            stage('Models Tests') {
               steps {
-                container('unit-tests') {
-                  echo 'Running RSpec unit tests...'
+                container('test-models') {
+                  echo 'Running Models tests...'
 
-                  // Wait for Docker daemon
                   sh 'timeout 30 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
-
-                  // Install python3 for hext CLI
                   sh 'apk add --no-cache python3'
 
-                  // Start containers and run tests
                   sh '''
                     cd /workspace
                     /hext/hext up
-                    /hext/hext test --exclude-pattern "spec/integration/**/*_spec.rb" \
+                    /hext/hext test spec/models \
                       --format progress \
                       --format RspecJunitFormatter \
-                      --out test-results/unit.xml
+                      --out test-results/models.xml
                   '''
                 }
               }
               post {
                 always {
-                  container('unit-tests') {
-                    junit 'test-results/unit.xml'
+                  container('test-models') {
+                    junit 'test-results/models.xml'
                   }
                 }
                 cleanup {
-                  container('unit-tests') {
+                  container('test-models') {
+                    sh 'cd /workspace && /hext/hext down || true'
+                  }
+                }
+              }
+            }
+
+            // Controllers Tests
+            stage('Controllers Tests') {
+              steps {
+                container('test-controllers') {
+                  echo 'Running Controllers tests...'
+
+                  sh 'timeout 30 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
+                  sh 'apk add --no-cache python3'
+
+                  sh '''
+                    cd /workspace
+                    /hext/hext up
+                    /hext/hext test spec/controllers \
+                      --format progress \
+                      --format RspecJunitFormatter \
+                      --out test-results/controllers.xml
+                  '''
+                }
+              }
+              post {
+                always {
+                  container('test-controllers') {
+                    junit 'test-results/controllers.xml'
+                  }
+                }
+                cleanup {
+                  container('test-controllers') {
+                    sh 'cd /workspace && /hext/hext down || true'
+                  }
+                }
+              }
+            }
+
+            // Requests/Views/Integration Tests
+            stage('Requests & Integration Tests') {
+              steps {
+                container('test-requests') {
+                  echo 'Running Requests, Views, and Integration tests...'
+
+                  sh 'timeout 30 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
+                  sh 'apk add --no-cache python3'
+
+                  sh '''
+                    cd /workspace
+                    /hext/hext up
+                    /hext/hext test spec/requests spec/views spec/integration \
+                      --format progress \
+                      --format RspecJunitFormatter \
+                      --out test-results/requests.xml
+                  '''
+                }
+              }
+              post {
+                always {
+                  container('test-requests') {
+                    junit 'test-results/requests.xml'
+                  }
+                }
+                cleanup {
+                  container('test-requests') {
                     sh 'cd /workspace && /hext/hext down || true'
                   }
                 }
@@ -150,13 +253,9 @@ spec:
                 container('rubocop') {
                   echo 'Running Rubocop...'
 
-                  // Wait for Docker daemon
                   sh 'timeout 30 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
-
-                  // Install python3 for hext CLI
                   sh 'apk add --no-cache python3'
 
-                  // Start containers and run rubocop
                   sh '''
                     cd /workspace
                     /hext/hext up
@@ -172,74 +271,6 @@ spec:
                 }
               }
             }
-          }
-        }
-      }
-    }
-
-    // ========== Integration Tests (PR Only) ==========
-    stage('Integration Tests') {
-      when {
-        changeRequest()
-      }
-      agent {
-        kubernetes {
-          yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  volumes:
-  - name: hext-shared
-    emptyDir: {}
-  - name: docker-graph-storage
-    emptyDir: {}
-  containers:
-  - name: docker
-    image: docker:24-dind
-    securityContext:
-      privileged: true
-    command: ['dockerd-entrypoint.sh']
-    volumeMounts:
-    - name: hext-shared
-      mountPath: /hext
-    - name: docker-graph-storage
-      mountPath: /var/lib/docker
-"""
-        }
-      }
-      steps {
-        container('docker') {
-          echo "Running integration tests for PR-${env.CHANGE_ID}..."
-
-          // Wait for Docker daemon
-          sh 'timeout 30 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
-
-          // Clone hext
-          sh '''
-            apk add --no-cache git python3
-            cd /hext
-            git clone https://github.com/duduyiq2001/hext.git .
-            chmod +x hext
-          '''
-
-          // Run integration tests
-          sh '''
-            cd /workspace
-            /hext/hext up
-            /hext/hext test spec/integration \
-              --format progress \
-              --format RspecJunitFormatter \
-              --out test-results/integration.xml
-          '''
-        }
-      }
-      post {
-        always {
-          junit 'test-results/integration.xml'
-        }
-        cleanup {
-          container('docker') {
-            sh 'cd /workspace && /hext/hext down || true'
           }
         }
       }

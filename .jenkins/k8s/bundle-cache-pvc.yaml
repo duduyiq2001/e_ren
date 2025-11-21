@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jenkins-bundle-cache
+  namespace: jenkins
+  labels:
+    app: jenkins
+    component: bundle-cache
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: gp2
+---
+# Optional: Pre-create the PVC before running Jenkins jobs
+# This ensures the volume is ready and avoids delays on first build
+#
+# To apply:
+#   kubectl apply -f .jenkins/k8s/bundle-cache-pvc.yaml
+#
+# To verify:
+#   kubectl get pvc jenkins-bundle-cache -n jenkins
+#
+# Expected output:
+#   NAME                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS
+#   jenkins-bundle-cache    Bound    pvc-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx   10Gi       RWO            gp2
