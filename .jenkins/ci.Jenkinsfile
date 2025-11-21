@@ -4,24 +4,8 @@
 pipeline {
   agent {
     kubernetes {
-      yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: agent
-    image: duyiqun/ere:jenkins-agent
-    command: ['sleep']
-    args: ['99d']
-    volumeMounts:
-    - name: docker-sock
-      mountPath: /var/run/docker.sock
-  volumes:
-  - name: docker-sock
-    hostPath:
-      path: /var/run/docker.sock
-      type: Socket
-"""
+      label 'jenkins-static-agent'
+      defaultContainer 'agent'
     }
   }
 
