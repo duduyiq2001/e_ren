@@ -2,7 +2,28 @@
 // Runs on: Push to main branch, Pull Requests to main, PR comments (/retest)
 
 pipeline {
-  agent any
+  agent {
+    kubernetes {
+      yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: agent
+    image: python:3.11-slim
+    command: ['cat']
+    tty: true
+    volumeMounts:
+    - name: docker-sock
+      mountPath: /var/run/docker.sock
+  volumes:
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
+      type: Socket
+"""
+    }
+  }
 
   triggers {
     githubPush()
@@ -26,35 +47,44 @@ pipeline {
         // ========== Stage 1: Initialize ==========
         stage('Initialize') {
           steps {
-            echo "Building branch: ${env.BRANCH_NAME}"
-            echo "Commit: ${env.GIT_COMMIT}"
+            container('agent') {
+              echo "Building branch: ${env.BRANCH_NAME}"
+              echo "Commit: ${env.GIT_COMMIT}"
 
-            script {
-              if (env.CHANGE_ID) {
-                echo "Pull Request: #${env.CHANGE_ID}"
-                echo "PR Title: ${env.CHANGE_TITLE}"
-                echo "PR Author: ${env.CHANGE_AUTHOR}"
-                echo "PR Target: ${env.CHANGE_TARGET}"
+              script {
+                if (env.CHANGE_ID) {
+                  echo "Pull Request: #${env.CHANGE_ID}"
+                  echo "PR Title: ${env.CHANGE_TITLE}"
+                  echo "PR Author: ${env.CHANGE_AUTHOR}"
+                  echo "PR Target: ${env.CHANGE_TARGET}"
+                }
               }
+
+              // Install Docker CLI and git
+              sh '''
+                apt-get update
+                apt-get install -y docker.io git
+                docker --version
+              '''
+
+              // Clone hext repo
+              sh '''
+                cd /tmp
+                rm -rf hext
+                git clone https://github.com/duduyiq2001/hext.git
+                cd hext
+                chmod +x hext setup.sh
+                ls -la
+                echo "✅ Hext CLI cloned"
+              '''
+
+              // Start Rails + Postgres containers ONCE
+              sh '''
+                cd $WORKSPACE
+                /tmp/hext/hext up
+                echo "✅ Rails and Postgres containers started"
+              '''
             }
-
-            // Clone hext repo
-            sh '''
-              cd /tmp
-              rm -rf hext
-              git clone https://github.com/duduyiq2001/hext.git
-              cd hext
-              chmod +x hext setup.sh
-              ls -la
-              echo "✅ Hext CLI cloned"
-            '''
-
-            // Start Rails + Postgres containers ONCE
-            sh '''
-              cd $WORKSPACE
-              /tmp/hext/hext up
-              echo "✅ Rails and Postgres containers started"
-            '''
           }
         }
 
@@ -64,14 +94,16 @@ pipeline {
             // Models Tests
             stage('Models Tests') {
               steps {
-                echo 'Running Models tests...'
-                sh '''
-                  cd $WORKSPACE
-                  /tmp/hext/hext test spec/models \
-                    --format progress \
-                    --format RspecJunitFormatter \
-                    --out test-results/models.xml
-                '''
+                container('agent') {
+                  echo 'Running Models tests...'
+                  sh '''
+                    cd $WORKSPACE
+                    /tmp/hext/hext test spec/models \
+                      --format progress \
+                      --format RspecJunitFormatter \
+                      --out test-results/models.xml
+                  '''
+                }
               }
               post {
                 always {
@@ -83,14 +115,16 @@ pipeline {
             // Controllers Tests
             stage('Controllers Tests') {
               steps {
-                echo 'Running Controllers tests...'
-                sh '''
-                  cd $WORKSPACE
-                  /tmp/hext/hext test spec/controllers \
-                    --format progress \
-                    --format RspecJunitFormatter \
-                    --out test-results/controllers.xml
-                '''
+                container('agent') {
+                  echo 'Running Controllers tests...'
+                  sh '''
+                    cd $WORKSPACE
+                    /tmp/hext/hext test spec/controllers \
+                      --format progress \
+                      --format RspecJunitFormatter \
+                      --out test-results/controllers.xml
+                  '''
+                }
               }
               post {
                 always {
@@ -102,14 +136,16 @@ pipeline {
             // Requests/Views/Integration Tests
             stage('Requests & Integration Tests') {
               steps {
-                echo 'Running Requests, Views, and Integration tests...'
-                sh '''
-                  cd $WORKSPACE
-                  /tmp/hext/hext test spec/requests spec/views spec/integration \
-                    --format progress \
-                    --format RspecJunitFormatter \
-                    --out test-results/requests.xml
-                '''
+                container('agent') {
+                  echo 'Running Requests, Views, and Integration tests...'
+                  sh '''
+                    cd $WORKSPACE
+                    /tmp/hext/hext test spec/requests spec/views spec/integration \
+                      --format progress \
+                      --format RspecJunitFormatter \
+                      --out test-results/requests.xml
+                  '''
+                }
               }
               post {
                 always {
@@ -121,11 +157,13 @@ pipeline {
             // Rubocop Linting
             stage('Rubocop') {
               steps {
-                echo 'Running Rubocop...'
-                sh '''
-                  cd $WORKSPACE
-                  /tmp/hext/hext shell -c "bundle exec rubocop --format simple"
-                '''
+                container('agent') {
+                  echo 'Running Rubocop...'
+                  sh '''
+                    cd $WORKSPACE
+                    /tmp/hext/hext shell -c "bundle exec rubocop --format simple"
+                  '''
+                }
               }
             }
           }
@@ -137,15 +175,17 @@ pipeline {
             branch 'main'
           }
           steps {
-            echo 'Building production Docker image...'
-            sh """
-              docker build -t e_ren:\${GIT_COMMIT:0:7} .
-              docker tag e_ren:\${GIT_COMMIT:0:7} e_ren:latest
-              echo "✅ Image built: e_ren:\${GIT_COMMIT:0:7}"
-            """
+            container('agent') {
+              echo 'Building production Docker image...'
+              sh """
+                docker build -t e_ren:\${GIT_COMMIT:0:7} .
+                docker tag e_ren:\${GIT_COMMIT:0:7} e_ren:latest
+                echo "✅ Image built: e_ren:\${GIT_COMMIT:0:7}"
+              """
 
-            // TODO: Push to registry when ready
-            // sh "docker push your-registry/e_ren:\${GIT_COMMIT:0:7}"
+              // TODO: Push to registry when ready
+              // sh "docker push your-registry/e_ren:\${GIT_COMMIT:0:7}"
+            }
           }
         }
       }
@@ -154,7 +194,11 @@ pipeline {
 
   post {
     always {
-      sh 'cd $WORKSPACE && /tmp/hext/hext down || true'
+      script {
+        container('agent') {
+          sh 'cd $WORKSPACE && /tmp/hext/hext down || true'
+        }
+      }
     }
     success {
       echo '✅ CI Pipeline succeeded!'
