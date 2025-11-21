@@ -18,7 +18,7 @@ A configurable, customizable solution for student-run Meetup.com-like sites on c
 - Docker & Docker Compose (optional, for containerized development)
 
 ## Setup
-
+trigger pr pipeline test
 ### Option 1: Automated Setup (Recommended)
 ```bash
 bin/setup
