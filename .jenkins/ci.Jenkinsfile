@@ -1,4 +1,4 @@
-// E-Ren CI Pipeline using Hext (Docker-in-Docker with test parallelization)
+// E-Ren CI Pipeline using Hext (Custom agent with test parallelization)
 // Runs on: Push to main branch, Pull Requests to main, PR comments (/retest)
 
 pipeline {
@@ -9,18 +9,18 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: docker
-    image: docker:24-dind
-    securityContext:
-      privileged: true
-    command: ['dockerd-entrypoint.sh']
   - name: agent
-    image: python:3.11-slim
-    command: ['cat']
-    tty: true
-    env:
-    - name: DOCKER_HOST
-      value: tcp://localhost:2375
+    image: duyiqun/ere:jenkins-agent
+    command: ['sleep']
+    args: ['99d']
+    volumeMounts:
+    - name: docker-sock
+      mountPath: /var/run/docker.sock
+  volumes:
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
+      type: Socket
 """
     }
   }
@@ -60,15 +60,8 @@ spec:
                 }
               }
 
-              // Install Docker CLI and git
-              sh '''
-                apt-get update
-                apt-get install -y docker.io git
-              '''
-
-              // Wait for Docker daemon to be ready
-              sh 'timeout 60 sh -c "until docker info >/dev/null 2>&1; do sleep 1; done"'
-              echo '✅ Docker daemon ready'
+              // Verify tools
+              sh 'python --version && docker --version && git --version'
 
               // Clone hext repo
               sh '''
@@ -77,7 +70,6 @@ spec:
                 git clone https://github.com/duduyiq2001/hext.git
                 cd hext
                 chmod +x hext setup.sh
-                ls -la
                 echo "✅ Hext CLI cloned"
               '''
 
