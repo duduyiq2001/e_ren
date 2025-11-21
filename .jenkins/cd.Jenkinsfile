@@ -21,6 +21,8 @@ pipeline {
     timeout(time: 20, unit: 'MINUTES')
     timestamps()
     ansiColor('xterm')
+    // GitHub Checks API integration
+    githubChecks()
   }
 
   environment {

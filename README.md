@@ -1,5 +1,7 @@
 # E-Ren
 
+[![Build Status](https://jenkins.yiqundu.com/buildStatus/icon?job=e_ren-ci%2Fmain)](https://jenkins.yiqundu.com/job/e_ren-ci/job/main/)
+
 A configurable, customizable solution for student-run Meetup.com-like sites on college campuses!
 
 ## Features

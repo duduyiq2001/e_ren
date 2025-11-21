@@ -22,6 +22,8 @@ pipeline {
     timeout(time: 30, unit: 'MINUTES')
     timestamps()
     ansiColor('xterm')
+    // GitHub Checks API integration - shows detailed build info on GitHub PRs
+    githubChecks()
   }
 
   stages {
