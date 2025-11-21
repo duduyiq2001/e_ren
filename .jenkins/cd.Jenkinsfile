@@ -1,28 +1,24 @@
 // E-Ren CD Pipeline - Continuous Deployment
 // Runs on: Push to 'release' branch (automatic deployment to production)
 
+properties([
+  // GitHub integration
+  githubProjectProperty(projectUrlStr: 'https://github.com/duduyiq2001/e_ren'),
+
+  // Build retention
+  buildDiscarder(logRotator(numToKeepStr: '20')),
+
+  // Triggers - ONLY for release branch
+  pipelineTriggers([
+    githubPush()
+  ])
+])
+
 pipeline {
   agent any
 
-  properties([
-    // GitHub integration
-    githubProjectProperty(projectUrlStr: 'https://github.com/duduyiq2001/e_ren'),
-
-    // Build retention
-    buildDiscarder(logRotator(numToKeepStr: '20')),
-
-    // Triggers - ONLY for release branch
-    pipelineTriggers([
-      githubPush()
-    ])
-  ])
-
   options {
     timeout(time: 20, unit: 'MINUTES')
-    timestamps()
-    ansiColor('xterm')
-    // GitHub Checks API integration
-    githubChecks()
   }
 
   environment {
