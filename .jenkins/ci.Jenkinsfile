@@ -67,6 +67,10 @@ EOF
 
                 // Start Rails + Postgres containers ONCE
                 sh '''
+                  # Create symlink so hext's ../e_ren path resolves correctly
+                  ln -sf $WORKSPACE /tmp/e_ren
+                  echo "✅ Symlink created: /tmp/e_ren -> $WORKSPACE"
+
                   cd $WORKSPACE
                   /tmp/hext/hext up
                   echo "✅ Rails and Postgres containers started"
