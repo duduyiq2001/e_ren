@@ -43,25 +43,21 @@ pipeline {
                 // Verify tools
                 sh 'python --version && docker --version && git --version'
 
-                // Clone hext repo
+                // Clone hext repo and modify docker-compose for workspace
                 sh '''
-                  cd /tmp
+                  cd $WORKSPACE
                   rm -rf hext
                   git clone https://github.com/duduyiq2001/hext.git
                   cd hext
                   chmod +x hext setup.sh
-                  echo "✅ Hext CLI cloned"
-                '''
 
-                // Start Rails + Postgres containers ONCE
-                sh '''
-                  # Remove /tmp/e_ren directory if it exists, then create symlink
-                  test -d /tmp/e_ren && rm -r /tmp/e_ren || true
-                  ln -sf $WORKSPACE /tmp/e_ren
-                  echo "✅ Symlink created: /tmp/e_ren -> $WORKSPACE"
-                  ls -la /tmp/e_ren
-                  echo "Files in symlinked directory:"
-                  ls /tmp/e_ren | head -20
+                  # Modify docker-compose.yml to use current directory instead of ../e_ren
+                  sed -i 's|../e_ren:/rails|..:/rails|g' docker-compose.yml
+                  echo "✅ Hext CLI cloned and configured for workspace"
+
+                  # Verify the change
+                  echo "=== Docker Compose volumes configuration ==="
+                  grep -A 2 "volumes:" docker-compose.yml | head -5
                 '''
 
                 // Create .env file with secrets in workspace
@@ -77,7 +73,7 @@ EOF
 
                 sh '''
                   cd $WORKSPACE
-                  /tmp/hext/hext up
+                  ./hext/hext up
                   echo "✅ Rails and Postgres containers started"
 
                   echo "=== Debug: Checking all containers (including exited) ==="
@@ -119,7 +115,7 @@ EOF
                   pwd
                   echo "=== Debug: Running tests ==="
                   cd $WORKSPACE
-                  /tmp/hext/hext test spec/models --format progress
+                  $WORKSPACE/hext/hext test spec/models --format progress
                 '''
               }
             }
@@ -130,7 +126,7 @@ EOF
                 echo 'Running Controllers tests...'
                 sh '''
                   cd $WORKSPACE
-                  /tmp/hext/hext test spec/controllers --format progress
+                  $WORKSPACE/hext/hext test spec/controllers --format progress
                 '''
               }
             }
@@ -141,7 +137,7 @@ EOF
                 echo 'Running Requests, Views, and Integration tests...'
                 sh '''
                   cd $WORKSPACE
-                  /tmp/hext/hext test spec/requests spec/views spec/integration --format progress
+                  $WORKSPACE/hext/hext test spec/requests spec/views spec/integration --format progress
                 '''
               }
             }
@@ -171,7 +167,7 @@ EOF
 
   post {
     always {
-      sh 'cd $WORKSPACE && /tmp/hext/hext down || true'
+      sh 'cd $WORKSPACE && ./hext/hext down || true'
     }
     success {
       echo '✅ CI Pipeline succeeded!'
