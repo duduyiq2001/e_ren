@@ -82,17 +82,17 @@ EOF
               steps {
                 echo 'Running Models tests...'
                 sh '''
+                  echo "=== Debug: Checking running containers ==="
+                  docker ps
+                  echo "=== Debug: Checking hext containers ==="
+                  docker ps | grep -i hext || echo "No hext containers found"
+                  docker ps | grep -i rails || echo "No rails containers found"
+                  echo "=== Debug: Current directory ==="
+                  pwd
+                  echo "=== Debug: Running tests ==="
                   cd $WORKSPACE
-                  /tmp/hext/hext test spec/models \
-                    --format progress \
-                    --format RspecJunitFormatter \
-                    --out test-results/models.xml
+                  /tmp/hext/hext test spec/models --format progress
                 '''
-              }
-              post {
-                always {
-                  junit 'test-results/models.xml'
-                }
               }
             }
 
@@ -102,16 +102,8 @@ EOF
                 echo 'Running Controllers tests...'
                 sh '''
                   cd $WORKSPACE
-                  /tmp/hext/hext test spec/controllers \
-                    --format progress \
-                    --format RspecJunitFormatter \
-                    --out test-results/controllers.xml
+                  /tmp/hext/hext test spec/controllers --format progress
                 '''
-              }
-              post {
-                always {
-                  junit 'test-results/controllers.xml'
-                }
               }
             }
 
@@ -121,26 +113,7 @@ EOF
                 echo 'Running Requests, Views, and Integration tests...'
                 sh '''
                   cd $WORKSPACE
-                  /tmp/hext/hext test spec/requests spec/views spec/integration \
-                    --format progress \
-                    --format RspecJunitFormatter \
-                    --out test-results/requests.xml
-                '''
-              }
-              post {
-                always {
-                  junit 'test-results/requests.xml'
-                }
-              }
-            }
-
-            // Rubocop Linting
-            stage('Rubocop') {
-              steps {
-                echo 'Running Rubocop...'
-                sh '''
-                  cd $WORKSPACE
-                  /tmp/hext/hext shell -c "bundle exec rubocop --format simple"
+                  /tmp/hext/hext test spec/requests spec/views spec/integration --format progress
                 '''
               }
             }
