@@ -70,6 +70,9 @@ EOF
                   # Create symlink so hext's ../e_ren path resolves correctly
                   ln -sf $WORKSPACE /tmp/e_ren
                   echo "✅ Symlink created: /tmp/e_ren -> $WORKSPACE"
+                  ls -la /tmp/e_ren
+                  echo "Files in symlinked directory:"
+                  ls /tmp/e_ren | head -20
 
                   cd $WORKSPACE
                   /tmp/hext/hext up
@@ -78,12 +81,21 @@ EOF
                   echo "=== Debug: Checking all containers (including exited) ==="
                   docker ps -a
 
+                  echo "=== Debug: Inspect Rails container ==="
+                  docker inspect e_ren_rails | grep -A 10 "Mounts"
+
+                  echo "=== Debug: Check what's in the container ==="
+                  docker exec e_ren_rails ls -la /rails || echo "Container not running or exec failed"
+
                   echo "=== Debug: Rails container logs ==="
-                  docker logs e_ren_rails || echo "Failed to get logs for e_ren_rails"
+                  docker logs e_ren_rails 2>&1 || echo "Failed to get logs for e_ren_rails"
 
                   echo "=== Debug: Waiting for Rails container to be ready ==="
-                  sleep 5
+                  sleep 10
                   docker ps | grep e_ren_rails && echo "✅ Rails container is running" || echo "❌ Rails container is NOT running"
+
+                  echo "=== Debug: Check container status after wait ==="
+                  docker ps -a | grep e_ren_rails
                 '''
               }
             }
