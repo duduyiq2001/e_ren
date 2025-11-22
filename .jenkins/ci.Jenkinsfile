@@ -53,6 +53,17 @@ pipeline {
                   echo "✅ Hext CLI cloned"
                 '''
 
+                // Create .env file with secrets
+                withCredentials([string(credentialsId: 'google-maps-api-key', variable: 'GOOGLE_MAP_KEY')]) {
+                  sh '''
+                    cat > $WORKSPACE/.env << EOF
+GOOGLE_MAP=${GOOGLE_MAP_KEY}
+RAILS_ENV=test
+EOF
+                    echo "✅ Environment file created"
+                  '''
+                }
+
                 // Start Rails + Postgres containers ONCE
                 sh '''
                   cd $WORKSPACE
