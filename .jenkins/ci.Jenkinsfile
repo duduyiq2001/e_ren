@@ -53,27 +53,29 @@ pipeline {
                   echo "✅ Hext CLI cloned"
                 '''
 
-                // Create .env file with secrets
-                withCredentials([string(credentialsId: 'google-maps-api-key', variable: 'GOOGLE_MAP_KEY')]) {
-                  sh '''
-                    mkdir -p /tmp/e_ren
-                    cat > /tmp/e_ren/.env << EOF
-GOOGLE_MAP=${GOOGLE_MAP_KEY}
-RAILS_ENV=test
-EOF
-                    echo "✅ Environment file created at /tmp/e_ren/.env"
-                  '''
-                }
-
                 // Start Rails + Postgres containers ONCE
                 sh '''
-                  # Create symlink so hext's ../e_ren path resolves correctly
+                  # Remove /tmp/e_ren directory if it exists, then create symlink
+                  test -d /tmp/e_ren && rm -r /tmp/e_ren || true
                   ln -sf $WORKSPACE /tmp/e_ren
                   echo "✅ Symlink created: /tmp/e_ren -> $WORKSPACE"
                   ls -la /tmp/e_ren
                   echo "Files in symlinked directory:"
                   ls /tmp/e_ren | head -20
+                '''
 
+                // Create .env file with secrets in workspace
+                withCredentials([string(credentialsId: 'google-maps-api-key', variable: 'GOOGLE_MAP_KEY')]) {
+                  sh '''
+                    cat > $WORKSPACE/.env << EOF
+GOOGLE_MAP=${GOOGLE_MAP_KEY}
+RAILS_ENV=test
+EOF
+                    echo "✅ Environment file created at $WORKSPACE/.env"
+                  '''
+                }
+
+                sh '''
                   cd $WORKSPACE
                   /tmp/hext/hext up
                   echo "✅ Rails and Postgres containers started"
