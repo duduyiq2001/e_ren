@@ -58,7 +58,7 @@ pipeline {
 
                   # Verify the changes
                   echo "=== Docker Compose configuration ==="
-                  grep -E "(env_file:|volumes:)" -A 1 docker-compose.yml | grep -E "(env_file|e_ren|\.\.)"
+                  grep -E "(env_file:|volumes:)" -A 1 docker-compose.yml | grep -E "(env_file|e_ren|\\.\\.|rails)"
                 '''
 
                 // Create .env file with secrets in workspace
