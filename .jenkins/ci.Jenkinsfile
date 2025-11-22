@@ -51,13 +51,14 @@ pipeline {
                   cd hext
                   chmod +x hext setup.sh
 
-                  # Modify docker-compose.yml to use current directory instead of ../e_ren
+                  # Modify docker-compose.yml to use workspace directory
                   sed -i 's|../e_ren:/rails|..:/rails|g' docker-compose.yml
+                  sed -i 's|../e_ren/.env|../.env|g' docker-compose.yml
                   echo "✅ Hext CLI cloned and configured for workspace"
 
-                  # Verify the change
-                  echo "=== Docker Compose volumes configuration ==="
-                  grep -A 2 "volumes:" docker-compose.yml | head -5
+                  # Verify the changes
+                  echo "=== Docker Compose configuration ==="
+                  grep -E "(env_file:|volumes:)" -A 1 docker-compose.yml | grep -E "(env_file|e_ren|\.\.)"
                 '''
 
                 // Create .env file with secrets in workspace
