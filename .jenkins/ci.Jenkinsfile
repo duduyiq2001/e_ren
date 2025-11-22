@@ -54,11 +54,17 @@ pipeline {
                   # Modify docker-compose.yml to use workspace directory
                   sed -i 's|../e_ren:/rails|..:/rails|g' docker-compose.yml
                   sed -i 's|../e_ren/.env|../.env|g' docker-compose.yml
+
+                  # Fix container name check in hext script (looks for hext_rails but compose creates e_ren_rails)
+                  sed -i 's|CONTAINER_NAME = "hext_rails"|CONTAINER_NAME = "e_ren_rails"|g' hext
+
                   echo "✅ Hext CLI cloned and configured for workspace"
 
                   # Verify the changes
                   echo "=== Docker Compose configuration ==="
                   grep -E "(env_file:|volumes:)" -A 1 docker-compose.yml | grep -E "(env_file|e_ren|\\.\\.|rails)"
+                  echo "=== Container name in hext script ==="
+                  grep "CONTAINER_NAME" hext | head -1
                 '''
 
                 // Create .env file with secrets in workspace
