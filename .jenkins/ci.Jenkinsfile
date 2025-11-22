@@ -83,24 +83,14 @@ EOF
                   ./hext/hext up
                   echo "✅ Rails and Postgres containers started"
 
-                  echo "=== Debug: Checking all containers (including exited) ==="
-                  docker ps -a
+                  echo "=== Installing gems with bundle install ==="
+                  docker exec e_ren_rails sh -c "cd /rails && bundle install"
 
-                  echo "=== Debug: Inspect Rails container ==="
-                  docker inspect e_ren_rails | grep -A 10 "Mounts"
+                  echo "=== Setting up test database ==="
+                  docker exec e_ren_rails sh -c "cd /rails && RAILS_ENV=test bin/rails db:prepare"
 
-                  echo "=== Debug: Check what's in the container ==="
-                  docker exec e_ren_rails ls -la /rails || echo "Container not running or exec failed"
-
-                  echo "=== Debug: Rails container logs ==="
-                  docker logs e_ren_rails 2>&1 || echo "Failed to get logs for e_ren_rails"
-
-                  echo "=== Debug: Waiting for Rails container to be ready ==="
-                  sleep 10
+                  echo "=== Verifying installation ==="
                   docker ps | grep e_ren_rails && echo "✅ Rails container is running" || echo "❌ Rails container is NOT running"
-
-                  echo "=== Debug: Check container status after wait ==="
-                  docker ps -a | grep e_ren_rails
                 '''
               }
             }
@@ -113,14 +103,6 @@ EOF
               steps {
                 echo 'Running Models tests...'
                 sh '''
-                  echo "=== Debug: Checking running containers ==="
-                  docker ps
-                  echo "=== Debug: Checking hext containers ==="
-                  docker ps | grep -i hext || echo "No hext containers found"
-                  docker ps | grep -i rails || echo "No rails containers found"
-                  echo "=== Debug: Current directory ==="
-                  pwd
-                  echo "=== Debug: Running tests ==="
                   cd $WORKSPACE
                   $WORKSPACE/hext/hext test spec/models --format progress
                 '''
