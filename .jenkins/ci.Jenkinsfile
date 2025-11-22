@@ -56,11 +56,12 @@ pipeline {
                 // Create .env file with secrets
                 withCredentials([string(credentialsId: 'google-maps-api-key', variable: 'GOOGLE_MAP_KEY')]) {
                   sh '''
-                    cat > $WORKSPACE/.env << EOF
+                    mkdir -p /tmp/e_ren
+                    cat > /tmp/e_ren/.env << EOF
 GOOGLE_MAP=${GOOGLE_MAP_KEY}
 RAILS_ENV=test
 EOF
-                    echo "✅ Environment file created"
+                    echo "✅ Environment file created at /tmp/e_ren/.env"
                   '''
                 }
 
