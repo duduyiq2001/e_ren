@@ -70,6 +70,16 @@ EOF
                   cd $WORKSPACE
                   /tmp/hext/hext up
                   echo "✅ Rails and Postgres containers started"
+
+                  echo "=== Debug: Checking all containers (including exited) ==="
+                  docker ps -a
+
+                  echo "=== Debug: Rails container logs ==="
+                  docker logs e_ren_rails || echo "Failed to get logs for e_ren_rails"
+
+                  echo "=== Debug: Waiting for Rails container to be ready ==="
+                  sleep 5
+                  docker ps | grep e_ren_rails && echo "✅ Rails container is running" || echo "❌ Rails container is NOT running"
                 '''
               }
             }
