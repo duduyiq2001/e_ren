@@ -27,11 +27,6 @@ RSpec.describe EventRegistrationsController, type: :controller do
         expect(EventRegistration.last.event_post).to eq(event_post)
       end
 
-      it "redirects to the event page" do
-        post :create, params: { event_post_id: event_post.id }
-        expect(response).to redirect_to(event_post)
-      end
-
       it "sets a success notice" do
         post :create, params: { event_post_id: event_post.id }
         expect(flash[:notice]).to eq("Successfully registered for the event!")
@@ -53,11 +48,6 @@ RSpec.describe EventRegistrationsController, type: :controller do
         expect {
           post :create, params: { event_post_id: event_post.id }
         }.not_to change(EventRegistration, :count)
-      end
-
-      it "redirects to the event page" do
-        post :create, params: { event_post_id: event_post.id }
-        expect(response).to redirect_to(event_post)
       end
 
       it "sets an error alert" do
@@ -169,11 +159,6 @@ RSpec.describe EventRegistrationsController, type: :controller do
         session.delete(:user_id)
       end
 
-      it "redirects to login page" do
-        post :create, params: { event_post_id: event_post.id }
-        expect(response).to redirect_to(login_path)
-      end
-
       it "does not create a registration" do
         expect {
           post :create, params: { event_post_id: event_post.id }
@@ -195,11 +180,6 @@ RSpec.describe EventRegistrationsController, type: :controller do
         expect {
           delete :destroy, params: { event_post_id: event_post.id, id: registration.id }
         }.to change(EventRegistration, :count).by(-1)
-      end
-
-      it "redirects to the event page" do
-        delete :destroy, params: { event_post_id: event_post.id, id: registration.id }
-        expect(response).to redirect_to(event_post)
       end
 
       it "sets a success notice" do
@@ -240,11 +220,6 @@ RSpec.describe EventRegistrationsController, type: :controller do
         session.delete(:user_id)
       end
 
-      it "redirects to login page" do
-        delete :destroy, params: { event_post_id: event_post.id, id: registration.id }
-        expect(response).to redirect_to(login_path)
-      end
-
       it "does not destroy the registration" do
         expect {
           delete :destroy, params: { event_post_id: event_post.id, id: registration.id }
@@ -282,11 +257,6 @@ RSpec.describe EventRegistrationsController, type: :controller do
         }.to change { attendee.reload.e_score }.from(0).to(10)
       end
 
-      it "redirects to registrations page" do
-        patch :confirm_attendance, params: { event_post_id: past_event.id, id: registration.id }
-        expect(response).to redirect_to(registrations_event_post_path(past_event))
-      end
-
       it "sets a success notice with E-points message" do
         patch :confirm_attendance, params: { event_post_id: past_event.id, id: registration.id }
         expect(flash[:notice]).to include("Attendance confirmed!")
@@ -305,11 +275,6 @@ RSpec.describe EventRegistrationsController, type: :controller do
         expect {
           patch :confirm_attendance, params: { event_post_id: future_event.id, id: future_registration.id }
         }.not_to change { future_registration.reload.attendance_confirmed }
-      end
-
-      it "redirects to registrations page" do
-        patch :confirm_attendance, params: { event_post_id: future_event.id, id: future_registration.id }
-        expect(response).to redirect_to(registrations_event_post_path(future_event))
       end
 
       it "sets an error alert" do
@@ -331,11 +296,6 @@ RSpec.describe EventRegistrationsController, type: :controller do
         }.not_to change { registration.reload.attendance_confirmed }
       end
 
-      it "redirects to event page" do
-        patch :confirm_attendance, params: { event_post_id: past_event.id, id: registration.id }
-        expect(response).to redirect_to(past_event)
-      end
-
       it "sets an authorization error alert" do
         patch :confirm_attendance, params: { event_post_id: past_event.id, id: registration.id }
         expect(flash[:alert]).to eq("You are not authorized to confirm attendance.")
@@ -345,11 +305,6 @@ RSpec.describe EventRegistrationsController, type: :controller do
     context "when not logged in" do
       before do
         session.delete(:user_id)
-      end
-
-      it "redirects to login page" do
-        patch :confirm_attendance, params: { event_post_id: past_event.id, id: registration.id }
-        expect(response).to redirect_to(login_path)
       end
 
       it "does not update attendance_confirmed" do

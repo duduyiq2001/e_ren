@@ -1,6 +1,6 @@
 module ControllerHelpers
   def login_user(user = nil)
-    user ||= create(:user)
+    user ||= create(:user, :confirmed)
     sign_in user
     user
   end
