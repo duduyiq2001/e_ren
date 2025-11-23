@@ -10,7 +10,7 @@ A configurable, customizable solution for student-run Meetup.com-like sites on c
 - E-score gamification system
 - Real-time leaderboards
 - AI-powered event recommendations
-
+trigger CI tests/builds
 ## Prerequisites
 - Ruby 3.4.1
 - PostgreSQL 16+
@@ -18,7 +18,7 @@ A configurable, customizable solution for student-run Meetup.com-like sites on c
 - Docker & Docker Compose (optional, for containerized development)
 
 ## Setup
-trigger pr pipeline test
+trigger pr pipeline test 1
 ### Option 1: Automated Setup (Recommended)
 ```bash
 bin/setup
