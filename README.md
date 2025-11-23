@@ -18,7 +18,7 @@ trigger CI tests/builds
 - Docker & Docker Compose (optional, for containerized development)
 
 ## Setup
-trigger pr pipeline test 111
+trigger pr pipeline test 1
 ### Option 1: Automated Setup (Recommended)
 ```bash
 bin/setup
