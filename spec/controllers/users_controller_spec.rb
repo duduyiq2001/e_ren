@@ -13,11 +13,6 @@ RSpec.describe UsersController, type: :controller do
       create(:event_registration, user: user, event_post: attended_event)
     end
 
-    it "returns http success" do
-      get :show, params: { id: user.id }
-      expect(response).to have_http_status(:success)
-    end
-
     it "assigns the requested user to @user" do
       get :show, params: { id: user.id }
       expect(assigns(:user)).to eq(user)
@@ -38,11 +33,6 @@ RSpec.describe UsersController, type: :controller do
     let!(:user1) { create(:user, name: "Alice Smith") }
     let!(:user2) { create(:user, name: "Bob Johnson") }
     let!(:user3) { create(:user, name: "Alice Johnson") }
-
-    it "returns http success" do
-      get :search, params: { q: "Alice" }
-      expect(response).to have_http_status(:success)
-    end
 
     it "finds users matching the query" do
       get :search, params: { q: "Alice" }

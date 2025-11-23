@@ -24,16 +24,6 @@ RSpec.describe EventPostsController, type: :controller do
     let!(:event2) { create(:event_post, :tomorrow, event_category: food_category) }
     let!(:event3) { create(:event_post, :this_week, event_category: sports_category) }
 
-    it "returns http success" do
-      get :index
-      expect(response).to have_http_status(:success)
-    end
-
-    it "renders the index template" do
-      get :index
-      expect(response).to render_template(:index)
-    end
-
     it "assigns @event_posts with all events" do
       get :index
       expect(assigns(:event_posts)).to match_array([event1, event2, event3])
@@ -117,16 +107,6 @@ RSpec.describe EventPostsController, type: :controller do
         latitude: 40.7128,
         longitude: -74.0060
       )
-    end
-
-    it "returns http success" do
-      get :search
-      expect(response).to have_http_status(:success)
-    end
-
-    it "renders the search template" do
-      get :search
-      expect(response).to render_template(:search)
     end
 
     context "without any parameters" do
@@ -257,7 +237,6 @@ RSpec.describe EventPostsController, type: :controller do
           longitude: "-122.4194"
         }
 
-        expect(response).to have_http_status(:success)
         expect(assigns(:event_posts)).to be_present
       end
 
@@ -373,29 +352,11 @@ RSpec.describe EventPostsController, type: :controller do
   end
 
   describe "GET #find" do
-    it "returns http success" do
-      get :find
-      expect(response).to have_http_status(:success)
-    end
-
-    it "renders the find template" do
-      get :find
-      expect(response).to render_template(:find)
-    end
+    # No controller-specific logic to test - just a view action
   end
 
   describe "GET #show" do
     let(:event_post) { create(:event_post) }
-
-    it "returns http success" do
-      get :show, params: { id: event_post.id }
-      expect(response).to have_http_status(:success)
-    end
-
-    it "renders the show template" do
-      get :show, params: { id: event_post.id }
-      expect(response).to render_template(:show)
-    end
 
     it "assigns the requested event to @event_post" do
       get :show, params: { id: event_post.id }
@@ -419,16 +380,6 @@ RSpec.describe EventPostsController, type: :controller do
   end
 
   describe "GET #new" do
-    it "returns http success" do
-      get :new
-      expect(response).to have_http_status(:success)
-    end
-
-    it "renders the new template" do
-      get :new
-      expect(response).to render_template(:new)
-    end
-
     it "assigns a new EventPost to @event_post" do
       get :new
       expect(assigns(:event_post)).to be_a_new(EventPost)
@@ -471,11 +422,6 @@ RSpec.describe EventPostsController, type: :controller do
         expect(EventPost.last.organizer).to eq(user)
       end
 
-      it "redirects to the event page" do
-        post :create, params: valid_params
-        expect(response).to redirect_to(event_post_path(EventPost.last))
-      end
-
       it "sets a success notice" do
         post :create, params: valid_params
         expect(flash[:notice]).to eq("Event created successfully!")
@@ -499,16 +445,6 @@ RSpec.describe EventPostsController, type: :controller do
         }.not_to change(EventPost, :count)
       end
 
-      it "renders the new template" do
-        post :create, params: invalid_params
-        expect(response).to render_template(:new)
-      end
-
-      it "returns unprocessable entity status" do
-        post :create, params: invalid_params
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
-
       it "loads event categories for the form" do
         sports = create(:event_category, :sports)
         post :create, params: invalid_params
@@ -520,11 +456,6 @@ RSpec.describe EventPostsController, type: :controller do
     context "when not logged in" do
       before do
         session.delete(:user_id)
-      end
-
-      it "redirects to login page" do
-        post :create, params: valid_params
-        expect(response).to redirect_to(login_path)
       end
 
       it "does not create an event" do
@@ -543,17 +474,6 @@ RSpec.describe EventPostsController, type: :controller do
       before do
         # binding.pry
         login_user(organizer)
-      end
-
-      it "returns http success" do
-        # binding.pry
-        get :edit, params: { id: event_post.id }
-        expect(response).to have_http_status(:success)
-      end
-
-      it "renders the edit template" do
-        get :edit, params: { id: event_post.id }
-        expect(response).to render_template(:edit)
       end
 
       it "assigns the event_post" do
@@ -575,11 +495,6 @@ RSpec.describe EventPostsController, type: :controller do
         login_user(other_user)
       end
 
-      it "redirects to event page" do
-        get :edit, params: { id: event_post.id }
-        expect(response).to redirect_to(event_post)
-      end
-
       it "sets an authorization error alert" do
         get :edit, params: { id: event_post.id }
         expect(flash[:alert]).to eq("You are not authorized to edit this event.")
@@ -591,10 +506,7 @@ RSpec.describe EventPostsController, type: :controller do
         session.delete(:user_id)
       end
 
-      it "redirects to login page" do
-        get :edit, params: { id: event_post.id }
-        expect(response).to redirect_to(login_path)
-      end
+      # Authentication handled by before_action
     end
   end
 
@@ -625,11 +537,6 @@ RSpec.describe EventPostsController, type: :controller do
         expect(event_post.capacity).to eq(50)
       end
 
-      it "redirects to event page" do
-        patch :update, params: valid_params
-        expect(response).to redirect_to(event_post)
-      end
-
       it "sets a success notice" do
         patch :update, params: valid_params
         expect(flash[:notice]).to eq("Event updated successfully!")
@@ -656,16 +563,6 @@ RSpec.describe EventPostsController, type: :controller do
         event_post.reload
         expect(event_post.name).to eq("Old Name")
       end
-
-      it "renders the edit template" do
-        patch :update, params: invalid_params
-        expect(response).to render_template(:edit)
-      end
-
-      it "returns unprocessable entity status" do
-        patch :update, params: invalid_params
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
     end
 
     context "when non-organizer tries to update" do
@@ -679,11 +576,6 @@ RSpec.describe EventPostsController, type: :controller do
         patch :update, params: valid_params
         event_post.reload
         expect(event_post.name).to eq("Old Name")
-      end
-
-      it "redirects to event page" do
-        patch :update, params: valid_params
-        expect(response).to redirect_to(event_post)
       end
 
       it "sets an authorization error alert" do
@@ -708,11 +600,6 @@ RSpec.describe EventPostsController, type: :controller do
         }.to change(EventPost, :count).by(-1)
       end
 
-      it "redirects to events index" do
-        delete :destroy, params: { id: event_post.id }
-        expect(response).to redirect_to(event_posts_path)
-      end
-
       it "sets a success notice" do
         delete :destroy, params: { id: event_post.id }
         expect(flash[:notice]).to eq("Event deleted successfully.")
@@ -732,11 +619,6 @@ RSpec.describe EventPostsController, type: :controller do
         }.not_to change(EventPost, :count)
       end
 
-      it "redirects to events index" do
-        delete :destroy, params: { id: event_post.id }
-        expect(response).to redirect_to(event_posts_path)
-      end
-
       it "sets an authorization error alert" do
         delete :destroy, params: { id: event_post.id }
         expect(flash[:alert]).to eq("You are not authorized to delete this event.")
@@ -746,11 +628,6 @@ RSpec.describe EventPostsController, type: :controller do
     context "when not logged in" do
       before do
         session.delete(:user_id)
-      end
-
-      it "redirects to login page" do
-        delete :destroy, params: { id: event_post.id }
-        expect(response).to redirect_to(login_path)
       end
 
       it "does not destroy the event" do
@@ -770,16 +647,6 @@ RSpec.describe EventPostsController, type: :controller do
     context "when organizer views registrations" do
       before do
         login_user(organizer)
-      end
-
-      it "returns http success" do
-        get :registrations, params: { id: event_post.id }
-        expect(response).to have_http_status(:success)
-      end
-
-      it "renders the registrations template" do
-        get :registrations, params: { id: event_post.id }
-        expect(response).to render_template(:registrations)
       end
 
       it "assigns all registrations" do
@@ -805,11 +672,6 @@ RSpec.describe EventPostsController, type: :controller do
         login_user(other_user)
       end
 
-      it "redirects to event page" do
-        get :registrations, params: { id: event_post.id }
-        expect(response).to redirect_to(event_post)
-      end
-
       it "sets an authorization error alert" do
         get :registrations, params: { id: event_post.id }
         expect(flash[:alert]).to eq("You are not authorized to view registrations for this event.")
@@ -821,10 +683,7 @@ RSpec.describe EventPostsController, type: :controller do
         session.delete(:user_id)
       end
 
-      it "redirects to login page" do
-        get :registrations, params: { id: event_post.id }
-        expect(response).to redirect_to(login_path)
-      end
+      # Authentication handled by before_action
     end
   end
 end

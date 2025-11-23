@@ -35,6 +35,11 @@ begin
 rescue ActiveRecord::PendingMigrationError => e
   abort e.to_s.strip
 end
+
+# Force routes to load once for entire test suite (Rails 8 + Devise compatibility)
+# Rails 8 uses deferred route loading, but Devise needs routes loaded to create mappings
+Rails.application.reload_routes_unless_loaded
+
 RSpec.configure do |config|
   # Using FactoryBot instead of fixtures, so fixture_paths not needed
 
@@ -78,29 +83,18 @@ RSpec.configure do |config|
   # Controller test helpers
   config.include ControllerHelpers, type: :controller
 
-  # Set Devise mapping for Devise controller tests
+  # Set Devise mapping for all controller tests
+  # Required for sign_in/sign_out test helpers and Devise controller actions to work
+  # Routes are already loaded above, so Devise.mappings[:user] is guaranteed to exist
   config.before(:each, type: :controller) do
-    if described_class
-      controller_class = described_class
-      # Check if it's a Devise controller or inherits from one
-      # Users::SessionsController and Users::RegistrationsController inherit from Devise controllers
-      is_devise_controller = false
-      klass = controller_class
-      while klass && klass != Object
-        if klass.name&.include?('Devise::') || klass.name == 'DeviseController'
-          is_devise_controller = true
-          break
-        end
-        klass = klass.superclass
-      end
-      
-      # Also check for Sessions or Registrations in the class name
-      is_devise_controller ||= controller_class.name&.include?('Sessions') || controller_class.name&.include?('Registrations')
-      
-      if is_devise_controller
-        @request.env["devise.mapping"] = Devise.mappings[:user]
-      end
-    end
+    @request.env["devise.mapping"] = Devise.mappings[:user] if @request
+  end
+
+  # Skip Devise confirmation emails during user creation in tests
+  # This prevents "Could not find a valid mapping" errors when FactoryBot creates users
+  # Confirmation workflow can still be tested by using :confirmed/:unconfirmed traits
+  config.before(:each) do
+    allow_any_instance_of(User).to receive(:send_confirmation_instructions).and_return(true)
   end
 end
 

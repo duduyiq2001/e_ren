@@ -5,8 +5,8 @@ class User < ApplicationRecord
          :confirmable
 
   # Associations
-  has_many :organized_events, class_name: 'EventPost', foreign_key: 'organizer_id', dependent: :destroy
-  has_many :event_registrations, dependent: :destroy
+  has_many :organized_events, class_name: 'EventPost', foreign_key: 'organizer_id', dependent: :destroy_async
+  has_many :event_registrations, dependent: :destroy_async
   has_many :attended_events, through: :event_registrations, source: :event_post
 
   # Validations
