@@ -10,7 +10,7 @@ A configurable, customizable solution for student-run Meetup.com-like sites on c
 - E-score gamification system
 - Real-time leaderboards
 - AI-powered event recommendations
-
+trigger CI tests/builds
 ## Prerequisites
 - Ruby 3.4.1
 - PostgreSQL 16+
