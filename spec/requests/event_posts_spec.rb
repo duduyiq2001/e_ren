@@ -21,7 +21,6 @@ RSpec.describe 'EventPosts', type: :request do
 
     it 'loads all event posts' do
       get '/event_posts/'
-      # binding.pry
       expect(assigns(:event_posts)).to match_array([event1, event2, event3])
     end
 

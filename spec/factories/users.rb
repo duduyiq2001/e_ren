@@ -6,6 +6,7 @@ FactoryBot.define do
     password_confirmation { "password123" }
     phone_number { "555-0#{rand(100..999)}" }
     e_score { rand(0..500) }
+    confirmed_at { Time.current }  # Users are confirmed by default
 
     trait :high_score do
       e_score { rand(400..500) }
