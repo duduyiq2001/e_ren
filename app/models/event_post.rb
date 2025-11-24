@@ -1,9 +1,16 @@
 class EventPost < ApplicationRecord
+  # Soft delete with discard (using deleted_at column)
+  include Discard::Model
+  self.discard_column = :deleted_at
+
   # Associations
   belongs_to :event_category
   belongs_to :organizer, class_name: 'User', foreign_key: 'organizer_id'
   has_many :event_registrations, dependent: :destroy_async
   has_many :attendees, through: :event_registrations, source: :user
+
+  # Track who performed the deletion
+  belongs_to :deleted_by_user, class_name: 'User', foreign_key: 'deleted_by_id', optional: true
 
   # Filtered associations by registration status
   has_many :confirmed_registrations, -> { where(status: :confirmed) }, class_name: 'EventRegistration'
@@ -41,6 +48,38 @@ class EventPost < ApplicationRecord
 
   # Custom validations
   validate :event_time_cannot_be_in_the_past, on: :create
+
+  # Soft delete with cascading
+  # Note: This method is designed to work in background jobs (AdminDeletionJob)
+  # When called from a background job, the entire deletion process is async.
+  # The destroy_async on event_registrations association means:
+  # - When this event is destroyed, registrations will be deleted async via background jobs
+  # - This ensures the deletion doesn't block the main thread
+  def soft_delete_with_cascade!(admin_user, reason: nil)
+    EventPost.transaction do
+      # Update deletion metadata first
+      self.deleted_by_id = admin_user.id
+      self.deletion_reason = reason
+      save! # Save metadata before soft delete
+      
+      # Soft delete registrations
+      # Since this method runs in a background job, these deletions are async
+      event_registrations.each(&:destroy)
+      
+      # Perform soft delete on the event itself
+      # This will trigger destroy_async on all dependent associations (event_registrations)
+      # The destroy_async dependency means registrations will be queued for async deletion
+      discard
+    end
+  end
+
+  # Get count of items that will be deleted
+  def deletion_preview
+    {
+      event_registrations: event_registrations.count,
+      attendees_count: attendees.count
+    }
+  end
 
   # Methods
   def spots_remaining

@@ -1,0 +1,99 @@
+#!/usr/bin/env ruby
+# 快速设置 Admin 测试环境
+
+puts "🔧 Setting up Admin Test Environment..."
+puts ""
+
+# 检查是否在 Rails 环境中
+unless defined?(Rails)
+  puts "❌ Error: This script must be run in Rails console"
+  puts "   Run: bin/rails runner bin/setup_admin_test"
+  exit 1
+end
+
+# 创建管理员用户
+admin_email = "admin@wustl.edu"
+admin = User.find_or_initialize_by(email: admin_email)
+
+if admin.new_record?
+  admin.assign_attributes(
+    name: "Admin User",
+    password: "password123",
+    password_confirmation: "password123",
+    role: :super_admin,
+    confirmed_at: Time.current
+  )
+  
+  if admin.save
+    puts "✅ Created admin user: #{admin_email}"
+    puts "   Password: password123"
+  else
+    puts "❌ Failed to create admin user: #{admin.errors.full_messages.join(', ')}"
+    exit 1
+  end
+else
+  admin.update(role: :super_admin) unless admin.super_admin?
+  puts "✅ Admin user already exists: #{admin_email}"
+  puts "   Updated role to super_admin"
+end
+
+# 创建测试用户
+test_users = [
+  { email: "user1@wustl.edu", name: "Test User 1" },
+  { email: "user2@wustl.edu", name: "Test User 2" }
+]
+
+test_users.each do |user_data|
+  user = User.find_or_initialize_by(email: user_data[:email])
+  if user.new_record?
+    user.assign_attributes(
+      name: user_data[:name],
+      password: "password123",
+      password_confirmation: "password123",
+      confirmed_at: Time.current
+    )
+    user.save
+    puts "✅ Created test user: #{user_data[:email]}"
+  else
+    puts "ℹ️  Test user already exists: #{user_data[:email]}"
+  end
+end
+
+# 创建测试事件（如果还没有）
+if EventPost.count == 0
+  category = EventCategory.first || EventCategory.create!(name: "General")
+  user1 = User.find_by(email: "user1@wustl.edu")
+  
+  if user1
+    event = EventPost.create!(
+      name: "Test Event for Deletion",
+      description: "This is a test event for admin deletion testing",
+      event_category: category,
+      organizer: user1,
+      capacity: 20,
+      event_time: 2.days.from_now,
+      location_name: "Test Location"
+    )
+    puts "✅ Created test event: #{event.name}"
+    
+    # 创建一些注册
+    user2 = User.find_by(email: "user2@wustl.edu")
+    if user2
+      EventRegistration.create!(user: user2, event_post: event)
+      puts "✅ Created test registration"
+    end
+  end
+end
+
+puts ""
+puts "🎉 Setup complete!"
+puts ""
+puts "Next steps:"
+puts "1. Start Rails server: bin/rails server"
+puts "2. Start Solid Queue worker: bin/rails solid_queue:start"
+puts "3. Login at http://localhost:3000 with:"
+puts "   Email: #{admin_email}"
+puts "   Password: password123"
+puts "4. Visit http://localhost:3000/admin"
+puts ""
+

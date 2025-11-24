@@ -1,4 +1,8 @@
 class EventRegistration < ApplicationRecord
+  # Soft delete with discard (using deleted_at column)
+  include Discard::Model
+  self.discard_column = :deleted_at
+
   belongs_to :user
   belongs_to :event_post
 
