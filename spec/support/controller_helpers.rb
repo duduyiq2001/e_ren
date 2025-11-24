@@ -1,6 +1,6 @@
 module ControllerHelpers
-  def login_user(user = nil)
-    user ||= create(:user, :confirmed)
+  def login_user(user)
+    raise ArgumentError, "user cannot be nil" if user.nil?
     sign_in user
     user
   end

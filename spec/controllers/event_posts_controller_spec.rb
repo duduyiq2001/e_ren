@@ -13,8 +13,10 @@ RSpec.describe EventPostsController, type: :controller do
   end
 
   # Login user before each test
+  let(:current_user) { create(:user) }
+
   before do
-    login_user
+    login_user(current_user)
   end
 
   describe "GET #index" do
@@ -364,7 +366,8 @@ RSpec.describe EventPostsController, type: :controller do
     end
 
     it "finds user's registration if they're registered" do
-      user = login_user
+      user = create(:user)
+      login_user(user)
       registration = create(:event_registration, user: user, event_post: event_post)
 
       get :show, params: { id: event_post.id }
@@ -372,7 +375,8 @@ RSpec.describe EventPostsController, type: :controller do
     end
 
     it "sets @registration to nil if user is not registered" do
-      login_user
+      user = create(:user)
+      login_user(user)
 
       get :show, params: { id: event_post.id }
       expect(assigns(:registration)).to be_nil
@@ -416,7 +420,8 @@ RSpec.describe EventPostsController, type: :controller do
       end
 
       it "assigns the event to the current user as organizer" do
-        user = login_user
+        user = create(:user)
+        login_user(user)
         post :create, params: valid_params
 
         expect(EventPost.last.organizer).to eq(user)
@@ -455,7 +460,7 @@ RSpec.describe EventPostsController, type: :controller do
 
     context "when not logged in" do
       before do
-        session.delete(:user_id)
+        sign_out :user       
       end
 
       it "does not create an event" do
@@ -472,7 +477,6 @@ RSpec.describe EventPostsController, type: :controller do
 
     context "when organizer accesses edit" do
       before do
-        # binding.pry
         login_user(organizer)
       end
 
