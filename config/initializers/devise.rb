@@ -2,7 +2,7 @@
 
 Devise.setup do |config|
   # ==> Mailer Configuration
-  config.mailer_sender = 'noreply@wustl.edu'
+  config.mailer_sender = 'noreply@erenspace.com'
 
   # ==> ORM configuration
   require 'devise/orm/active_record'

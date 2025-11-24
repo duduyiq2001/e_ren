@@ -10,8 +10,7 @@ class User < ApplicationRecord
   has_many :attended_events, through: :event_registrations, source: :event_post
 
   # Validations
-  # Note: Devise handles email and password validations automatically, but email domain restriction is enforced below.
-  validates :email, format: { with: /\A[\w+\-.]+@wustl\.edu\z/, message: "must be a wustl.edu email address" }
+  # Note: Devise handles email and password validations automatically
   validates :name, presence: true, length: { maximum: 100 }
   validates :phone_number, format: { with: /\A\+?[0-9\s\-\(\)]+\z/, allow_blank: true, message: "must be a valid phone number" }
   validates :e_score, numericality: { only_integer: true, greater_than_or_equal_to: 0 }

@@ -36,34 +36,26 @@ Rails.application.configure do
   
   # Email delivery configuration
   # If you want to use real SMTP, set GMAIL_USERNAME and GMAIL_PASSWORD env vars
-  if ENV['GMAIL_USERNAME'].present? && ENV['GMAIL_PASSWORD'].present?
-    config.action_mailer.delivery_method = :smtp
-    config.action_mailer.smtp_settings = {
-      address: 'smtp.gmail.com',
-      port: 587,
-      domain: 'gmail.com',
-      user_name: ENV['GMAIL_USERNAME'],
-      password: ENV['GMAIL_PASSWORD'],
-      authentication: 'plain',
-      enable_starttls_auto: true
-    }
-    config.action_mailer.perform_deliveries = true
-  else
-    # Default: use test mode (emails are stored in ActionMailer::Base.deliveries, not actually sent)
-    config.action_mailer.delivery_method = :test
-    config.action_mailer.perform_deliveries = true
+  if ENV['SENDGRID'].present?
+
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
+  # Keep localhost for development, use erenspace.com for production
+  config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+   
+  config.action_mailer.smtp_settings = {
+    address: 'smtp.sendgrid.net',
+    port: 587,
+    domain: 'erenspace.com',
+    user_name: 'apikey',
+    password: ENV['SENDGRID'],
+    authentication: :plain,
+    enable_starttls_auto: true
+  }
   end
   
-  # 让邮件发送失败时抛出错误（便于调试）
-  config.action_mailer.raise_delivery_errors = true
-
-  # Make template changes take effect immediately.
-  config.action_mailer.perform_caching = false
-
-  # Set localhost to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
-
-  # Print deprecation notices to the Rails logger.
+    # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
 
   # Raise an error on page load if there are pending migrations.

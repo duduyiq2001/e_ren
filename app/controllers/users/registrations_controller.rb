@@ -15,9 +15,14 @@ class Users::RegistrationsController < Devise::RegistrationsController
   # Redirect after sign up (before email confirmation)
   # When confirmable is enabled, Devise doesn't sign in the user automatically
   def after_sign_up_path_for(resource)
-    # User needs to confirm email before accessing the app
-    # Devise will show a message about needing to confirm email
-    root_path
+    # Redirect to custom confirmation pending page with user's email
+    confirmations_pending_path(email: resource.email)
+  end
+
+  # Redirect for inactive users (unconfirmed)
+  def after_inactive_sign_up_path_for(resource)
+    # Redirect to custom confirmation pending page with user's email
+    confirmations_pending_path(email: resource.email)
   end
 
   # Redirect after email confirmation
