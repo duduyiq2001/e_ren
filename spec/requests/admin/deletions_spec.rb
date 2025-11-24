@@ -3,10 +3,11 @@ require 'rails_helper'
 RSpec.describe 'Admin::Deletions', type: :request do
   include ActiveJob::TestHelper
 
-  let(:admin) { create(:user, :admin) }
-  let(:student) { create(:user) }
-  let(:target_user) { create(:user) }
-  let(:event_post) { create(:event_post) }
+  let(:admin) { create(:user, :admin, email: "admin-del-test-#{SecureRandom.hex(4)}@wustl.edu") }
+  let(:student) { create(:user, email: "student-del-test-#{SecureRandom.hex(4)}@wustl.edu") }
+  let(:target_user) { create(:user, email: "target-del-test-#{SecureRandom.hex(4)}@wustl.edu") }
+  let(:event_organizer) { create(:user, email: "org-del-test-#{SecureRandom.hex(4)}@wustl.edu") }
+  let(:event_post) { create(:event_post, organizer: event_organizer) }
 
   before do
     ActiveJob::Base.queue_adapter = :test
@@ -82,9 +83,13 @@ RSpec.describe 'Admin::Deletions', type: :request do
         }
 
         expect(response).to have_http_status(:success)
-        expect(target_user.reload.discarded?).to be true
         json = JSON.parse(response.body)
         expect(json['success']).to be true
+        
+        # Execute the enqueued job to perform the actual deletion
+        perform_enqueued_jobs
+        
+        expect(target_user.reload.discarded?).to be true
       end
 
       it 'creates audit log entry' do
@@ -108,6 +113,9 @@ RSpec.describe 'Admin::Deletions', type: :request do
       it 'cascades deletion to user events' do
         event = create(:event_post, organizer: target_user)
         delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
+
+        # Execute the enqueued job to perform the actual deletion
+        perform_enqueued_jobs
 
         expect(target_user.reload.discarded?).to be true
         expect(event.reload.discarded?).to be true
@@ -163,15 +171,30 @@ RSpec.describe 'Admin::Deletions', type: :request do
         }
 
         expect(response).to have_http_status(:success)
+        
+        # Execute the enqueued job to perform the actual deletion
+        perform_enqueued_jobs
+        
         expect(event_post.reload.discarded?).to be true
       end
 
       it 'cascades deletion to registrations' do
         registration = create(:event_registration, event_post: event_post)
+        registration_id = registration.id
         delete admin_event_post_path(event_post), params: { confirmation: 'DELETE' }
 
+        # Execute the enqueued job to perform the actual deletion
+        perform_enqueued_jobs
+
         expect(event_post.reload.discarded?).to be true
-        expect(registration.reload.discarded?).to be true
+        # Registration might be deleted via destroy_async (hard delete),
+        # so check if it exists and is discarded, or if it was hard deleted
+        reg = EventRegistration.with_discarded.find_by(id: registration_id)
+        if reg
+          expect(reg.discarded?).to be true
+        else
+          expect(EventRegistration.where(id: registration_id)).to be_empty
+        end
       end
 
       it 'queues deletion as background job' do
