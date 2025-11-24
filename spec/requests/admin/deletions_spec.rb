@@ -1,10 +1,16 @@
 require 'rails_helper'
 
 RSpec.describe 'Admin::Deletions', type: :request do
+  include ActiveJob::TestHelper
+
   let(:admin) { create(:user, :admin) }
   let(:student) { create(:user) }
   let(:target_user) { create(:user) }
   let(:event_post) { create(:event_post) }
+
+  before do
+    ActiveJob::Base.queue_adapter = :test
+  end
 
   describe 'GET /admin/users/:id/deletion_preview' do
     context 'as admin' do
@@ -106,6 +112,34 @@ RSpec.describe 'Admin::Deletions', type: :request do
         expect(target_user.reload.discarded?).to be true
         expect(event.reload.discarded?).to be true
       end
+
+      it 'queues deletion as background job' do
+        expect {
+          delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
+        }.to have_enqueued_job(AdminDeletionJob).with(
+          'User',
+          target_user.id,
+          admin.id,
+          'Deleted by admin'
+        )
+      end
+
+      it 'returns async flag in response' do
+        delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
+        json = JSON.parse(response.body)
+        expect(json['async']).to be true
+        expect(json['message']).to include('queued')
+      end
+
+      it 'includes deletion reason in audit log' do
+        delete admin_user_path(target_user), params: {
+          confirmation: 'DELETE',
+          reason: 'Spam account'
+        }
+
+        log = AdminAuditLog.last
+        expect(log.metadata['reason']).to eq('Spam account')
+      end
     end
 
     context 'as non-admin' do
@@ -139,7 +173,45 @@ RSpec.describe 'Admin::Deletions', type: :request do
         expect(event_post.reload.discarded?).to be true
         expect(registration.reload.discarded?).to be true
       end
+
+      it 'queues deletion as background job' do
+        expect {
+          delete admin_event_post_path(event_post), params: { confirmation: 'DELETE' }
+        }.to have_enqueued_job(AdminDeletionJob).with(
+          'EventPost',
+          event_post.id,
+          admin.id,
+          'Deleted by admin'
+        )
+      end
     end
+  end
+
+  describe 'async deletion behavior' do
+    before { sign_in admin }
+
+    it 'returns immediately without waiting for deletion' do
+      start_time = Time.current
+      delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
+      elapsed = Time.current - start_time
+
+      # Should return quickly (less than 1 second)
+      expect(elapsed).to be < 1
+      expect(response).to have_http_status(:success)
+    end
+
+      it 'processes deletion in background job' do
+        delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
+        
+        # Initially not deleted (job not processed yet)
+        expect(target_user.reload.discarded?).to be false
+        
+        # Process the enqueued job
+        perform_enqueued_jobs
+        
+        # Now should be deleted
+        expect(target_user.reload.discarded?).to be true
+      end
   end
 
   describe 'POST /admin/restore/:type/:id' do

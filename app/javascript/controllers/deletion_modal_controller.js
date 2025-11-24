@@ -22,12 +22,52 @@ export default class extends Controller {
 
   open(event) {
     const button = event.currentTarget
-    this.typeValue = button.dataset.deletionModalTypeValue
-    this.idValue = parseInt(button.dataset.deletionModalIdValue)
-    this.titleValue = button.dataset.deletionModalTitleValue
+    
+    // Get data attributes - Stimulus converts kebab-case to camelCase
+    // HTML: data-deletion-modal-type-value -> dataset.deletionModalTypeValue
+    const typeValue = button.dataset.deletionModalTypeValue || button.getAttribute('data-deletion-modal-type-value')
+    const idString = button.dataset.deletionModalIdValue || button.getAttribute('data-deletion-modal-id-value')
+    const titleValue = button.dataset.deletionModalTitleValue || button.getAttribute('data-deletion-modal-title-value')
+    
+    // Parse ID
+    const idValue = idString ? parseInt(idString, 10) : null
+    
+    // Debug logging
+    console.log('Deletion Modal Open:', {
+      type: typeValue,
+      idString: idString,
+      idValue: idValue,
+      title: titleValue
+    })
+    
+    // Validate ID
+    if (!idValue || isNaN(idValue) || idValue <= 0) {
+      console.error('Invalid ID:', {
+        idString: idString,
+        parsed: idValue
+      })
+      alert(`Error: Invalid user/event ID (${idString}). Please refresh the page.`)
+      return
+    }
+    
+    // Store values in modal element's data attributes (not Stimulus values)
+    // This ensures the values persist across different controller instances
+    if (this.modal) {
+      this.modal.dataset.deletionId = idValue.toString()
+      this.modal.dataset.deletionType = typeValue
+      this.modal.dataset.deletionTitle = titleValue
+      
+      // Also set Stimulus values for compatibility
+      this.idValue = idValue
+      this.typeValue = typeValue
+      this.titleValue = titleValue
+    } else {
+      console.error('Modal element not found')
+      return
+    }
     
     // Set modal title
-    document.getElementById('modal-title').textContent = this.titleValue
+    document.getElementById('modal-title').textContent = titleValue
     
     // Reset form
     if (this.confirmationInput) {
@@ -56,9 +96,22 @@ export default class extends Controller {
   }
 
   async fetchPreview() {
+    // Get values from modal element (more reliable than Stimulus values)
+    const idValue = this.modal ? parseInt(this.modal.dataset.deletionId, 10) : this.idValue
+    const typeValue = this.modal ? this.modal.dataset.deletionType : this.typeValue
+    
+    // Validate ID before fetching
+    if (!idValue || isNaN(idValue) || idValue === 0) {
+      console.error('Invalid ID in fetchPreview:', { idValue, modal: this.modal?.dataset })
+      this.displayPreview({})
+      return
+    }
+    
     try {
-      const type = this.typeValue === 'user' ? 'users' : 'event_posts'
-      const response = await fetch(`/admin/${type}/${this.idValue}/deletion_preview`, {
+      const type = typeValue === 'user' ? 'users' : 'event_posts'
+      const url = `/admin/${type}/${idValue}/deletion_preview`
+      console.log('Fetching preview:', { type, id: idValue, url })
+      const response = await fetch(url, {
         headers: {
           'Accept': 'application/json',
           'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
@@ -102,15 +155,33 @@ export default class extends Controller {
       return
     }
 
-    const type = this.typeValue === 'user' ? 'users' : 'event_posts'
+    // Get values from modal element (more reliable than Stimulus values)
+    const idValue = this.modal ? parseInt(this.modal.dataset.deletionId, 10) : this.idValue
+    const typeValue = this.modal ? this.modal.dataset.deletionType : this.typeValue
+
+    // Validate ID before making request
+    if (!idValue || isNaN(idValue) || idValue === 0) {
+      console.error('Invalid ID in confirmDelete:', { 
+        idValue, 
+        modalDataset: this.modal?.dataset,
+        stimulusIdValue: this.idValue 
+      })
+      alert('Error: Invalid ID. Please close the modal and try again.')
+      return
+    }
+
+    const type = typeValue === 'user' ? 'users' : 'event_posts'
     const reason = document.getElementById('deletion-reason').value
+    const url = `/admin/${type}/${idValue}`
+    
+    console.log('Deleting:', { type, id: idValue, url, reason, modalDataset: this.modal?.dataset })
     
     // Disable button during request
     this.confirmBtn.disabled = true
     this.confirmBtn.textContent = 'Deleting...'
     
     try {
-      const response = await fetch(`/admin/${type}/${this.idValue}`, {
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

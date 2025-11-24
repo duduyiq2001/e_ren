@@ -38,6 +38,8 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: 'dashboard#index'
     
+    get 'debug/deletion_test', to: 'debug#deletion_test'
+    
     resources :users, only: [] do
       member do
         get :deletion_preview, to: 'deletions#preview'
