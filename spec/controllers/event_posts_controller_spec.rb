@@ -39,7 +39,11 @@ RSpec.describe EventPostsController, type: :controller do
     end
 
     context "user registrations" do
-      let(:user) { login_user }
+      let(:user) { create(:user) }
+
+      before do
+        login_user(user)
+      end
 
       it "loads user's registrations for displayed events" do
         registration = create(:event_registration, user: user, event_post: event1)
@@ -296,7 +300,11 @@ RSpec.describe EventPostsController, type: :controller do
     end
 
     context "user registrations" do
-      let(:user) { login_user }
+      let(:user) { create(:user) }
+
+      before do
+        login_user(user)
+      end
 
       it "loads user's registrations for search results" do
         registration = create(:event_registration, user: user, event_post: soccer_event)
@@ -507,7 +515,7 @@ RSpec.describe EventPostsController, type: :controller do
 
     context "when not logged in" do
       before do
-        session.delete(:user_id)
+        sign_out :user
       end
 
       # Authentication handled by before_action
@@ -631,7 +639,7 @@ RSpec.describe EventPostsController, type: :controller do
 
     context "when not logged in" do
       before do
-        session.delete(:user_id)
+        sign_out :user
       end
 
       it "does not destroy the event" do
@@ -684,7 +692,7 @@ RSpec.describe EventPostsController, type: :controller do
 
     context "when not logged in" do
       before do
-        session.delete(:user_id)
+        sign_out :user
       end
 
       # Authentication handled by before_action
