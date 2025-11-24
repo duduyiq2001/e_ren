@@ -156,7 +156,7 @@ RSpec.describe EventRegistrationsController, type: :controller do
 
     context "when not logged in" do
       before do
-        session.delete(:user_id)
+        sign_out :user
       end
 
       it "does not create a registration" do
@@ -167,7 +167,7 @@ RSpec.describe EventRegistrationsController, type: :controller do
 
       it "sets an alert message" do
         post :create, params: { event_post_id: event_post.id }
-        expect(flash[:alert]).to eq("You must be logged in to access this page.")
+        expect(flash[:alert]).to eq("You need to sign in or sign up before continuing.")
       end
     end
   end
@@ -217,7 +217,7 @@ RSpec.describe EventRegistrationsController, type: :controller do
 
     context "when not logged in" do
       before do
-        session.delete(:user_id)
+        sign_out :user
       end
 
       it "does not destroy the registration" do
@@ -228,7 +228,7 @@ RSpec.describe EventRegistrationsController, type: :controller do
 
       it "sets an alert message" do
         delete :destroy, params: { event_post_id: event_post.id, id: registration.id }
-        expect(flash[:alert]).to eq("You must be logged in to access this page.")
+        expect(flash[:alert]).to eq("You need to sign in or sign up before continuing.")
       end
     end
   end
@@ -304,7 +304,7 @@ RSpec.describe EventRegistrationsController, type: :controller do
 
     context "when not logged in" do
       before do
-        session.delete(:user_id)
+        sign_out :user
       end
 
       it "does not update attendance_confirmed" do
@@ -315,7 +315,7 @@ RSpec.describe EventRegistrationsController, type: :controller do
 
       it "sets an alert message" do
         patch :confirm_attendance, params: { event_post_id: past_event.id, id: registration.id }
-        expect(flash[:alert]).to eq("You must be logged in to access this page.")
+        expect(flash[:alert]).to eq("You need to sign in or sign up before continuing.")
       end
     end
   end
