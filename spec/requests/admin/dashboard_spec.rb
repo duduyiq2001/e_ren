@@ -1,12 +1,14 @@
 require 'rails_helper'
 
 RSpec.describe 'Admin::Dashboard', type: :request do
-  let(:admin) { create(:user, :admin) }
-  let(:student) { create(:user) }
-  let!(:user1) { create(:user) }
-  let!(:user2) { create(:user) }
-  let!(:event1) { create(:event_post) }
-  let!(:event2) { create(:event_post) }
+  let(:admin) { create(:user, :admin, email: "admin-test-#{SecureRandom.hex(4)}@wustl.edu") }
+  let(:student) { create(:user, email: "student-test-#{SecureRandom.hex(4)}@wustl.edu") }
+  let!(:user1) { create(:user, email: "user1-test-#{SecureRandom.hex(4)}@wustl.edu") }
+  let!(:user2) { create(:user, email: "user2-test-#{SecureRandom.hex(4)}@wustl.edu") }
+  let!(:organizer1) { create(:user, email: "org1-test-#{SecureRandom.hex(4)}@wustl.edu") }
+  let!(:organizer2) { create(:user, email: "org2-test-#{SecureRandom.hex(4)}@wustl.edu") }
+  let!(:event1) { create(:event_post, organizer: organizer1) }
+  let!(:event2) { create(:event_post, organizer: organizer2) }
 
   describe 'GET /admin' do
     context 'as admin' do
@@ -30,7 +32,7 @@ RSpec.describe 'Admin::Dashboard', type: :request do
       end
 
       it 'displays deleted items when they exist' do
-        deleted_user = create(:user)
+        deleted_user = create(:user, email: "deleted-test-#{SecureRandom.hex(4)}@wustl.edu")
         deleted_user.discard
         
         get admin_root_path

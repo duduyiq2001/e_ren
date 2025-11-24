@@ -1,27 +1,27 @@
-# Admin Panel 架构文档
+# Admin Panel Architecture Documentation
 
-## 概述
+## Overview
 
-Admin Panel 是一个基于角色的访问控制（RBAC）系统，允许超级管理员（super_admin）管理平台上的用户和事件。系统采用软删除机制，所有删除操作都是异步执行的，确保不会阻塞用户请求。
+The Admin Panel is a Role-Based Access Control (RBAC) system that allows super administrators (super_admin) to manage users and events on the platform. The system uses soft deletion, and all deletion operations are executed asynchronously to ensure they don't block user requests.
 
-## 核心组件
+## Core Components
 
-### 1. 角色系统 (Role System)
+### 1. Role System
 
-#### 用户角色
-- **student** (0): 普通学生用户，默认角色
-- **club_admin** (1): 俱乐部管理员
-- **super_admin** (2): 超级管理员，拥有删除权限
+#### User Roles
+- **student** (0): Regular student user, default role
+- **club_admin** (1): Club administrator
+- **super_admin** (2): Super administrator with deletion permissions
 
-#### 权限检查
+#### Permission Checks
 ```ruby
-# User 模型中的权限方法
+# Permission methods in User model
 def admin?
   super_admin?
 end
 
 def can_delete_user?(target_user)
-  super_admin? && target_user.id != id # 不能删除自己
+  super_admin? && target_user.id != id # Cannot delete self
 end
 
 def can_delete_event?(event_post)
@@ -29,40 +29,40 @@ def can_delete_event?(event_post)
 end
 ```
 
-### 2. 软删除机制 (Soft Delete)
+### 2. Soft Delete Mechanism
 
-#### 技术实现
-- **Gem**: `discard` (Rails 8.1 兼容)
-- **列名**: `deleted_at` (datetime)
-- **元数据**: 
-  - `deleted_by_id`: 执行删除的管理员 ID
-  - `deletion_reason`: 删除原因（可选）
+#### Technical Implementation
+- **Gem**: `discard` (Rails 8.1 compatible)
+- **Column**: `deleted_at` (datetime)
+- **Metadata**: 
+  - `deleted_by_id`: ID of the admin who performed the deletion
+  - `deletion_reason`: Reason for deletion (optional)
 
-#### 模型配置
+#### Model Configuration
 ```ruby
-# User, EventPost, EventRegistration 模型
+# User, EventPost, EventRegistration models
 include Discard::Model
 self.discard_column = :deleted_at
 ```
 
-#### 查询方法
-- `User.all` - 只返回未删除的记录（默认）
-- `User.discarded` - 只返回已删除的记录
-- `User.with_discarded` - 返回所有记录（包括已删除）
-- `user.discarded?` - 检查是否已删除
-- `user.discard` - 软删除
-- `user.undiscard` - 恢复
+#### Query Methods
+- `User.all` - Returns only non-deleted records (default)
+- `User.discarded` - Returns only deleted records
+- `User.with_discarded` - Returns all records (including deleted)
+- `user.discarded?` - Check if deleted
+- `user.discard` - Soft delete
+- `user.undiscard` - Restore
 
-### 3. 异步删除流程 (Async Deletion Flow)
+### 3. Async Deletion Flow
 
-#### 架构设计
+#### Architecture Design
 ```
-用户请求 → Controller → 立即返回 → 后台任务队列 → Worker 处理
+User Request → Controller → Immediate Response → Background Job Queue → Worker Processing
 ```
 
-#### 详细流程
+#### Detailed Flow
 
-**步骤 1: 用户发起删除请求**
+**Step 1: User Initiates Deletion Request**
 ```ruby
 DELETE /admin/users/:id
 {
@@ -71,69 +71,69 @@ DELETE /admin/users/:id
 }
 ```
 
-**步骤 2: Controller 处理（立即返回）**
+**Step 2: Controller Processing (Immediate Response)**
 ```ruby
 # Admin::DeletionsController#destroy
-1. 验证确认字符串（必须是 "DELETE"）
-2. 检查权限（can_delete_user? / can_delete_event?）
-3. 记录审计日志（立即记录，标记为 async: true）
-4. 将删除任务加入队列（AdminDeletionJob.perform_later）
-5. 立即返回成功响应（不等待删除完成）
+1. Validate confirmation string (must be "DELETE")
+2. Check permissions (can_delete_user? / can_delete_event?)
+3. Log audit entry (immediately, marked as async: true)
+4. Enqueue deletion job (AdminDeletionJob.perform_later)
+5. Return success response immediately (without waiting for deletion to complete)
 ```
 
-**步骤 3: 后台任务执行**
+**Step 3: Background Job Execution**
 ```ruby
 # AdminDeletionJob#perform
-1. 查找要删除的记录
-2. 调用 soft_delete_with_cascade! 方法
-3. 执行级联软删除
-4. 记录完成日志
+1. Find the record to delete
+2. Call soft_delete_with_cascade! method
+3. Execute cascading soft deletion
+4. Log completion
 ```
 
-**步骤 4: 级联删除逻辑**
+**Step 4: Cascading Deletion Logic**
 ```ruby
 # User#soft_delete_with_cascade!
-1. 更新删除元数据（deleted_by_id, deletion_reason）
-2. 软删除用户的所有事件（organized_events）
-3. 软删除用户的所有注册（event_registrations）
-4. 软删除用户本身
-5. 所有操作在事务中执行
+1. Update deletion metadata (deleted_by_id, deletion_reason)
+2. Soft delete all user's events (organized_events)
+3. Soft delete all user's registrations (event_registrations)
+4. Soft delete the user itself
+5. All operations executed within a transaction
 ```
 
-#### 为什么使用异步删除？
+#### Why Use Async Deletion?
 
-1. **性能**: 删除大量关联数据时不会阻塞 HTTP 请求
-2. **用户体验**: 用户立即得到响应，不需要等待
-3. **可扩展性**: 可以处理大量删除操作而不影响服务器响应时间
-4. **错误处理**: 后台任务可以重试，不会影响用户
+1. **Performance**: Deleting large amounts of associated data doesn't block HTTP requests
+2. **User Experience**: Users get immediate responses without waiting
+3. **Scalability**: Can handle large deletion operations without affecting server response times
+4. **Error Handling**: Background jobs can retry without affecting users
 
-### 4. 级联删除规则 (Cascading Deletion Rules)
+### 4. Cascading Deletion Rules
 
-#### 删除用户时的级联
+#### Cascading When Deleting a User
 ```
-User (被删除)
-├── organized_events (用户创建的所有事件)
-│   └── event_registrations (这些事件的所有注册)
-├── event_registrations (用户的直接注册)
-└── 用户本身
-```
-
-#### 删除事件时的级联
-```
-EventPost (被删除)
-├── event_registrations (事件的所有注册)
-└── 事件本身
+User (being deleted)
+├── organized_events (all events created by user)
+│   └── event_registrations (all registrations for these events)
+├── event_registrations (user's direct registrations)
+└── User itself
 ```
 
-#### 实现细节
-- 使用 `dependent: :destroy_async` 确保关联记录异步删除
-- 所有删除操作在数据库事务中执行，保证数据一致性
-- 软删除不会真正删除数据，只是标记 `deleted_at`
+#### Cascading When Deleting an Event
+```
+EventPost (being deleted)
+├── event_registrations (all registrations for the event)
+└── Event itself
+```
 
-### 5. 删除预览 (Deletion Preview)
+#### Implementation Details
+- Uses `dependent: :destroy_async` to ensure associated records are deleted asynchronously
+- All deletion operations execute within database transactions to ensure data consistency
+- Soft deletion doesn't actually delete data, only marks `deleted_at`
 
-#### 功能
-在删除前显示将被删除的数据统计，帮助管理员了解删除的影响范围。
+### 5. Deletion Preview
+
+#### Functionality
+Displays statistics of data that will be deleted before deletion, helping administrators understand the scope of deletion impact.
 
 #### API
 ```
@@ -141,7 +141,7 @@ GET /admin/users/:id/deletion_preview
 GET /admin/event_posts/:id/deletion_preview
 ```
 
-#### 返回数据
+#### Response Data
 ```json
 {
   "type": "User",
@@ -156,112 +156,112 @@ GET /admin/event_posts/:id/deletion_preview
 }
 ```
 
-### 6. 恢复机制 (Restore Mechanism)
+### 6. Restore Mechanism
 
-#### 功能
-管理员可以在 30 天宽限期内恢复已删除的记录。
+#### Functionality
+Administrators can restore deleted records within a 30-day grace period.
 
 #### API
 ```
 POST /admin/restore/:type/:id
 ```
 
-#### 恢复逻辑
+#### Restore Logic
 ```ruby
-# 恢复用户时
-1. 恢复用户本身
-2. 恢复用户的所有事件（organized_events）
-3. 恢复用户的所有注册（event_registrations）
+# When restoring a user
+1. Restore the user itself
+2. Restore all user's events (organized_events)
+3. Restore all user's registrations (event_registrations)
 
-# 恢复事件时
-1. 恢复事件本身
-2. 恢复事件的所有注册（event_registrations）
+# When restoring an event
+1. Restore the event itself
+2. Restore all event's registrations (event_registrations)
 ```
 
-### 7. 审计日志 (Audit Log)
+### 7. Audit Log
 
-#### 目的
-记录所有管理员操作，用于：
-- 追踪谁执行了删除/恢复操作
-- 记录操作时间和原因
-- 合规性要求（GDPR 等）
+#### Purpose
+Records all administrator operations for:
+- Tracking who performed delete/restore operations
+- Recording operation time and reason
+- Compliance requirements (GDPR, etc.)
 
-#### 数据结构
+#### Data Structure
 ```ruby
 AdminAuditLog
-- admin_user_id: 执行操作的管理员
+- admin_user_id: Administrator who performed the operation
 - action: 'delete' | 'restore'
 - target_type: 'User' | 'EventPost'
-- target_id: 被操作记录的 ID
-- metadata: JSON 格式的额外信息
-  - reason: 删除原因
-  - preview: 删除预览数据
-  - async: 是否异步执行
-  - queued_at: 任务入队时间
-- ip_address: 请求 IP
-- user_agent: 用户代理
-- created_at: 操作时间
+- target_id: ID of the record being operated on
+- metadata: Additional information in JSON format
+  - reason: Deletion reason
+  - preview: Deletion preview data
+  - async: Whether executed asynchronously
+  - queued_at: Job enqueue time
+- ip_address: Request IP
+- user_agent: User agent
+- created_at: Operation time
 ```
 
-### 8. 安全机制 (Security)
+### 8. Security Mechanisms
 
-#### 权限控制
-- **多层验证**: Controller 层 + Model 层
-- **Base Controller**: `Admin::AdminBaseController` 统一处理认证
-- **方法级权限**: `can_delete_user?`, `can_delete_event?`
+#### Access Control
+- **Multi-layer Validation**: Controller layer + Model layer
+- **Base Controller**: `Admin::AdminBaseController` handles authentication uniformly
+- **Method-level Permissions**: `can_delete_user?`, `can_delete_event?`
 
-#### 确认机制
-- 必须输入 "DELETE" 字符串才能确认删除
-- 防止误操作
+#### Confirmation Mechanism
+- Must type "DELETE" string to confirm deletion
+- Prevents accidental operations
 
-#### 自我保护
-- 管理员不能删除自己
-- 防止系统完全锁定
+#### Self-Protection
+- Administrators cannot delete themselves
+- Prevents complete system lockout
 
-### 9. 前端实现 (Frontend)
+### 9. Frontend Implementation
 
-#### 技术栈
-- **Stimulus**: JavaScript 框架
-- **Tailwind CSS**: 样式框架
-- **Turbo**: 页面加速
+#### Technology Stack
+- **Stimulus**: JavaScript framework
+- **Tailwind CSS**: Styling framework
+- **Turbo**: Page acceleration
 
-#### 组件
-1. **DeletionModalController**: 处理删除模态框
-   - 获取删除预览
-   - 验证确认输入
-   - 提交删除请求
-   - 显示成功/错误消息
+#### Components
+1. **DeletionModalController**: Handles deletion modal
+   - Fetch deletion preview
+   - Validate confirmation input
+   - Submit deletion request
+   - Display success/error messages
 
-2. **RestoreButtonController**: 处理恢复按钮
-   - 确认恢复操作
-   - 提交恢复请求
-   - 显示结果
+2. **RestoreButtonController**: Handles restore button
+   - Confirm restore operation
+   - Submit restore request
+   - Display results
 
-#### 用户界面
-- **三个标签页**:
-  - Active Items: 显示活跃的用户和事件
-  - Deleted Items: 显示已删除的项目
-  - Audit Log: 显示操作历史
+#### User Interface
+- **Three Tabs**:
+  - Active Items: Display active users and events
+  - Deleted Items: Display deleted items
+  - Audit Log: Display operation history
 
-### 10. 数据库架构 (Database Schema)
+### 10. Database Schema
 
-#### 新增字段
+#### New Fields
 
-**users 表**:
-- `role` (integer, default: 0): 用户角色
-- `deleted_at` (datetime): 软删除时间戳
-- `deleted_by_id` (bigint): 执行删除的管理员 ID
-- `deletion_reason` (text): 删除原因
+**users table**:
+- `role` (integer, default: 0): User role
+- `deleted_at` (datetime): Soft deletion timestamp
+- `deleted_by_id` (bigint): ID of admin who performed deletion
+- `deletion_reason` (text): Deletion reason
 
-**event_posts 表**:
+**event_posts table**:
 - `deleted_at` (datetime)
 - `deleted_by_id` (bigint)
 - `deletion_reason` (text)
 
-**event_registrations 表**:
+**event_registrations table**:
 - `deleted_at` (datetime)
 
-**admin_audit_logs 表** (新建):
+**admin_audit_logs table** (new):
 - `admin_user_id` (references users)
 - `action` (string): 'delete' | 'restore'
 - `target_type` (string): 'User' | 'EventPost'
@@ -271,33 +271,33 @@ AdminAuditLog
 - `user_agent` (string)
 - `created_at`, `updated_at`
 
-## API 端点
+## API Endpoints
 
-### 删除预览
+### Deletion Preview
 ```
 GET /admin/users/:id/deletion_preview
 GET /admin/event_posts/:id/deletion_preview
 ```
 
-### 删除操作
+### Deletion Operation
 ```
 DELETE /admin/users/:id
 DELETE /admin/event_posts/:id
 
-请求体:
+Request Body:
 {
   "confirmation": "DELETE",
   "reason": "Optional deletion reason"
 }
 ```
 
-### 恢复操作
+### Restore Operation
 ```
 POST /admin/restore/:type/:id
 
-参数:
+Parameters:
 - type: 'user' | 'event_post'
-- id: 记录 ID
+- id: Record ID
 ```
 
 ### Dashboard
@@ -305,94 +305,93 @@ POST /admin/restore/:type/:id
 GET /admin
 ```
 
-## 工作流程示例
+## Workflow Examples
 
-### 删除用户流程
+### User Deletion Flow
 
-1. **管理员点击删除按钮**
-   - 前端调用 `GET /admin/users/:id/deletion_preview`
-   - 显示删除预览模态框
+1. **Administrator Clicks Delete Button**
+   - Frontend calls `GET /admin/users/:id/deletion_preview`
+   - Display deletion preview modal
 
-2. **管理员确认删除**
-   - 输入 "DELETE" 确认
-   - 可选输入删除原因
-   - 前端调用 `DELETE /admin/users/:id`
+2. **Administrator Confirms Deletion**
+   - Type "DELETE" to confirm
+   - Optionally enter deletion reason
+   - Frontend calls `DELETE /admin/users/:id`
 
-3. **Controller 处理**
-   - 验证确认字符串
-   - 检查权限
-   - 记录审计日志
-   - 将任务加入队列
-   - 立即返回成功
+3. **Controller Processing**
+   - Validate confirmation string
+   - Check permissions
+   - Log audit entry
+   - Enqueue job
+   - Return success immediately
 
-4. **后台任务执行**（异步）
-   - `AdminDeletionJob` 被 worker 处理
-   - 调用 `soft_delete_with_cascade!`
-   - 软删除用户及其所有关联数据
-   - 记录完成日志
+4. **Background Job Execution** (async)
+   - `AdminDeletionJob` processed by worker
+   - Call `soft_delete_with_cascade!`
+   - Soft delete user and all associated data
+   - Log completion
 
-5. **结果**
-   - 用户出现在 "Deleted Items" 标签页
-   - 可以在 30 天内恢复
+5. **Result**
+   - User appears in "Deleted Items" tab
+   - Can be restored within 30 days
 
-### 恢复用户流程
+### User Restore Flow
 
-1. **管理员查看已删除项目**
-   - 切换到 "Deleted Items" 标签页
-   - 找到要恢复的用户
+1. **Administrator Views Deleted Items**
+   - Switch to "Deleted Items" tab
+   - Find user to restore
 
-2. **点击恢复按钮**
-   - 前端调用 `POST /admin/restore/user/:id`
-   - 显示确认对话框
+2. **Click Restore Button**
+   - Frontend calls `POST /admin/restore/user/:id`
+   - Display confirmation dialog
 
-3. **Controller 处理**
-   - 恢复用户本身
-   - 恢复用户的所有事件
-   - 恢复用户的所有注册
-   - 记录审计日志
+3. **Controller Processing**
+   - Restore user itself
+   - Restore all user's events
+   - Restore all user's registrations
+   - Log audit entry
 
-4. **结果**
-   - 用户回到 "Active Items" 标签页
-   - 所有关联数据也被恢复
+4. **Result**
+   - User returns to "Active Items" tab
+   - All associated data also restored
 
-## 技术细节
+## Technical Details
 
-### 后台任务系统
-- **队列**: Solid Queue (Rails 内置)
-- **Worker**: 需要运行 `bin/rails solid_queue:start`
-- **重试机制**: 任务失败会自动重试
+### Background Job System
+- **Queue**: Solid Queue (Rails built-in)
+- **Worker**: Need to run `bin/rails solid_queue:start`
+- **Retry Mechanism**: Failed jobs automatically retry
 
-### 性能考虑
-- **异步处理**: 删除操作不阻塞 HTTP 请求
-- **事务保护**: 级联删除在事务中执行
-- **索引优化**: `deleted_at` 字段已建立索引
+### Performance Considerations
+- **Async Processing**: Deletion operations don't block HTTP requests
+- **Transaction Protection**: Cascading deletions execute within transactions
+- **Index Optimization**: `deleted_at` field has index
 
-### 数据完整性
-- **外键约束**: `deleted_by_id` 有外键约束
-- **事务保证**: 所有删除操作在事务中
-- **软删除**: 数据不会真正丢失，可以恢复
+### Data Integrity
+- **Foreign Key Constraints**: `deleted_by_id` has foreign key constraint
+- **Transaction Guarantee**: All deletion operations within transactions
+- **Soft Deletion**: Data not actually lost, can be restored
 
-## 测试策略
+## Testing Strategy
 
-### 单元测试
-- 模型方法测试（`soft_delete_with_cascade!`, `deletion_preview`）
-- 权限方法测试（`can_delete_user?`, `can_delete_event?`）
+### Unit Tests
+- Model method tests (`soft_delete_with_cascade!`, `deletion_preview`)
+- Permission method tests (`can_delete_user?`, `can_delete_event?`)
 
-### 集成测试
-- API 端点测试
-- 权限验证测试
-- 级联删除测试
-- 恢复功能测试
+### Integration Tests
+- API endpoint tests
+- Permission validation tests
+- Cascading deletion tests
+- Restore functionality tests
 
-### 异步测试
-- 后台任务执行测试
-- 队列处理测试
+### Async Tests
+- Background job execution tests
+- Queue processing tests
 
-## 未来增强
+## Future Enhancements
 
-1. **批量操作**: 支持批量删除多个用户/事件
-2. **永久删除**: 30 天后自动永久删除
-3. **导出功能**: 删除前导出用户数据（GDPR 要求）
-4. **通知系统**: 删除时通知相关用户
-5. **统计面板**: 显示删除统计和趋势
-
+1. **Batch Operations**: Support batch deletion of multiple users/events
+2. **Permanent Deletion**: Automatic permanent deletion after 30 days
+3. **Export Functionality**: Export user data before deletion (GDPR requirement)
+4. **Notification System**: Notify related users when deletion occurs
+5. **Statistics Dashboard**: Display deletion statistics and trends
