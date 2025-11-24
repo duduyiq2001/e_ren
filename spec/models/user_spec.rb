@@ -2,9 +2,10 @@ require 'rails_helper'
 
 RSpec.describe User, type: :model do
   describe "associations" do
-    it { should have_many(:organized_events).class_name('EventPost').with_foreign_key('organizer_id').dependent(:destroy) }
-    it { should have_many(:event_registrations).dependent(:destroy) }
+    it { should have_many(:organized_events).class_name('EventPost').with_foreign_key('organizer_id').dependent(:destroy_async) }
+    it { should have_many(:event_registrations).dependent(:destroy_async) }
     it { should have_many(:attended_events).through(:event_registrations).source(:event_post) }
+    it { should belong_to(:deleted_by_user).class_name('User').with_foreign_key('deleted_by_id').optional }
   end
 
   describe "validations" do
@@ -110,6 +111,98 @@ RSpec.describe User, type: :model do
 
       it "returns false if user is not organizing the event" do
         expect(user.organizing?(attended_event)).to be false
+      end
+    end
+  end
+
+  describe "role and admin methods" do
+    let(:student) { create(:user, role: :student) }
+    let(:admin) { create(:user, :admin) }
+
+    describe "#admin?" do
+      it "returns true for super_admin" do
+        expect(admin.admin?).to be true
+      end
+
+      it "returns false for student" do
+        expect(student.admin?).to be false
+      end
+    end
+
+    describe "#can_delete_user?" do
+      let(:target_user) { create(:user) }
+
+      it "allows admin to delete other users" do
+        expect(admin.can_delete_user?(target_user)).to be true
+      end
+
+      it "prevents admin from deleting themselves" do
+        expect(admin.can_delete_user?(admin)).to be false
+      end
+
+      it "prevents non-admin from deleting users" do
+        expect(student.can_delete_user?(target_user)).to be false
+      end
+    end
+
+    describe "#can_delete_event?" do
+      let(:event_post) { create(:event_post) }
+
+      it "allows admin to delete events" do
+        expect(admin.can_delete_event?(event_post)).to be true
+      end
+
+      it "prevents non-admin from deleting events" do
+        expect(student.can_delete_event?(event_post)).to be false
+      end
+    end
+  end
+
+  describe "soft delete functionality" do
+    let(:admin) { create(:user, :admin) }
+    let(:target_user) { create(:user) }
+    let!(:event_post) { create(:event_post, organizer: target_user) }
+    let!(:registration) { create(:event_registration, user: target_user, event_post: event_post) }
+    let!(:other_registration) { create(:event_registration, event_post: event_post) }
+
+    describe "#soft_delete_with_cascade!" do
+      it "soft deletes user and cascades to events" do
+        target_user.soft_delete_with_cascade!(admin, reason: 'Test deletion')
+        
+        expect(target_user.reload.discarded?).to be true
+        expect(event_post.reload.discarded?).to be true
+        expect(registration.reload.discarded?).to be true
+        expect(other_registration.reload.discarded?).to be true
+      end
+
+      it "records deletion metadata" do
+        target_user.soft_delete_with_cascade!(admin, reason: 'Spam account')
+        
+        expect(target_user.deleted_by_id).to eq(admin.id)
+        expect(target_user.deletion_reason).to eq('Spam account')
+      end
+
+      it "does not hard delete records" do
+        user_id = target_user.id
+        event_id = event_post.id
+        
+        target_user.soft_delete_with_cascade!(admin)
+        
+        expect(User.with_discarded.find(user_id)).to be_present
+        expect(EventPost.with_discarded.find(event_id)).to be_present
+      end
+    end
+
+    describe "#deletion_preview" do
+      it "returns accurate counts" do
+        create_list(:event_post, 2, organizer: target_user)
+        create_list(:event_registration, 3, user: target_user)
+        
+        preview = target_user.deletion_preview
+        
+        expect(preview[:organized_events]).to eq(3) # 1 from let! + 2 from create_list
+        expect(preview[:event_registrations]).to be >= 3
+        expect(preview[:e_score]).to eq(target_user.e_score)
       end
     end
   end

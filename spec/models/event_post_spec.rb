@@ -7,6 +7,7 @@ RSpec.describe EventPost, type: :model do
     it { should belong_to(:organizer).class_name('User').with_foreign_key('organizer_id') }
     it { should have_many(:event_registrations).dependent(:destroy_async) }
     it { should have_many(:attendees).through(:event_registrations).source(:user) }
+    it { should belong_to(:deleted_by_user).class_name('User').with_foreign_key('deleted_by_id').optional }
   end
 
   describe "validations" do
@@ -456,6 +457,57 @@ RSpec.describe EventPost, type: :model do
       expect {
         create(:event_post, organizer: nil)
       }.to raise_error(ActiveRecord::RecordInvalid)
+    end
+  end
+
+  describe "soft delete functionality" do
+    let(:admin) { create(:user, :admin) }
+    let(:event_post) { create(:event_post) }
+    let!(:registration1) { create(:event_registration, event_post: event_post) }
+    let!(:registration2) { create(:event_registration, event_post: event_post) }
+
+    describe "#soft_delete_with_cascade!" do
+      it "soft deletes event and cascades to registrations" do
+        event_post.soft_delete_with_cascade!(admin, reason: 'Test deletion')
+        
+        expect(event_post.reload.discarded?).to be true
+        expect(registration1.reload.discarded?).to be true
+        expect(registration2.reload.discarded?).to be true
+      end
+
+      it "records deletion metadata" do
+        event_post.soft_delete_with_cascade!(admin, reason: 'Inappropriate content')
+        
+        expect(event_post.deleted_by_id).to eq(admin.id)
+        expect(event_post.deletion_reason).to eq('Inappropriate content')
+      end
+
+      it "does not hard delete records" do
+        event_id = event_post.id
+        reg_id = registration1.id
+        
+        event_post.soft_delete_with_cascade!(admin)
+        
+        expect(EventPost.with_discarded.find(event_id)).to be_present
+        expect(EventRegistration.with_discarded.find(reg_id)).to be_present
+      end
+    end
+
+    describe "#deletion_preview" do
+      it "returns accurate counts" do
+        preview = event_post.deletion_preview
+        
+        expect(preview[:event_registrations]).to eq(2)
+        expect(preview[:attendees_count]).to eq(2)
+      end
+
+      it "returns zero for events with no registrations" do
+        new_event = create(:event_post)
+        preview = new_event.deletion_preview
+        
+        expect(preview[:event_registrations]).to eq(0)
+        expect(preview[:attendees_count]).to eq(0)
+      end
     end
   end
 end

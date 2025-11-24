@@ -1,0 +1,336 @@
+<!-- Header Section -->
+<header class="bg-washu-red text-white py-12 relative overflow-hidden">
+  <div class="gothic-pattern absolute inset-0 opacity-20"></div>
+  <div class="container mx-auto px-4 relative z-10">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold mb-2">Admin Panel</h1>
+        <p class="text-pink-100">Manage users and events</p>
+      </div>
+      <div>
+        <%= link_to root_path, class: "bg-white text-washu-red px-6 py-3 rounded-lg font-medium shadow-lg hover:bg-gray-100 transition-all duration-300" do %>
+          ← Back to Home
+        <% end %>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="container mx-auto px-4 py-8">
+  <!-- Flash Messages -->
+  <% if notice %>
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 fade-in" id="flash-notice">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          <span class="text-green-700 font-medium"><%= notice %></span>
+        </div>
+        <button onclick="this.parentElement.parentElement.remove()" class="text-green-500 hover:text-green-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  <% end %>
+
+  <% if alert %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 fade-in" id="flash-alert">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="text-red-700 font-medium"><%= alert %></span>
+        </div>
+        <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Tabs -->
+  <div class="mb-6 border-b border-gray-200">
+    <nav class="flex space-x-8">
+      <button onclick="showTab('active')" id="tab-active" class="tab-button py-4 px-1 border-b-2 border-washu-red font-medium text-sm text-washu-red">
+        Active Items
+      </button>
+      <button onclick="showTab('deleted')" id="tab-deleted" class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+        Deleted Items
+      </button>
+      <button onclick="showTab('audit')" id="tab-audit" class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+        Audit Log
+      </button>
+    </nav>
+  </div>
+
+  <!-- Active Items Tab -->
+  <div id="tab-content-active" class="tab-content">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Users Section -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-washu-gray">Users (<%= @users.count %>)</h2>
+        </div>
+        <div class="space-y-3 max-h-96 overflow-y-auto">
+          <% @users.each do |user| %>
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div class="flex-1">
+                <div class="font-medium text-gray-900"><%= user.name %></div>
+                <div class="text-sm text-gray-500"><%= user.email %></div>
+                <div class="text-xs text-gray-400 mt-1">
+                  Role: <%= user.role.humanize %> | E-Score: <%= user.e_score %>
+                </div>
+              </div>
+              <button
+                data-controller="deletion-modal"
+                data-deletion-modal-type-value="user"
+                data-deletion-modal-id-value="<%= user.id %>"
+                data-deletion-modal-title-value="<%= user.name %>"
+                data-action="click->deletion-modal#open"
+                class="px-3 py-1 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Events Section -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-washu-gray">Events (<%= @event_posts.count %>)</h2>
+        </div>
+        <div class="space-y-3 max-h-96 overflow-y-auto">
+          <% @event_posts.each do |event| %>
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div class="flex-1">
+                <div class="font-medium text-gray-900"><%= event.name %></div>
+                <div class="text-sm text-gray-500">By: <%= event.organizer.name %></div>
+                <div class="text-xs text-gray-400 mt-1">
+                  <%= event.event_time.strftime("%b %d, %Y at %I:%M %p") %> | <%= event.registrations_count %> registrations
+                </div>
+              </div>
+              <button
+                data-controller="deletion-modal"
+                data-deletion-modal-type-value="event_post"
+                data-deletion-modal-id-value="<%= event.id %>"
+                data-deletion-modal-title-value="<%= event.name %>"
+                data-action="click->deletion-modal#open"
+                class="px-3 py-1 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deleted Items Tab -->
+  <div id="tab-content-deleted" class="tab-content hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Deleted Users -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-washu-gray">Deleted Users (<%= @deleted_users.count %>)</h2>
+        </div>
+        <div class="space-y-3 max-h-96 overflow-y-auto">
+          <% @deleted_users.each do |user| %>
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
+              <div class="flex-1">
+                <div class="font-medium text-gray-600 line-through"><%= user.name %></div>
+                <div class="text-sm text-gray-400"><%= user.email %></div>
+                <div class="text-xs text-gray-400 mt-1">
+                  Deleted: <%= user.deleted_at.strftime("%b %d, %Y at %I:%M %p") %>
+                  <% if user.deletion_reason.present? %>
+                    | Reason: <%= user.deletion_reason %>
+                  <% end %>
+                </div>
+              </div>
+              <button
+                data-controller="restore-button"
+                data-restore-button-type-value="user"
+                data-restore-button-id-value="<%= user.id %>"
+                data-action="click->restore-button#restore"
+                class="px-3 py-1 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700 transition-colors"
+              >
+                Restore
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Deleted Events -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-washu-gray">Deleted Events (<%= @deleted_events.count %>)</h2>
+        </div>
+        <div class="space-y-3 max-h-96 overflow-y-auto">
+          <% @deleted_events.each do |event| %>
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
+              <div class="flex-1">
+                <div class="font-medium text-gray-600 line-through"><%= event.name %></div>
+                <div class="text-sm text-gray-400">By: <%= event.organizer.name %></div>
+                <div class="text-xs text-gray-400 mt-1">
+                  Deleted: <%= event.deleted_at.strftime("%b %d, %Y at %I:%M %p") %>
+                  <% if event.deletion_reason.present? %>
+                    | Reason: <%= event.deletion_reason %>
+                  <% end %>
+                </div>
+              </div>
+              <button
+                data-controller="restore-button"
+                data-restore-button-type-value="event_post"
+                data-restore-button-id-value="<%= event.id %>"
+                data-action="click->restore-button#restore"
+                class="px-3 py-1 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700 transition-colors"
+              >
+                Restore
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit Log Tab -->
+  <div id="tab-content-audit" class="tab-content hidden">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-2xl font-bold text-washu-gray mb-4">Recent Audit Logs</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% @recent_audit_logs.each do |log| %>
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= log.action == 'delete' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' %>">
+                    <%= log.action.capitalize %>
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <%= log.target_type %> #<%= log.target_id %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= log.admin_user.name %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= log.created_at.strftime("%b %d, %Y %I:%M %p") %>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500">
+                  <%= log.metadata['reason'] || '-' %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Deletion Modal -->
+<div id="deletion-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" data-controller="deletion-modal">
+  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div class="mt-3">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-900">⚠️ Confirm Deletion</h3>
+        <button data-action="click->deletion-modal#close" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <div id="modal-content" class="space-y-4">
+        <div class="text-gray-700">
+          <p class="mb-2">You are about to delete: <strong id="modal-title"></strong></p>
+          <div id="deletion-preview" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <h4 class="font-semibold text-yellow-800 mb-2">This will delete:</h4>
+            <ul id="preview-list" class="list-disc list-inside text-sm text-yellow-700 space-y-1"></ul>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Reason for deletion (optional):</label>
+          <textarea id="deletion-reason" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-washu-red" placeholder="e.g., Spam, inappropriate content, user request"></textarea>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Type <strong>DELETE</strong> to confirm:
+          </label>
+          <input type="text" id="deletion-confirmation" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-washu-red" placeholder="DELETE">
+        </div>
+        
+        <div class="flex justify-end space-x-3 pt-4">
+          <button data-action="click->deletion-modal#close" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors">
+            Cancel
+          </button>
+          <button id="confirm-delete-btn" data-action="click->deletion-modal#confirmDelete" disabled class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+            Confirm Deletion
+          </button>
+        </div>
+        
+        <p class="text-xs text-gray-500 text-center">
+          💡 Items will be recoverable for 30 days
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.add('hidden');
+    });
+    
+    // Remove active state from all tabs
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.classList.remove('border-washu-red', 'text-washu-red');
+      button.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected tab content
+    document.getElementById(`tab-content-${tabName}`).classList.remove('hidden');
+    
+    // Add active state to selected tab
+    const activeTab = document.getElementById(`tab-${tabName}`);
+    activeTab.classList.remove('border-transparent', 'text-gray-500');
+    activeTab.classList.add('border-washu-red', 'text-washu-red');
+  }
+  
+  // Enable/disable delete button based on confirmation input
+  document.addEventListener('DOMContentLoaded', function() {
+    const confirmationInput = document.getElementById('deletion-confirmation');
+    const confirmBtn = document.getElementById('confirm-delete-btn');
+    
+    if (confirmationInput && confirmBtn) {
+      confirmationInput.addEventListener('input', function() {
+        confirmBtn.disabled = this.value !== 'DELETE';
+      });
+    }
+  });
+</script>
+

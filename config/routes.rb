@@ -34,6 +34,27 @@ Rails.application.routes.draw do
   get 'users/search', to: 'users#search', as: :search_users
   resources :users, only: [:show]
 
+  # Admin namespace
+  namespace :admin do
+    root to: 'dashboard#index'
+    
+    resources :users, only: [] do
+      member do
+        get :deletion_preview, to: 'deletions#preview'
+        delete :destroy, to: 'deletions#destroy'
+      end
+    end
+
+    resources :event_posts, only: [] do
+      member do
+        get :deletion_preview, to: 'deletions#preview'
+        delete :destroy, to: 'deletions#destroy'
+      end
+    end
+
+    post 'restore/:type/:id', to: 'deletions#restore', as: :restore
+  end
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
