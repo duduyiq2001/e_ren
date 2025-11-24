@@ -55,8 +55,6 @@ Rails.application.routes.draw do
         delete :destroy, to: 'deletions#destroy'
       end
     end
-
-    post 'restore/:type/:id', to: 'deletions#restore', as: :restore
   end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

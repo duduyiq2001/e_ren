@@ -76,7 +76,8 @@ RSpec.describe 'Admin::Deletions', type: :request do
         expect(target_user.reload.discarded?).to be false
       end
 
-      it 'soft deletes with valid confirmation' do
+      it 'hard deletes with valid confirmation' do
+        user_id = target_user.id
         delete admin_user_path(target_user), params: {
           confirmation: 'DELETE',
           reason: 'Test deletion'
@@ -89,7 +90,8 @@ RSpec.describe 'Admin::Deletions', type: :request do
         # Execute the enqueued job to perform the actual deletion
         perform_enqueued_jobs
         
-        expect(target_user.reload.discarded?).to be true
+        # Record should be hard deleted (not found)
+        expect { User.find(user_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
 
       it 'creates audit log entry' do
@@ -105,20 +107,25 @@ RSpec.describe 'Admin::Deletions', type: :request do
       end
 
       it 'prevents admin from deleting themselves' do
+        admin_id = admin.id
         delete admin_user_path(admin), params: { confirmation: 'DELETE' }
         expect(response).to have_http_status(:forbidden)
-        expect(admin.reload.discarded?).to be false
+        # Admin should still exist (not deleted)
+        expect(User.find(admin_id)).to be_present
       end
 
       it 'cascades deletion to user events' do
         event = create(:event_post, organizer: target_user)
+        user_id = target_user.id
+        event_id = event.id
         delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
 
         # Execute the enqueued job to perform the actual deletion
         perform_enqueued_jobs
 
-        expect(target_user.reload.discarded?).to be true
-        expect(event.reload.discarded?).to be true
+        # Records should be hard deleted (not found)
+        expect { User.find(user_id) }.to raise_error(ActiveRecord::RecordNotFound)
+        expect { EventPost.find(event_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
 
       context 'when user has registrations in events' do
@@ -165,15 +172,16 @@ RSpec.describe 'Admin::Deletions', type: :request do
           # Execute the enqueued job to perform the actual deletion
           perform_enqueued_jobs
           
+          # Reload events (they should still exist, only registrations are deleted)
           event1.reload
           event2.reload
           event3.reload
           event4.reload
           
-          # Event1: should decrease by 1 (confirmed_reg1)
+          # Event1: should decrease by 1 (confirmed_reg1 was hard deleted)
           expect(event1.registrations_count).to eq(initial_count1 - 1)
           
-          # Event2: should decrease by 1 (confirmed_reg2)
+          # Event2: should decrease by 1 (confirmed_reg2 was hard deleted)
           expect(event2.registrations_count).to eq(initial_count2 - 1)
           
           # Event3: should not change (waitlisted_reg doesn't affect count)
@@ -214,10 +222,10 @@ RSpec.describe 'Admin::Deletions', type: :request do
           
           event1.reload
           
-          # Should only decrease by 1 (target_user's confirmed registration)
+          # Should only decrease by 1 (target_user's confirmed registration was hard deleted)
           # other_user's registration should remain
           expect(event1.registrations_count).to eq(initial_count1 - 1)
-          expect(other_reg.reload.discarded?).to be false
+          expect(EventRegistration.find(other_reg.id)).to be_present
         end
       end
 
@@ -264,7 +272,8 @@ RSpec.describe 'Admin::Deletions', type: :request do
     context 'as admin' do
       before { sign_in admin }
 
-      it 'soft deletes event with valid confirmation' do
+      it 'hard deletes event with valid confirmation' do
+        event_id = event_post.id
         delete admin_event_post_path(event_post), params: {
           confirmation: 'DELETE',
           reason: 'Inappropriate content'
@@ -275,26 +284,22 @@ RSpec.describe 'Admin::Deletions', type: :request do
         # Execute the enqueued job to perform the actual deletion
         perform_enqueued_jobs
         
-        expect(event_post.reload.discarded?).to be true
+        # Record should be hard deleted (not found)
+        expect { EventPost.find(event_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
 
       it 'cascades deletion to registrations' do
         registration = create(:event_registration, event_post: event_post)
+        event_id = event_post.id
         registration_id = registration.id
         delete admin_event_post_path(event_post), params: { confirmation: 'DELETE' }
 
         # Execute the enqueued job to perform the actual deletion
         perform_enqueued_jobs
 
-        expect(event_post.reload.discarded?).to be true
-        # Registration might be deleted via destroy_async (hard delete),
-        # so check if it exists and is discarded, or if it was hard deleted
-        reg = EventRegistration.with_discarded.find_by(id: registration_id)
-        if reg
-          expect(reg.discarded?).to be true
-        else
-          expect(EventRegistration.where(id: registration_id)).to be_empty
-        end
+        # Records should be hard deleted (not found)
+        expect { EventPost.find(event_id) }.to raise_error(ActiveRecord::RecordNotFound)
+        expect { EventRegistration.find(registration_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
 
       it 'queues deletion as background job' do
@@ -324,59 +329,19 @@ RSpec.describe 'Admin::Deletions', type: :request do
     end
 
       it 'processes deletion in background job' do
+        user_id = target_user.id
         delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
         
         # Initially not deleted (job not processed yet)
-        expect(target_user.reload.discarded?).to be false
+        expect(User.find(user_id)).to be_present
         
         # Process the enqueued job
         perform_enqueued_jobs
         
-        # Now should be deleted
-        expect(target_user.reload.discarded?).to be true
+        # Now should be hard deleted (not found)
+        expect { User.find(user_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
   end
 
-  describe 'POST /admin/restore/:type/:id' do
-    let(:deleted_user) { create(:user).tap { |u| u.update_column(:deleted_at, 1.day.ago) } }
-    let(:deleted_event) { create(:event_post).tap { |e| e.update_column(:deleted_at, 1.day.ago) } }
-
-    context 'as admin' do
-      before { sign_in admin }
-
-      it 'restores soft-deleted user' do
-        post admin_restore_path(type: 'user', id: deleted_user.id)
-
-        expect(response).to have_http_status(:success)
-        expect(deleted_user.reload.discarded?).to be false
-      end
-
-      it 'restores soft-deleted event' do
-        post admin_restore_path(type: 'event_post', id: deleted_event.id)
-
-        expect(response).to have_http_status(:success)
-        expect(deleted_event.reload.discarded?).to be false
-      end
-
-      it 'creates audit log for restoration' do
-        expect {
-          post admin_restore_path(type: 'user', id: deleted_user.id)
-        }.to change(AdminAuditLog, :count).by(1)
-
-        log = AdminAuditLog.last
-        expect(log.action).to eq('restore')
-        expect(log.target_type).to eq('User')
-      end
-    end
-
-    context 'as non-admin' do
-      before { sign_in student }
-
-      it 'returns forbidden' do
-        post admin_restore_path(type: 'user', id: deleted_user.id)
-        expect(response).to have_http_status(:forbidden)
-      end
-    end
-  end
 end
 

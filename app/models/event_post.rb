@@ -66,10 +66,10 @@ class EventPost < ApplicationRecord
       # Since this method runs in a background job, these deletions are async
       event_registrations.each(&:destroy)
       
-      # Perform soft delete on the event itself
+      # Perform hard delete on the event itself
       # This will trigger destroy_async on all dependent associations (event_registrations)
       # The destroy_async dependency means registrations will be queued for async deletion
-      discard
+      destroy
     end
   end
 

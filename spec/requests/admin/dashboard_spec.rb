@@ -31,13 +31,6 @@ RSpec.describe 'Admin::Dashboard', type: :request do
         expect(response.body).to include(event2.name)
       end
 
-      it 'displays deleted items when they exist' do
-        deleted_user = create(:user, email: "deleted-test-#{SecureRandom.hex(4)}@wustl.edu")
-        deleted_user.discard
-        
-        get admin_root_path
-        expect(response.body).to include('Deleted Items')
-      end
 
       it 'displays audit log' do
         AdminAuditLog.create!(

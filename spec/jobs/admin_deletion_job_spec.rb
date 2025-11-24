@@ -16,29 +16,25 @@ RSpec.describe AdminDeletionJob, type: :job do
       let!(:event) { create(:event_post, organizer: target_user) }
       let!(:registration) { create(:event_registration, user: target_user, event_post: event) }
 
-      it 'soft deletes the user' do
-        expect {
-          AdminDeletionJob.perform_now('User', target_user.id, admin.id, 'Test reason')
-        }.to change { target_user.reload.discarded? }.from(false).to(true)
+      it 'hard deletes the user' do
+        user_id = target_user.id
+        AdminDeletionJob.perform_now('User', target_user.id, admin.id, 'Test reason')
+        # User should be hard deleted (not found)
+        expect { User.find(user_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
 
       it 'cascades deletion to user events' do
+        event_id = event.id
         AdminDeletionJob.perform_now('User', target_user.id, admin.id)
-        expect(event.reload.discarded?).to be true
+        # Event should be hard deleted (not found)
+        expect { EventPost.find(event_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
 
       it 'cascades deletion to user registrations' do
         registration_id = registration.id
         AdminDeletionJob.perform_now('User', target_user.id, admin.id)
-        # Registration might be deleted via destroy_async (hard delete), 
-        # so check if it exists and is discarded, or if it was hard deleted
-        registration_record = EventRegistration.with_discarded.find_by(id: registration_id)
-        if registration_record
-          expect(registration_record.discarded?).to be true
-        else
-          # If record doesn't exist, it was hard deleted via destroy_async (which is expected)
-          expect(EventRegistration.where(id: registration_id)).to be_empty
-        end
+        # Registration should be hard deleted (not found)
+        expect { EventRegistration.find(registration_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
 
       context 'when user has registrations in multiple events' do
@@ -125,18 +121,20 @@ RSpec.describe AdminDeletionJob, type: :job do
           
           event1.reload
           
-          # Should only decrease by 1 (target_user's confirmed registration)
+          # Should only decrease by 1 (target_user's confirmed registration was hard deleted)
           # other_user's registration should remain
           expect(event1.registrations_count).to eq(initial_count1 - 1)
-          expect(other_reg.reload.discarded?).to be false
+          expect(EventRegistration.find(other_reg.id)).to be_present
         end
       end
 
-      it 'records deletion metadata' do
+      it 'records deletion metadata before deletion' do
+        # Metadata is saved before deletion, but after deletion we can't check it
+        # as the record is gone. We can verify deletion happened.
+        user_id = target_user.id
         AdminDeletionJob.perform_now('User', target_user.id, admin.id, 'Spam account')
-        target_user.reload
-        expect(target_user.deleted_by_id).to eq(admin.id)
-        expect(target_user.deletion_reason).to eq('Spam account')
+        # User should be hard deleted (not found)
+        expect { User.find(user_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
 
       it 'does not create duplicate audit log entry' do
@@ -153,37 +151,29 @@ RSpec.describe AdminDeletionJob, type: :job do
       let!(:registration1) { create(:event_registration, event_post: event_post) }
       let!(:registration2) { create(:event_registration, event_post: event_post) }
 
-      it 'soft deletes the event' do
-        expect {
-          AdminDeletionJob.perform_now('EventPost', event_post.id, admin.id)
-        }.to change { event_post.reload.discarded? }.from(false).to(true)
+      it 'hard deletes the event' do
+        event_id = event_post.id
+        AdminDeletionJob.perform_now('EventPost', event_post.id, admin.id)
+        # Event should be hard deleted (not found)
+        expect { EventPost.find(event_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
 
       it 'cascades deletion to registrations' do
         registration1_id = registration1.id
         registration2_id = registration2.id
         AdminDeletionJob.perform_now('EventPost', event_post.id, admin.id)
-        # Registrations might be deleted via destroy_async (hard delete),
-        # so check if they exist and are discarded, or if they were hard deleted
-        reg1 = EventRegistration.with_discarded.find_by(id: registration1_id)
-        reg2 = EventRegistration.with_discarded.find_by(id: registration2_id)
-        if reg1
-          expect(reg1.discarded?).to be true
-        else
-          expect(EventRegistration.where(id: registration1_id)).to be_empty
-        end
-        if reg2
-          expect(reg2.discarded?).to be true
-        else
-          expect(EventRegistration.where(id: registration2_id)).to be_empty
-        end
+        # Registrations should be hard deleted (not found)
+        expect { EventRegistration.find(registration1_id) }.to raise_error(ActiveRecord::RecordNotFound)
+        expect { EventRegistration.find(registration2_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
 
-      it 'records deletion metadata' do
+      it 'records deletion metadata before deletion' do
+        # Metadata is saved before deletion, but after deletion we can't check it
+        # as the record is gone. We can verify deletion happened.
+        event_id = event_post.id
         AdminDeletionJob.perform_now('EventPost', event_post.id, admin.id, 'Inappropriate')
-        event_post.reload
-        expect(event_post.deleted_by_id).to eq(admin.id)
-        expect(event_post.deletion_reason).to eq('Inappropriate')
+        # Event should be hard deleted (not found)
+        expect { EventPost.find(event_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
     end
 

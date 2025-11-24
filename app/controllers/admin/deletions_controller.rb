@@ -1,6 +1,6 @@
 module Admin
   class DeletionsController < AdminBaseController
-    before_action :set_deletable, only: [:preview, :destroy, :restore]
+    before_action :set_deletable, only: [:preview, :destroy]
 
     # GET /admin/users/:id/deletion_preview
     # GET /admin/event_posts/:id/deletion_preview
@@ -57,37 +57,8 @@ module Admin
       render json: {
         success: true,
         message: "#{@deletable.class.name} deletion queued. It will be processed in the background.",
-        grace_period_ends: 30.days.from_now,
         async: true
       }
-    end
-
-    # POST /admin/restore/:type/:id
-    def restore
-      # Discard's restore (undiscard) - handle cascading manually
-      if @deletable.undiscard
-        # If it's a User, restore their events
-        if @deletable.is_a?(User)
-          @deletable.organized_events.with_discarded.discarded.each(&:undiscard)
-        end
-        # If it's an EventPost, restore its registrations
-        if @deletable.is_a?(EventPost)
-          @deletable.event_registrations.with_discarded.discarded.each(&:undiscard)
-        end
-
-        AdminAuditLog.create!(
-          admin_user: current_user,
-          action: 'restore',
-          target_type: @deletable.class.name,
-          target_id: @deletable.id,
-          ip_address: request.remote_ip,
-          user_agent: request.user_agent
-        )
-
-        render json: { success: true, message: "#{@deletable.class.name} restored" }
-      else
-        render json: { error: "Restore failed" }, status: :unprocessable_entity
-      end
     end
 
     private
@@ -124,16 +95,16 @@ module Admin
       
       if request.path.include?('/users/')
         Rails.logger.debug "Inferring type: User (from path)"
-        @deletable = User.with_discarded.find(id_int)
+        @deletable = User.find(id_int)
       elsif request.path.include?('/event_posts/')
         Rails.logger.debug "Inferring type: EventPost (from path)"
-        @deletable = EventPost.with_discarded.find(id_int)
+        @deletable = EventPost.find(id_int)
       elsif params[:type] == 'user' || params[:type] == 'User'
         Rails.logger.debug "Inferring type: User (from params)"
-        @deletable = User.with_discarded.find(id_int)
+        @deletable = User.find(id_int)
       elsif params[:type] == 'event_post' || params[:type] == 'EventPost'
         Rails.logger.debug "Inferring type: EventPost (from params)"
-        @deletable = EventPost.with_discarded.find(id_int)
+        @deletable = EventPost.find(id_int)
       else
         Rails.logger.error "Could not infer type from path or params"
         render json: { 
