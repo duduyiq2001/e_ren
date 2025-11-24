@@ -2,7 +2,7 @@ class EventPostsController < ApplicationController
   before_action :authenticate_user!
 
   def index
-    @event_posts = EventPost.includes(:event_category, :organizer, :attendees).order(event_time: :asc)
+    @event_posts = EventPost.kept.includes(:event_category, :organizer, :attendees).order(event_time: :asc)
 
     # Load user's registrations for these events
     if current_user
@@ -14,15 +14,17 @@ class EventPostsController < ApplicationController
   end
 
   def show
-    @event_post = EventPost.find(params[:id])
+    @event_post = EventPost.kept.find(params[:id])
     @registration = current_user.event_registrations.find_by(event_post: @event_post) if current_user
+  rescue ActiveRecord::RecordNotFound
+    redirect_to event_posts_path, alert: "Event not found or has been deleted."
   end
 
   def find
   end
 
   def search
-    @event_posts = EventPost.includes(:event_category, :organizer, :attendees)
+    @event_posts = EventPost.kept.includes(:event_category, :organizer, :attendees)
 
     # Apply filters (they're chainable!)
     @event_posts = @event_posts.search_by_name(params[:q]) if params[:q].present?
@@ -85,7 +87,7 @@ class EventPostsController < ApplicationController
   end
 
   def edit
-    @event_post = EventPost.find(params[:id])
+    @event_post = EventPost.kept.find(params[:id])
 
     # Only allow organizer to edit
     unless current_user == @event_post.organizer
@@ -97,7 +99,7 @@ class EventPostsController < ApplicationController
   end
 
   def update
-    @event_post = EventPost.find(params[:id])
+    @event_post = EventPost.kept.find(params[:id])
 
     # Only allow organizer to update
     unless current_user == @event_post.organizer
@@ -114,7 +116,7 @@ class EventPostsController < ApplicationController
   end
 
   def destroy
-    @event_post = EventPost.find(params[:id])
+    @event_post = EventPost.kept.find(params[:id])
 
     # Only allow organizer to delete
     unless current_user == @event_post.organizer
@@ -127,7 +129,7 @@ class EventPostsController < ApplicationController
   end
 
   def registrations
-    @event_post = EventPost.find(params[:id])
+    @event_post = EventPost.kept.find(params[:id])
 
     # Only allow organizer to view registrations
     unless current_user == @event_post.organizer

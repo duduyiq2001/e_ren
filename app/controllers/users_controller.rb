@@ -2,9 +2,9 @@ class UsersController < ApplicationController
   def show
     @user = User.find(params[:id])
 
-    # Get all events (organized and attended)
-    @organized_events = @user.organized_events.includes(:event_category).order(event_time: :asc)
-    @attended_events = @user.attended_events.includes(:event_category, :organizer).order(event_time: :asc)
+    # Get all events (organized and attended) - only non-deleted events
+    @organized_events = @user.organized_events.kept.includes(:event_category).order(event_time: :asc)
+    @attended_events = @user.attended_events.kept.includes(:event_category, :organizer).order(event_time: :asc)
 
     # Filter events by type (upcoming, registered, organized, completed)
     @event_filter = params[:filter] || 'registered'
@@ -13,9 +13,12 @@ class UsersController < ApplicationController
     when 'registered'
       # Show upcoming registered events (not organized by user)
       # Split into confirmed and pending registrations
+      # Only include non-deleted events
       all_upcoming_registrations = @user.event_registrations
+                                        .kept
                                         .includes(event_post: [:event_category, :organizer])
                                         .joins(:event_post)
+                                        .where('event_posts.deleted_at IS NULL')
                                         .where('event_posts.event_time > ?', Time.current)
                                         .order('event_posts.event_time ASC')
 
@@ -23,12 +26,13 @@ class UsersController < ApplicationController
       @pending_registrations = all_upcoming_registrations.pending.map(&:event_post)
       @filtered_events = @confirmed_registrations + @pending_registrations
     when 'organized'
-      # Show upcoming organized events
+      # Show upcoming organized events (already filtered by kept)
       @filtered_events = @organized_events.where('event_time > ?', Time.current)
     when 'completed'
-      # Show past organized events
+      # Show past organized events (already filtered by kept)
       @filtered_events = @organized_events.where('event_time <= ?', Time.current)
     else
+      # Show attended events (already filtered by kept)
       @filtered_events = @attended_events.where('event_time > ?', Time.current)
     end
 

@@ -2,7 +2,7 @@ class EventRegistrationsController < ApplicationController
   before_action :authenticate_user!
 
   def create
-    @event_post = EventPost.find(params[:event_post_id])
+    @event_post = EventPost.kept.find(params[:event_post_id])
     @registration = current_user.event_registrations.build(event_post: @event_post)
 
     if @registration.save
@@ -19,7 +19,7 @@ class EventRegistrationsController < ApplicationController
   end
 
   def update
-    @event_post = EventPost.find(params[:event_post_id])
+    @event_post = EventPost.kept.find(params[:event_post_id])
     @registration = @event_post.event_registrations.find(params[:id])
 
     unless current_user == @event_post.organizer
@@ -47,7 +47,7 @@ class EventRegistrationsController < ApplicationController
   end
 
   def approve_registration
-    @event_post = EventPost.find(params[:event_post_id])
+    @event_post = EventPost.kept.find(params[:event_post_id])
     @registration = @event_post.event_registrations.find(params[:id])
 
     # Only organizer can approve registration
@@ -70,7 +70,7 @@ class EventRegistrationsController < ApplicationController
   end
 
   def confirm_attendance
-    @event_post = EventPost.find(params[:event_post_id])
+    @event_post = EventPost.kept.find(params[:event_post_id])
     @registration = @event_post.event_registrations.find(params[:id])
 
     # Only organizer can confirm attendance

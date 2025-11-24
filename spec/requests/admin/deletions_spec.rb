@@ -121,6 +121,106 @@ RSpec.describe 'Admin::Deletions', type: :request do
         expect(event.reload.discarded?).to be true
       end
 
+      context 'when user has registrations in events' do
+        let!(:organizer1) { create(:user, email: "org1-req-#{SecureRandom.hex(4)}@wustl.edu") }
+        let!(:organizer2) { create(:user, email: "org2-req-#{SecureRandom.hex(4)}@wustl.edu") }
+        let!(:organizer3) { create(:user, email: "org3-req-#{SecureRandom.hex(4)}@wustl.edu") }
+        let!(:organizer4) { create(:user, email: "org4-req-#{SecureRandom.hex(4)}@wustl.edu") }
+        let!(:organizer5) { create(:user, email: "org5-req-#{SecureRandom.hex(4)}@wustl.edu") }
+        
+        let!(:event1) { create(:event_post, organizer: organizer1) }
+        let!(:event2) { create(:event_post, organizer: organizer2) }
+        let!(:event3) { create(:event_post, organizer: organizer3) }
+        let!(:event4) { create(:event_post, organizer: organizer4, requires_approval: true) }
+        let!(:event5) { create(:event_post, organizer: organizer5, requires_approval: true) }
+        
+        let!(:confirmed_reg1) { create(:event_registration, user: target_user, event_post: event1, status: :confirmed) }
+        let!(:confirmed_reg2) { create(:event_registration, user: target_user, event_post: event2, status: :confirmed) }
+        let!(:waitlisted_reg) { create(:event_registration, user: target_user, event_post: event3, status: :waitlisted) }
+        let!(:pending_reg) { create(:event_registration, user: target_user, event_post: event4, status: :pending) }
+        
+        # Add other users' registrations to establish baseline counts
+        let!(:other_user1) { create(:user, email: "other1-req-#{SecureRandom.hex(4)}@wustl.edu") }
+        let!(:other_user2) { create(:user, email: "other2-req-#{SecureRandom.hex(4)}@wustl.edu") }
+        let!(:other_confirmed1) { create(:event_registration, user: other_user1, event_post: event1, status: :confirmed) }
+        let!(:other_confirmed2) { create(:event_registration, user: other_user2, event_post: event2, status: :confirmed) }
+        
+        before do
+          # Reload events to get accurate counts
+          event1.reload
+          event2.reload
+          event3.reload
+          event4.reload
+          event5.reload
+        end
+
+        it 'decrements registrations_count for events with confirmed registrations' do
+          initial_count1 = event1.registrations_count
+          initial_count2 = event2.registrations_count
+          initial_count3 = event3.registrations_count
+          initial_count4 = event4.registrations_count
+          
+          delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
+          
+          # Execute the enqueued job to perform the actual deletion
+          perform_enqueued_jobs
+          
+          event1.reload
+          event2.reload
+          event3.reload
+          event4.reload
+          
+          # Event1: should decrease by 1 (confirmed_reg1)
+          expect(event1.registrations_count).to eq(initial_count1 - 1)
+          
+          # Event2: should decrease by 1 (confirmed_reg2)
+          expect(event2.registrations_count).to eq(initial_count2 - 1)
+          
+          # Event3: should not change (waitlisted_reg doesn't affect count)
+          expect(event3.registrations_count).to eq(initial_count3)
+          
+          # Event4: should not change (pending_reg doesn't affect count)
+          expect(event4.registrations_count).to eq(initial_count4)
+        end
+
+        it 'only affects confirmed registrations, not waitlisted or pending' do
+          initial_count3 = event3.registrations_count
+          initial_count4 = event4.registrations_count
+          
+          delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
+          
+          # Execute the enqueued job to perform the actual deletion
+          perform_enqueued_jobs
+          
+          event3.reload
+          event4.reload
+          
+          # Counts should not change for waitlisted/pending registrations
+          expect(event3.registrations_count).to eq(initial_count3)
+          expect(event4.registrations_count).to eq(initial_count4)
+        end
+
+        it 'maintains correct counts for other users registrations' do
+          # Create another user with confirmed registration in event1
+          other_user = create(:user, email: "other-user-#{SecureRandom.hex(4)}@wustl.edu")
+          other_reg = create(:event_registration, user: other_user, event_post: event1, status: :confirmed)
+          
+          initial_count1 = event1.registrations_count
+          
+          delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
+          
+          # Execute the enqueued job to perform the actual deletion
+          perform_enqueued_jobs
+          
+          event1.reload
+          
+          # Should only decrease by 1 (target_user's confirmed registration)
+          # other_user's registration should remain
+          expect(event1.registrations_count).to eq(initial_count1 - 1)
+          expect(other_reg.reload.discarded?).to be false
+        end
+      end
+
       it 'queues deletion as background job' do
         expect {
           delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
