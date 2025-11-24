@@ -17,7 +17,9 @@ class EventRegistration < ApplicationRecord
   # Counter cache management - only count confirmed registrations
   after_create :increment_confirmed_count, if: :confirmed?
   after_destroy :decrement_confirmed_count, if: :confirmed?
+  after_discard :decrement_confirmed_count, if: :confirmed?
   before_destroy :promote_potential_candidate
+  before_discard :promote_potential_candidate
   after_update :update_confirmed_count, if: :saved_change_to_status?
 
   after_create :send_enrollment_notification
