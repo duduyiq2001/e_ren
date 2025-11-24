@@ -16,16 +16,8 @@ class AdminDeletionJob < ApplicationJob
     # Perform soft delete with cascade
     deletable.soft_delete_with_cascade!(admin_user, reason: reason)
     
-    # Log the deletion (in case it wasn't logged in controller)
-    AdminAuditLog.create!(
-      admin_user: admin_user,
-      action: 'delete',
-      target_type: deletable_type,
-      target_id: deletable_id,
-      metadata: { reason: reason, async: true },
-      ip_address: nil, # Not available in background job
-      user_agent: nil  # Not available in background job
-    )
+    # Note: Audit log is already created in the controller before queuing this job
+    # We don't create another log here to avoid duplicates
   rescue ActiveRecord::RecordNotFound => e
     Rails.logger.error "AdminDeletionJob failed: Record not found - #{e.message}"
   rescue StandardError => e
