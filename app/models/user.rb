@@ -9,7 +9,7 @@ class User < ApplicationRecord
   self.discard_column = :deleted_at
 
   # Role enum
-  enum :role, { student: 0, club_admin: 1, super_admin: 2 }, default: :student
+ enum :role, { student: 0, club_admin: 1, super_admin: 2 }, default: :student
 
   # Associations
   has_many :organized_events, class_name: 'EventPost', foreign_key: 'organizer_id', dependent: :destroy_async

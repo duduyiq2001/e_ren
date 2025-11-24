@@ -94,24 +94,71 @@ module Admin
 
     def set_deletable
       # Handle routes like /admin/users/:id or /admin/event_posts/:id
-      if params[:user_id] || (params[:type] == 'user')
-        id = params[:id] || params[:user_id]
-        @deletable = User.with_discarded.find(id)
-      elsif params[:event_post_id] || (params[:type] == 'event_post')
-        id = params[:id] || params[:event_post_id]
-        @deletable = EventPost.with_discarded.find(id)
-      else
-        # Try to infer from controller path
-        if request.path.include?('/users/')
-          @deletable = User.with_discarded.find(params[:id])
-        elsif request.path.include?('/event_posts/')
-          @deletable = EventPost.with_discarded.find(params[:id])
-        else
-          render json: { error: "Invalid type. Must be 'user' or 'event_post'" }, status: :bad_request
-        end
+      # Routes are: DELETE /admin/users/:id or DELETE /admin/event_posts/:id
+      # So params[:id] will be present, and we infer type from the path
+      
+      Rails.logger.debug "=== set_deletable Debug ==="
+      Rails.logger.debug "Request path: #{request.path}"
+      Rails.logger.debug "Request method: #{request.method}"
+      Rails.logger.debug "Params: #{params.inspect}"
+      Rails.logger.debug "Params[:id]: #{params[:id]} (#{params[:id].class})"
+      Rails.logger.debug "Params[:type]: #{params[:type]}"
+      Rails.logger.debug "Params keys: #{params.keys.inspect}"
+      
+      # Validate ID first
+      id = params[:id]
+      if id.nil? || id.to_s.empty? || id.to_i == 0
+        Rails.logger.error "Invalid ID: #{id.inspect}"
+        return render json: { 
+          error: "Invalid ID parameter", 
+          debug: {
+            id: id,
+            id_class: id.class,
+            path: request.path,
+            params: params.to_unsafe_h
+          }
+        }, status: :bad_request
       end
-    rescue ActiveRecord::RecordNotFound
-      render json: { error: "Record not found" }, status: :not_found
+      
+      id_int = id.to_i
+      
+      if request.path.include?('/users/')
+        Rails.logger.debug "Inferring type: User (from path)"
+        @deletable = User.with_discarded.find(id_int)
+      elsif request.path.include?('/event_posts/')
+        Rails.logger.debug "Inferring type: EventPost (from path)"
+        @deletable = EventPost.with_discarded.find(id_int)
+      elsif params[:type] == 'user' || params[:type] == 'User'
+        Rails.logger.debug "Inferring type: User (from params)"
+        @deletable = User.with_discarded.find(id_int)
+      elsif params[:type] == 'event_post' || params[:type] == 'EventPost'
+        Rails.logger.debug "Inferring type: EventPost (from params)"
+        @deletable = EventPost.with_discarded.find(id_int)
+      else
+        Rails.logger.error "Could not infer type from path or params"
+        render json: { 
+          error: "Invalid type. Must be 'user' or 'event_post'", 
+          debug: {
+            path: request.path,
+            params: params.to_unsafe_h
+          }
+        }, status: :bad_request
+        return
+      end
+      
+      Rails.logger.debug "Found deletable: #{@deletable.class.name} ##{@deletable.id}"
+    rescue ActiveRecord::RecordNotFound => e
+      Rails.logger.error "Record not found: #{e.message}"
+      Rails.logger.error "Path: #{request.path}, Params: #{params.inspect}"
+      render json: { 
+        error: "Record not found", 
+        debug: {
+          id: params[:id],
+          type: params[:type] || 'inferred from path',
+          path: request.path,
+          params: params.to_unsafe_h
+        }
+      }, status: :not_found
     end
 
     def deletable_title
