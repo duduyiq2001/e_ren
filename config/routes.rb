@@ -56,26 +56,6 @@ Rails.application.routes.draw do
   end
   # Email confirmation pending page
   get 'confirmations/pending', to: 'confirmations#pending', as: :confirmations_pending
-  # Admin namespace
-  namespace :admin do
-    root to: 'dashboard#index'
-    
-    get 'debug/deletion_test', to: 'debug#deletion_test'
-    
-    resources :users, only: [] do
-      member do
-        get :deletion_preview, to: 'deletions#preview'
-        delete :destroy, to: 'deletions#destroy'
-      end
-    end
-
-    resources :event_posts, only: [] do
-      member do
-        get :deletion_preview, to: 'deletions#preview'
-        delete :destroy, to: 'deletions#destroy'
-      end
-    end
-  end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
