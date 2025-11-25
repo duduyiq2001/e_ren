@@ -16,7 +16,7 @@ A configurable, customizable solution for student-run Meetup.com-like sites on c
 - PostgreSQL 16+
 - Node.js (for asset compilation)
 - Docker & Docker Compose (optional, for containerized development)
-
+trigger pipeline
 ## Setup
 trigger pr pipeline test
 ### Option 1: Automated Setup (Recommended)
