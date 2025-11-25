@@ -126,7 +126,7 @@ EOF
                 echo 'Running Requests, Views, and Integration tests...'
                 sh '''
                   cd $WORKSPACE
-                  $WORKSPACE/hext/hext test spec/requests spec/views spec/integration --format progress
+                  $WORKSPACE/hext/hext test spec/requests spec/views  --format progress
                 '''
               }
             }

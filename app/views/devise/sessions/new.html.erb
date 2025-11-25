@@ -10,18 +10,7 @@
 <!-- Main Content -->
 <main class="container mx-auto px-4 py-12">
   <div class="max-w-md mx-auto">
-    <!-- Flash Messages -->
-    <% if alert %>
-      <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 fade-in">
-        <div class="flex items-center">
-          <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <span class="text-red-700 font-medium"><%= alert %></span>
-        </div>
-      </div>
-    <% end %>
-
+    <!-- Flash Messages - Only show notice (confirmation message), not generic auth alerts -->
     <% if notice %>
       <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 fade-in">
         <div class="flex items-center">
@@ -43,7 +32,7 @@
           <%= f.label :email, class: "block text-sm font-medium text-gray-700 mb-2" %>
           <%= f.email_field :email,
               class: "form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none",
-              placeholder: "your.email@wustl.edu",
+              placeholder: "your.email@example.com",
               required: true,
               autofocus: true,
               autocomplete: "email" %>

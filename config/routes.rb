@@ -54,6 +54,8 @@ Rails.application.routes.draw do
       end
     end
   end
+  # Email confirmation pending page
+  get 'confirmations/pending', to: 'confirmations#pending', as: :confirmations_pending
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
