@@ -35,6 +35,11 @@ RSpec.describe Users::RegistrationsController, type: :controller do
         expect(controller.current_user).to be_nil
       end
 
+      it "sets flash notice about email confirmation" do
+        post :create, params: valid_params
+        expect(flash[:notice]).to eq("A message with a confirmation link has been sent to your email address. Please follow the link to activate your account.")
+      end
+
       it "permits custom parameters (name, phone_number)" do
         post :create, params: valid_params
         user = User.find_by(email: "newuser@wustl.edu")

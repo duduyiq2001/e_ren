@@ -12,11 +12,11 @@ puts "🌱 Seeding database..."
 # Create Users
 puts "Creating users..."
 users = [
-  User.create!(name: "Alice Chen", email: "alice@university.edu", password: "password123", password_confirmation: "password123", phone_number: "555-0101", e_score: 150),
-  User.create!(name: "Bob Martinez", email: "bob@university.edu", password: "password123", password_confirmation: "password123", phone_number: "555-0102", e_score: 120),
-  User.create!(name: "Charlie Kim", email: "charlie@university.edu", password: "password123", password_confirmation: "password123", phone_number: "555-0103", e_score: 200),
-  User.create!(name: "Diana Patel", email: "diana@university.edu", password: "password123", password_confirmation: "password123", phone_number: "555-0104", e_score: 80),
-  User.create!(name: "Ethan Brown", email: "ethan@university.edu", password: "password123", password_confirmation: "password123", phone_number: "555-0105", e_score: 95)
+  User.create!(name: "Alice Chen", email: "alice@wustl.edu", password: "password123", password_confirmation: "password123", phone_number: "555-0101", e_score: 150, confirmed_at: Time.current),
+  User.create!(name: "Bob Martinez", email: "bob@wustl.edu", password: "password123", password_confirmation: "password123", phone_number: "555-0102", e_score: 120, confirmed_at: Time.current),
+  User.create!(name: "Charlie Kim", email: "charlie@wustl.edu", password: "password123", password_confirmation: "password123", phone_number: "555-0103", e_score: 200, confirmed_at: Time.current),
+  User.create!(name: "Diana Patel", email: "diana@wustl.edu", password: "password123", password_confirmation: "password123", phone_number: "555-0104", e_score: 80, confirmed_at: Time.current),
+  User.create!(name: "Ethan Brown", email: "ethan@wustl.edu", password: "password123", password_confirmation: "password123", phone_number: "555-0105", e_score: 95, confirmed_at: Time.current)
 ]
 
 # Create Event Categories

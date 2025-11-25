@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe User, type: :model do
   describe "associations" do
-    it { should have_many(:organized_events).class_name('EventPost').with_foreign_key('organizer_id').dependent(:destroy) }
-    it { should have_many(:event_registrations).dependent(:destroy) }
+    it { should have_many(:organized_events).class_name('EventPost').with_foreign_key('organizer_id').dependent(:destroy_async) }
+    it { should have_many(:event_registrations).dependent(:destroy_async) }
     it { should have_many(:attended_events).through(:event_registrations).source(:event_post) }
   end
 
