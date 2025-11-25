@@ -1,5 +1,5 @@
 class EventNotificationMailer < ApplicationMailer
-  default from: 'noreply@example.com'
+  default from: 'noreply@erenspace.com'
 
   def enrollment_confirmation(event_registration)
     @event_registration = event_registration
