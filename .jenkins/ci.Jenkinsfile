@@ -85,7 +85,7 @@ EOF
                   docker exec e_ren_rails sh -c "cd /rails && bundle install"
 
                   echo "=== Setting up test database ==="
-                  docker exec e_ren_rails sh -c "cd /rails && bin/rails db:test:prepare"
+                  docker exec e_ren_rails sh -c "cd /rails && RAILS_ENV=test bin/rails db:drop db:create db:schema:load"
 
                   echo "=== Verifying installation ==="
                   docker ps | grep e_ren_rails && echo "✅ Rails container is running" || echo "❌ Rails container is NOT running"
