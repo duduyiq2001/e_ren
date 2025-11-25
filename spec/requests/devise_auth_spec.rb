@@ -20,17 +20,17 @@ RSpec.describe "Devise Authentication", type: :request do
         }.to change(User, :count).by(1)
       end
 
-      it "redirects to root path after registration" do
+      it "redirects to confirmation pending page after registration" do
         post user_registration_path, params: valid_params
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(confirmations_pending_path(email: "newuser@wustl.edu"))
       end
 
-      it "signs in the user after registration" do
+      it "does not sign in user before email confirmation" do
         post user_registration_path, params: valid_params
         follow_redirect!
-        # Check that user is signed in by verifying they can access protected pages
+        # User should not be signed in yet - needs to confirm email first
         get event_posts_path
-        expect(response).to have_http_status(:success)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 

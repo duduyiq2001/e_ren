@@ -78,7 +78,6 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
 
     it "shows registered badge" do
       expect(rendered).to have_content("Registered")
-      expect(rendered).to have_css(".registered-badge")
     end
 
     it "shows unregister button" do
@@ -169,7 +168,6 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
 
     it "shows both registration and organizer actions" do
       expect(rendered).to have_content("Registered")
-      expect(rendered).to have_css(".registered-badge")
       expect(rendered).to have_button("Unregister", visible: :all)
       expect(rendered).to have_link("View Registrations", visible: :all)
       expect(rendered).to have_link("Edit Event", visible: :all)

@@ -1,6 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe "Email Authentication", type: :request do
+  include ActiveJob::TestHelper
+
+  before do
+    ActiveJob::Base.queue_adapter = :test
+  end
+
   describe "Email Confirmation" do
     context "when user registers" do
       let(:valid_params) do
@@ -26,9 +32,11 @@ RSpec.describe "Email Authentication", type: :request do
       end
 
       it "sends confirmation email" do
-        expect {
-          post user_registration_path, params: valid_params
-        }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        perform_enqueued_jobs do
+          expect {
+            post user_registration_path, params: valid_params
+          }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        end
 
         email = last_email
         expect(email.to).to include("newuser@wustl.edu")
@@ -83,22 +91,32 @@ RSpec.describe "Email Authentication", type: :request do
       it "can confirm email using token extracted from mock email" do
         # This test demonstrates using the mock email system for authentication
         # In a real scenario, user would click the link in the email
-        email = register_user_and_get_confirmation_email(email: "newuser2@wustl.edu")
-        
+        perform_enqueued_jobs do
+          post user_registration_path, params: {
+            user: {
+              email: "newuser2@wustl.edu",
+              password: "password123",
+              password_confirmation: "password123",
+              name: "Test User"
+            }
+          }
+        end
+
+        email = last_email
         expect(email).to be_present
         expect(email.to).to include("newuser2@wustl.edu")
-        
+
         # Extract token from the mock email
         token = confirmation_token_from_email(email)
         expect(token).to be_present
-        
+
         # Use the token to confirm (simulating clicking the email link)
         user = User.find_by(email: "newuser2@wustl.edu")
         expect(user.confirmed_at).to be_nil
-        
+
         get user_confirmation_path(confirmation_token: token)
         user.reload
-        
+
         expect(user.confirmed_at).to be_present
       end
     end
@@ -295,7 +313,9 @@ RSpec.describe "Email Authentication", type: :request do
 
     it "sends confirmation email again" do
       initial_count = ActionMailer::Base.deliveries.count
-      post user_confirmation_path, params: { user: { email: user.email } }
+      perform_enqueued_jobs do
+        post user_confirmation_path, params: { user: { email: user.email } }
+      end
       # Devise may send email, check that at least one was sent
       expect(ActionMailer::Base.deliveries.count).to be > initial_count
 
@@ -308,7 +328,9 @@ RSpec.describe "Email Authentication", type: :request do
       old_token = user.confirmation_token
       old_sent_at = user.confirmation_sent_at
 
-      post user_confirmation_path, params: { user: { email: user.email } }
+      perform_enqueued_jobs do
+        post user_confirmation_path, params: { user: { email: user.email } }
+      end
       user.reload
 
       # Token should be present (may or may not change)
