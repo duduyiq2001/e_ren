@@ -2,9 +2,7 @@
 // Runs on: Push to main branch, Pull Requests to main, PR comments (/retest)
 
 pipeline {
-  agent {
-    label 'agent'
-  }
+  agent any
 
   triggers {
     githubPush()
