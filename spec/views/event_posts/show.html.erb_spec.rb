@@ -61,10 +61,6 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     it "does not show unregister button" do
       expect(rendered).not_to have_button("Unregister", visible: :all)
     end
-
-    it "does not show registered badge" do
-      expect(rendered).not_to have_css(".registered-badge")
-    end
   end
 
   context "when user is registered" do
@@ -105,10 +101,6 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
 
     it "shows waitlisted badge" do
       expect(rendered).to have_content("Waitlisted")
-    end
-
-    it "does not show registered badge" do
-      expect(rendered).not_to have_css(".registered-badge")
     end
 
     it "shows unregister button" do

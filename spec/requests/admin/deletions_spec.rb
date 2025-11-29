@@ -73,7 +73,8 @@ RSpec.describe 'Admin::Deletions', type: :request do
       it 'requires DELETE confirmation' do
         delete admin_user_path(target_user), params: { confirmation: 'wrong' }
         expect(response).to have_http_status(:unprocessable_entity)
-        expect(target_user.reload.discarded?).to be false
+        # User should still exist (not deleted)
+        expect(User.find(target_user.id)).to be_present
       end
 
       it 'hard deletes with valid confirmation' do
@@ -166,27 +167,25 @@ RSpec.describe 'Admin::Deletions', type: :request do
           initial_count2 = event2.registrations_count
           initial_count3 = event3.registrations_count
           initial_count4 = event4.registrations_count
-          
+
           delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
-          
-          # Execute the enqueued job to perform the actual deletion
           perform_enqueued_jobs
-          
+
           # Reload events (they should still exist, only registrations are deleted)
           event1.reload
           event2.reload
           event3.reload
           event4.reload
-          
+
           # Event1: should decrease by 1 (confirmed_reg1 was hard deleted)
           expect(event1.registrations_count).to eq(initial_count1 - 1)
-          
+
           # Event2: should decrease by 1 (confirmed_reg2 was hard deleted)
           expect(event2.registrations_count).to eq(initial_count2 - 1)
-          
+
           # Event3: should not change (waitlisted_reg doesn't affect count)
           expect(event3.registrations_count).to eq(initial_count3)
-          
+
           # Event4: should not change (pending_reg doesn't affect count)
           expect(event4.registrations_count).to eq(initial_count4)
         end
@@ -194,15 +193,13 @@ RSpec.describe 'Admin::Deletions', type: :request do
         it 'only affects confirmed registrations, not waitlisted or pending' do
           initial_count3 = event3.registrations_count
           initial_count4 = event4.registrations_count
-          
+
           delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
-          
-          # Execute the enqueued job to perform the actual deletion
           perform_enqueued_jobs
-          
+
           event3.reload
           event4.reload
-          
+
           # Counts should not change for waitlisted/pending registrations
           expect(event3.registrations_count).to eq(initial_count3)
           expect(event4.registrations_count).to eq(initial_count4)
@@ -212,16 +209,14 @@ RSpec.describe 'Admin::Deletions', type: :request do
           # Create another user with confirmed registration in event1
           other_user = create(:user, email: "other-user-#{SecureRandom.hex(4)}@wustl.edu")
           other_reg = create(:event_registration, user: other_user, event_post: event1, status: :confirmed)
-          
+
           initial_count1 = event1.registrations_count
-          
+
           delete admin_user_path(target_user), params: { confirmation: 'DELETE' }
-          
-          # Execute the enqueued job to perform the actual deletion
           perform_enqueued_jobs
-          
+
           event1.reload
-          
+
           # Should only decrease by 1 (target_user's confirmed registration was hard deleted)
           # other_user's registration should remain
           expect(event1.registrations_count).to eq(initial_count1 - 1)

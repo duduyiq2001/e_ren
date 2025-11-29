@@ -5,9 +5,8 @@ RSpec.describe EventPost, type: :model do
   describe "associations" do
     it { should belong_to(:event_category) }
     it { should belong_to(:organizer).class_name('User').with_foreign_key('organizer_id') }
-    it { should have_many(:event_registrations).dependent(:destroy_async) }
+    it { should have_many(:event_registrations).dependent(:destroy) }
     it { should have_many(:attendees).through(:event_registrations).source(:user) }
-    it { should belong_to(:deleted_by_user).class_name('User').with_foreign_key('deleted_by_id').optional }
   end
 
   describe "validations" do
@@ -460,62 +459,22 @@ RSpec.describe EventPost, type: :model do
     end
   end
 
-  describe "soft delete functionality" do
-    let(:admin) { create(:user, :admin) }
+  describe "destroy with cascade" do
     let(:event_post) { create(:event_post) }
     let!(:registration1) { create(:event_registration, event_post: event_post) }
     let!(:registration2) { create(:event_registration, event_post: event_post) }
 
-    describe "#soft_delete_with_cascade!" do
-      it "hard deletes event and cascades to registrations" do
-        event_id = event_post.id
-        reg1_id = registration1.id
-        reg2_id = registration2.id
-        
-        event_post.soft_delete_with_cascade!(admin, reason: 'Test deletion')
-        
-        # Records should be hard deleted (not found)
-        expect { EventPost.find(event_id) }.to raise_error(ActiveRecord::RecordNotFound)
-        expect { EventRegistration.find(reg1_id) }.to raise_error(ActiveRecord::RecordNotFound)
-        expect { EventRegistration.find(reg2_id) }.to raise_error(ActiveRecord::RecordNotFound)
-      end
+    it "destroys event and cascades to registrations" do
+      event_id = event_post.id
+      reg1_id = registration1.id
+      reg2_id = registration2.id
 
-      it "records deletion metadata before deletion" do
-        # Metadata is saved before deletion
-        event_post.soft_delete_with_cascade!(admin, reason: 'Inappropriate content')
-        
-        # After deletion, we can't check metadata as record is gone
-        # But we can verify deletion happened
-        expect { EventPost.find(event_post.id) }.to raise_error(ActiveRecord::RecordNotFound)
-      end
+      event_post.destroy
 
-      it "hard deletes records" do
-        event_id = event_post.id
-        reg_id = registration1.id
-        
-        event_post.soft_delete_with_cascade!(admin)
-        
-        # Records should be hard deleted (not found)
-        expect { EventPost.find(event_id) }.to raise_error(ActiveRecord::RecordNotFound)
-        expect { EventRegistration.find(reg_id) }.to raise_error(ActiveRecord::RecordNotFound)
-      end
-    end
-
-    describe "#deletion_preview" do
-      it "returns accurate counts" do
-        preview = event_post.deletion_preview
-        
-        expect(preview[:event_registrations]).to eq(2)
-        expect(preview[:attendees_count]).to eq(2)
-      end
-
-      it "returns zero for events with no registrations" do
-        new_event = create(:event_post)
-        preview = new_event.deletion_preview
-        
-        expect(preview[:event_registrations]).to eq(0)
-        expect(preview[:attendees_count]).to eq(0)
-      end
+      # Event and registrations should be deleted
+      expect { EventPost.find(event_id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { EventRegistration.find(reg1_id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { EventRegistration.find(reg2_id) }.to raise_error(ActiveRecord::RecordNotFound)
     end
   end
 end

@@ -128,9 +128,7 @@ RSpec.describe AdminDeletionJob, type: :job do
         end
       end
 
-      it 'records deletion metadata before deletion' do
-        # Metadata is saved before deletion, but after deletion we can't check it
-        # as the record is gone. We can verify deletion happened.
+      it 'deletes user successfully' do
         user_id = target_user.id
         AdminDeletionJob.perform_now('User', target_user.id, admin.id, 'Spam account')
         # User should be hard deleted (not found)
@@ -167,9 +165,7 @@ RSpec.describe AdminDeletionJob, type: :job do
         expect { EventRegistration.find(registration2_id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
 
-      it 'records deletion metadata before deletion' do
-        # Metadata is saved before deletion, but after deletion we can't check it
-        # as the record is gone. We can verify deletion happened.
+      it 'deletes event successfully' do
         event_id = event_post.id
         AdminDeletionJob.perform_now('EventPost', event_post.id, admin.id, 'Inappropriate')
         # Event should be hard deleted (not found)
@@ -192,7 +188,7 @@ RSpec.describe AdminDeletionJob, type: :job do
 
     context 'when error occurs' do
       before do
-        allow_any_instance_of(User).to receive(:soft_delete_with_cascade!).and_raise(StandardError.new('Test error'))
+        allow_any_instance_of(User).to receive(:destroy!).and_raise(StandardError.new('Test error'))
       end
 
       it 'logs the error' do

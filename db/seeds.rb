@@ -9,6 +9,17 @@ end
 
 puts "🌱 Seeding database..."
 
+# Create Admin User
+puts "Creating admin user..."
+admin = User.create!(
+  name: "Admin User",
+  email: "admin@wustl.edu",
+  password: "password123",
+  password_confirmation: "password123",
+  role: :super_admin,
+  confirmed_at: Time.current
+)
+
 # Create Users
 puts "Creating users..."
 users = [
@@ -156,7 +167,9 @@ end
 
 puts "✅ Seeding complete!"
 puts "📊 Created:"
-puts "   - #{User.count} users"
+puts "   - #{User.count} users (including 1 admin)"
 puts "   - #{EventCategory.count} categories"
 puts "   - #{EventPost.count} events"
 puts "   - #{EventRegistration.count} registrations"
+puts ""
+puts "🔐 Admin login: admin@wustl.edu / password123"

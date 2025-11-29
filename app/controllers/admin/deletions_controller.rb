@@ -9,7 +9,7 @@ module Admin
         type: @deletable.class.name,
         id: @deletable.id,
         title: deletable_title,
-        will_delete: @deletable.deletion_preview,
+        will_delete: build_deletion_preview,
         confirmation_required: true
       }
     end
@@ -30,9 +30,9 @@ module Admin
       end
 
       deletion_reason = params[:reason] || "Deleted by admin"
-      
+
       # Capture preview before deletion
-      preview = @deletable.deletion_preview
+      preview = build_deletion_preview
 
       # Log the deletion attempt immediately (before async job)
       AdminAuditLog.create!(
@@ -139,6 +139,24 @@ module Admin
         @deletable.title
       else
         "#{@deletable.class.name} ##{@deletable.id}"
+      end
+    end
+
+    def build_deletion_preview
+      case @deletable
+      when User
+        {
+          organized_events: @deletable.organized_events.count,
+          event_registrations: @deletable.event_registrations.count,
+          e_score: @deletable.e_score
+        }
+      when EventPost
+        {
+          event_registrations: @deletable.event_registrations.count,
+          attendees_count: @deletable.attendees.count
+        }
+      else
+        {}
       end
     end
   end

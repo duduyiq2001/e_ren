@@ -17,9 +17,6 @@ gem "stimulus-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 
-# Soft delete gem for ActiveRecord models (Rails 8 compatible)
-gem 'discard', '~> 1.2'
-
 # Authentication
 gem "devise"
 
