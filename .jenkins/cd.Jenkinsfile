@@ -14,7 +14,6 @@ pipeline {
   }
 
   environment {
-    DOCKER_REGISTRY = 'your-registry.com'
     DEPLOYMENT_NAME = 'e-ren'
     PRODUCTION_NAMESPACE = 'e-ren-prod'
   }
@@ -31,33 +30,36 @@ pipeline {
           steps {
             echo 'Building production Docker image...'
 
-            script {
-              // Generate semantic version tag from commit
-              def imageTag = sh(
-                script: "git describe --tags --always --abbrev=7",
-                returnStdout: true
-              ).trim()
+            withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+              script {
+                // Generate semantic version tag from commit
+                def imageTag = sh(
+                  script: "git describe --tags --always --abbrev=7",
+                  returnStdout: true
+                ).trim()
 
-              env.IMAGE_TAG = imageTag
+                env.IMAGE_TAG = imageTag
+                env.DOCKER_IMAGE = "${DOCKER_USER}/e_ren"
 
-              echo "Building image: ${env.DOCKER_REGISTRY}/e_ren:${imageTag}"
+                echo "Building image: ${env.DOCKER_IMAGE}:${imageTag}"
 
-              sh """
-                docker build -t ${env.DOCKER_REGISTRY}/e_ren:${imageTag} .
-                docker tag ${env.DOCKER_REGISTRY}/e_ren:${imageTag} ${env.DOCKER_REGISTRY}/e_ren:latest
-              """
+                // Login to DockerHub
+                sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
 
-              // TODO: Add Docker registry login
-              // sh "docker login ${env.DOCKER_REGISTRY}"
+                // Build and tag
+                sh """
+                  docker build -t ${env.DOCKER_IMAGE}:${imageTag} .
+                  docker tag ${env.DOCKER_IMAGE}:${imageTag} ${env.DOCKER_IMAGE}:latest
+                """
 
-              // Push to registry
-              sh """
-                echo "Would push: ${env.DOCKER_REGISTRY}/e_ren:${imageTag}"
-                # docker push ${env.DOCKER_REGISTRY}/e_ren:${imageTag}
-                # docker push ${env.DOCKER_REGISTRY}/e_ren:latest
-              """
+                // Push to DockerHub
+                sh """
+                  docker push ${env.DOCKER_IMAGE}:${imageTag}
+                  docker push ${env.DOCKER_IMAGE}:latest
+                """
 
-              echo "✅ Image built and pushed: ${imageTag}"
+                echo "✅ Image built and pushed: ${env.DOCKER_IMAGE}:${imageTag}"
+              }
             }
           }
         }
@@ -67,14 +69,14 @@ pipeline {
           steps {
             echo "============================================="
             echo "🚀 DEPLOYING TO PRODUCTION"
-            echo "Image: ${env.DOCKER_REGISTRY}/e_ren:${env.IMAGE_TAG}"
+            echo "Image: ${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
             echo "Namespace: ${env.PRODUCTION_NAMESPACE}"
             echo "============================================="
 
             // Update deployment
             sh """
               kubectl set image deployment/${env.DEPLOYMENT_NAME} \
-                ${env.DEPLOYMENT_NAME}=${env.DOCKER_REGISTRY}/e_ren:${env.IMAGE_TAG} \
+                ${env.DEPLOYMENT_NAME}=${env.DOCKER_IMAGE}:${env.IMAGE_TAG} \
                 --namespace=${env.PRODUCTION_NAMESPACE} \
                 --record
 
