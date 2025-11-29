@@ -1,6 +1,7 @@
 # Clear existing data (development only)
 if Rails.env.development?
   puts "🗑️  Clearing existing data..."
+  AdminAuditLog.destroy_all if defined?(AdminAuditLog)
   EventRegistration.destroy_all
   EventPost.destroy_all
   EventCategory.destroy_all

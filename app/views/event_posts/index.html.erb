@@ -3,13 +3,13 @@
 <%# Filter Bar %>
 <section class="max-w-7xl mx-auto px-4 mb-8">
   <div class="flex flex-wrap gap-3">
-    <button class="skew-btn bg-white text-black border-2 border-white px-5 py-2 font-bold text-sm">
+    <%= link_to search_event_posts_path, class: "skew-btn bg-white text-black border-2 border-white px-5 py-2 font-bold text-sm" do %>
       All Events
-    </button>
+    <% end %>
     <% EventCategory.all.each do |category| %>
-      <button class="skew-btn bg-transparent border-2 border-cyber-grey text-cyber-grey px-5 py-2 font-bold text-sm hover:bg-white hover:text-black hover:border-white transition-colors">
+      <%= link_to search_event_posts_path(category_id: category.id), class: "skew-btn bg-transparent border-2 border-cyber-grey text-cyber-grey px-5 py-2 font-bold text-sm hover:bg-white hover:text-black hover:border-white transition-colors" do %>
         <%= category.name %>
-      </button>
+      <% end %>
     <% end %>
   </div>
 </section>

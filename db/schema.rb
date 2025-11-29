@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_25_180740) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_29_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -41,6 +41,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_25_180740) do
   create_table "event_posts", force: :cascade do |t|
     t.integer "capacity", null: false
     t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.bigint "deleted_by_id"
+    t.text "deletion_reason"
     t.text "description"
     t.bigint "event_category_id", null: false
     t.datetime "event_time", null: false
@@ -55,6 +58,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_25_180740) do
     t.integer "registrations_count", default: 0, null: false
     t.boolean "requires_approval", default: false, null: false
     t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_event_posts_on_deleted_at"
     t.index ["event_category_id", "event_time"], name: "index_event_posts_on_event_category_id_and_event_time"
     t.index ["event_category_id"], name: "index_event_posts_on_event_category_id"
     t.index ["event_time"], name: "index_event_posts_on_event_time"
@@ -66,11 +70,13 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_25_180740) do
   create_table "event_registrations", force: :cascade do |t|
     t.boolean "attendance_confirmed", default: false, null: false
     t.datetime "created_at", null: false
+    t.datetime "deleted_at"
     t.bigint "event_post_id", null: false
     t.datetime "registered_at", null: false
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["deleted_at"], name: "index_event_registrations_on_deleted_at"
     t.index ["event_post_id"], name: "index_event_registrations_on_event_post_id"
     t.index ["user_id", "event_post_id"], name: "index_event_registrations_on_user_and_event", unique: true
     t.index ["user_id"], name: "index_event_registrations_on_user_id"
@@ -83,6 +89,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_25_180740) do
     t.datetime "created_at", null: false
     t.datetime "current_sign_in_at"
     t.string "current_sign_in_ip"
+    t.datetime "deleted_at"
+    t.bigint "deleted_by_id"
+    t.text "deletion_reason"
     t.integer "e_score", default: 0, null: false
     t.string "email", null: false
     t.string "encrypted_password", default: "", null: false
@@ -98,6 +107,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_25_180740) do
     t.string "unconfirmed_email"
     t.datetime "updated_at", null: false
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
+    t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["e_score"], name: "index_users_on_e_score"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
@@ -106,7 +116,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_25_180740) do
 
   add_foreign_key "admin_audit_logs", "users", column: "admin_user_id"
   add_foreign_key "event_posts", "event_categories"
+  add_foreign_key "event_posts", "users", column: "deleted_by_id"
   add_foreign_key "event_posts", "users", column: "organizer_id"
   add_foreign_key "event_registrations", "event_posts"
   add_foreign_key "event_registrations", "users"
+  add_foreign_key "users", "users", column: "deleted_by_id"
 end
