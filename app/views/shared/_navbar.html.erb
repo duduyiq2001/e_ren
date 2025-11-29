@@ -1,73 +1,61 @@
-<%# Main navigation bar for authenticated pages %>
+<%# Main navigation bar - Cyberpunk style %>
 
-<header class="bg-washu-red text-white py-16 relative overflow-hidden">
-  <div class="gothic-pattern absolute inset-0 opacity-20"></div>
-  <div class="container mx-auto px-4 relative z-10">
-    <!-- Navigation Bar -->
-    <div class="flex justify-between items-center mb-8">
-      <div class="flex-1">
-        <h1 class="text-2xl md:text-3xl font-bold">WashU ESpace</h1>
-      </div>
-      <div class="flex items-center space-x-4">
-        <!-- Post Event Button -->
-        <%= link_to new_event_post_path, class: "nav-button bg-white text-washu-red px-4 sm:px-6 py-3 rounded-lg font-medium shadow-lg hover:bg-gray-100 flex items-center space-x-2 transition-all duration-300" do %>
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
-          <span class="hidden sm:inline">Post Event</span>
+<header class="border-b-2 border-cyber-grey bg-cyber-bg/95 backdrop-blur sticky top-0 z-50 py-4">
+  <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+    <%# Logo %>
+    <%= link_to root_path, class: "font-display text-2xl text-white italic text-shadow-cyber" do %>
+      e_ren /// SPACE
+    <% end %>
+
+    <%# Nav Links %>
+    <nav class="hidden md:flex gap-8">
+      <%= link_to "Events", event_posts_path, class: "text-cyber-grey font-bold text-sm hover:text-cyber-crimson transition-colors #{request.path == event_posts_path ? 'text-cyber-crimson border-b-2 border-cyber-lime pb-1' : ''}" %>
+      <%= link_to "Leaderboard", leaderboard_path, class: "text-cyber-grey font-bold text-sm hover:text-cyber-crimson transition-colors" %>
+    </nav>
+
+    <%# User Profile %>
+    <div class="flex items-center gap-4">
+      <% if current_user %>
+        <%= link_to user_path(current_user), class: "skew-card border-2 border-cyber-grey px-4 py-2 flex items-center gap-2 hover:border-cyber-lime transition-colors" do %>
+          <div class="w-2 h-2 bg-cyber-lime glow-lime"></div>
+          <span class="text-sm font-bold"><%= current_user.name.split.first %></span>
         <% end %>
 
-        <!-- Leaderboard Button -->
-        <%= link_to leaderboard_path, class: "nav-button bg-white text-washu-red px-4 sm:px-6 py-3 rounded-lg font-medium shadow-lg hover:bg-gray-100 flex items-center space-x-2 transition-all duration-300" do %>
-          <span>🏆</span>
-          <span class="hidden sm:inline">Leaderboard</span>
+        <%= button_to destroy_user_session_path, method: :delete, class: "text-cyber-grey hover:text-cyber-crimson text-sm font-bold transition-colors" do %>
+          Logout
         <% end %>
-        
-        <!-- Profile Avatar -->
-        <% if current_user %>
-          <%= link_to user_path(current_user), class: "profile-avatar w-10 h-10 sm:w-12 sm:h-12 bg-white text-washu-red rounded-full flex items-center justify-center font-bold text-lg sm:text-xl shadow-lg hover:shadow-xl transition-all duration-300" do %>
-            <%= current_user.name.first %>
-          <% end %>
-        <% end %>
-        <!-- Signn out -->
-        <%= button_to "logout", destroy_user_session_path, method: :delete  %>
-      </div>
-    </div>
-
-    <!-- Page Title -->
-    <div class="text-center">
-      <h2 class="text-3xl md:text-5xl font-bold mb-4"><%= local_assigns[:title] || 'Discover Campus Events' %></h2>
-      <% if local_assigns[:subtitle] %>
-        <p class="text-lg md:text-xl text-pink-100 mb-6"><%= subtitle %></p>
-      <% end %>
-
-      <% if local_assigns[:show_search] %>
-        <!-- Search Bar -->
-        <%= link_to search_event_posts_path, class: "inline-block" do %>
-          <div class="bg-white text-gray-900 px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2">
-            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-            <span class="text-gray-600">Search events...</span>
-          </div>
-        <% end %>
+      <% else %>
+        <%= link_to "Login", new_user_session_path, class: "text-cyber-lime font-bold text-sm hover:underline" %>
       <% end %>
     </div>
   </div>
 </header>
 
-<style>
-  .nav-button {
-    transition: all 0.3s ease;
-  }
-  .nav-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  }
-  .profile-avatar {
-    transition: all 0.3s ease;
-  }
-  .profile-avatar:hover {
-    transform: scale(1.05);
-  }
-</style>
+<%# Hero Section (optional) %>
+<% if local_assigns[:title] %>
+  <section class="py-16 md:py-24 px-4">
+    <div class="max-w-7xl mx-auto">
+      <h1 class="font-display text-4xl md:text-6xl leading-tight mb-6">
+        <%= local_assigns[:title] %>
+      </h1>
+      <% if local_assigns[:subtitle] %>
+        <p class="text-cyber-grey text-lg border-l-4 border-cyber-lime pl-5 max-w-xl">
+          <%= subtitle %>
+        </p>
+      <% end %>
+
+      <% if local_assigns[:show_search] %>
+        <div class="mt-8">
+          <%= link_to search_event_posts_path, class: "inline-block" do %>
+            <div class="skew-btn bg-cyber-card border-2 border-cyber-grey px-6 py-3 flex items-center gap-3 hover:border-cyber-lime transition-colors">
+              <svg class="w-5 h-5 text-cyber-grey" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <span class="text-cyber-grey">Search events...</span>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+<% end %>

@@ -1,186 +1,198 @@
-<div class="container mx-auto px-4 py-8">
-  <!-- Header -->
+<%= render 'shared/back_header', title: 'Event Registrations', back_path: event_post_path(@event_post), back_text: 'Back to Event' %>
+
+<main class="max-w-7xl mx-auto px-4 py-12">
+  <%# Header %>
   <div class="mb-8">
-    <%= link_to event_post_path(@event_post), class: "inline-flex items-center text-blue-600 hover:text-blue-800 mb-4" do %>
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-      </svg>
-      Back to Event
-    <% end %>
-
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">Event Registrations</h1>
-    <h2 class="text-xl text-gray-600"><%= @event_post.name %></h2>
+    <h2 class="text-3xl text-white font-bold mb-2"><%= @event_post.name %></h2>
+    <p class="text-cyber-grey border-l-4 border-cyber-lime pl-4">Registration roster and attendance tracking</p>
   </div>
 
-  <!-- Summary Stats -->
+  <%# Summary Stats %>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white rounded-lg shadow-lg p-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-gray-600 text-sm">Total Capacity</p>
-          <p class="text-3xl font-bold text-gray-900"><%= @event_post.capacity %></p>
-        </div>
-        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-          </svg>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-lg shadow-lg p-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-gray-600 text-sm">Confirmed</p>
-          <p class="text-3xl font-bold text-green-600"><%= @confirmed_registrations.count %></p>
-        </div>
-        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-          </svg>
+    <div class="relative">
+      <div class="absolute inset-0 bg-black translate-x-1 translate-y-1"></div>
+      <div class="relative bg-cyber-card border-2 border-black p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-cyber-grey text-xs uppercase font-bold">> Capacity</p>
+            <p class="text-3xl font-display text-white"><%= @event_post.capacity %></p>
+          </div>
+          <div class="w-12 h-12 bg-blue-600 flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-lg p-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-gray-600 text-sm">Waitlisted</p>
-          <p class="text-3xl font-bold text-yellow-600"><%= @waitlisted_registrations.count %></p>
+    <div class="relative">
+      <div class="absolute inset-0 bg-black translate-x-1 translate-y-1"></div>
+      <div class="relative bg-cyber-card border-2 border-black p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-cyber-grey text-xs uppercase font-bold">> Confirmed</p>
+            <p class="text-3xl font-display text-cyber-lime"><%= @confirmed_registrations.count %></p>
+          </div>
+          <div class="w-12 h-12 bg-cyber-lime flex items-center justify-center">
+            <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
         </div>
-        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-          <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
+      </div>
+    </div>
+
+    <div class="relative">
+      <div class="absolute inset-0 bg-black translate-x-1 translate-y-1"></div>
+      <div class="relative bg-cyber-card border-2 border-black p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-cyber-grey text-xs uppercase font-bold">> Waitlisted</p>
+            <p class="text-3xl font-display text-yellow-500"><%= @waitlisted_registrations.count %></p>
+          </div>
+          <div class="w-12 h-12 bg-yellow-500 flex items-center justify-center">
+            <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Event Status Banner -->
+  <%# Event Status Banner %>
   <% event_has_passed = @event_post.event_time < Time.current %>
   <% if event_has_passed %>
-    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-      <div class="flex items-center">
-        <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="bg-cyber-lime/10 border-2 border-cyber-lime p-4 mb-8">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 text-cyber-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
-        <span class="text-green-700 font-medium">Event has ended. You can now confirm attendance to award E-points.</span>
+        <span class="text-cyber-lime font-bold text-sm">Event Complete — Confirm attendance to award E-points</span>
       </div>
     </div>
   <% else %>
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-      <div class="flex items-center">
-        <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="bg-blue-600/10 border-2 border-blue-500 p-4 mb-8">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
-        <span class="text-blue-700 font-medium">Event scheduled for <%= @event_post.event_time.strftime("%b %d, %Y at %I:%M %p") %>. Attendance can be confirmed after the event ends.</span>
+        <span class="text-blue-400 font-bold text-sm">Event scheduled: <%= @event_post.event_time.strftime("%b %d, %Y at %I:%M %p") %></span>
       </div>
     </div>
   <% end %>
 
-  <!-- Confirmed Registrations -->
-  <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">Confirmed Attendees</h3>
+  <%# Confirmed Registrations %>
+  <div class="relative mb-8">
+    <div class="absolute inset-0 bg-black translate-x-2 translate-y-2"></div>
+    <div class="relative bg-cyber-card border-2 border-black p-8">
+      <h3 class="text-xl text-cyber-lime font-bold mb-6">Confirmed Attendees</h3>
 
-    <% if @confirmed_registrations.any? %>
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b-2 border-gray-200">
-              <th class="text-left py-3 px-4 font-bold text-gray-700">#</th>
-              <th class="text-left py-3 px-4 font-bold text-gray-700">Name</th>
-              <th class="text-left py-3 px-4 font-bold text-gray-700">Email</th>
-              <th class="text-left py-3 px-4 font-bold text-gray-700">Phone</th>
-              <th class="text-left py-3 px-4 font-bold text-gray-700">Registered At</th>
-              <% if event_has_passed %>
-                <th class="text-center py-3 px-4 font-bold text-gray-700">Attendance</th>
-              <% end %>
-            </tr>
-          </thead>
-          <tbody>
-            <% @confirmed_registrations.each_with_index do |registration, index| %>
-              <tr class="border-b border-gray-100 hover:bg-gray-50 <%= 'bg-green-50' if registration.attendance_confirmed? %>">
-                <td class="py-3 px-4 text-gray-600"><%= index + 1 %></td>
-                <td class="py-3 px-4">
-                  <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                      <%= registration.user.name.first %>
-                    </div>
-                    <%= link_to registration.user.name, user_path(registration.user), class: "font-medium text-gray-900 hover:text-blue-600" %>
-                  </div>
-                </td>
-                <td class="py-3 px-4 text-gray-600"><%= registration.user.email %></td>
-                <td class="py-3 px-4 text-gray-600"><%= registration.user.phone_number || 'N/A' %></td>
-                <td class="py-3 px-4 text-gray-600"><%= registration.registered_at.strftime("%b %d, %Y %I:%M %p") %></td>
+      <% if @confirmed_registrations.any? %>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b-2 border-cyber-grey/30">
+                <th class="text-left py-3 px-4 text-cyber-grey text-xs font-bold">#</th>
+                <th class="text-left py-3 px-4 text-cyber-grey text-xs font-bold">Name</th>
+                <th class="text-left py-3 px-4 text-cyber-grey text-xs font-bold">Email</th>
+                <th class="text-left py-3 px-4 text-cyber-grey text-xs font-bold">Phone</th>
+                <th class="text-left py-3 px-4 text-cyber-grey text-xs font-bold">Registered</th>
                 <% if event_has_passed %>
-                  <td class="py-3 px-4 text-center">
-                    <% if registration.attendance_confirmed? %>
-                      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        Confirmed
-                      </span>
-                    <% else %>
-                      <%= button_to "Confirm",
-                          confirm_attendance_event_post_event_registration_path(@event_post, registration),
-                          method: :patch,
-                          class: "px-4 py-2 bg-washu-red text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors" %>
-                    <% end %>
-                  </td>
+                  <th class="text-center py-3 px-4 text-cyber-grey text-xs font-bold">Attendance</th>
                 <% end %>
               </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    <% else %>
-      <div class="text-center py-12">
-        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-        </svg>
-        <p class="text-gray-500 text-lg">No confirmed registrations yet</p>
-      </div>
-    <% end %>
+            </thead>
+            <tbody>
+              <% @confirmed_registrations.each_with_index do |registration, index| %>
+                <tr class="border-b border-cyber-grey/20 hover:bg-white/5 <%= 'bg-cyber-lime/10' if registration.attendance_confirmed? %>">
+                  <td class="py-3 px-4 text-cyber-grey"><%= index + 1 %></td>
+                  <td class="py-3 px-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 bg-cyber-crimson flex items-center justify-center text-white font-bold text-sm">
+                        <%= registration.user.name.first %>
+                      </div>
+                      <%= link_to registration.user.name, user_path(registration.user), class: "text-white hover:text-cyber-lime transition-colors" %>
+                    </div>
+                  </td>
+                  <td class="py-3 px-4 text-cyber-grey text-sm"><%= registration.user.email %></td>
+                  <td class="py-3 px-4 text-cyber-grey text-sm"><%= registration.user.phone_number || 'N/A' %></td>
+                  <td class="py-3 px-4 text-cyber-grey text-sm"><%= registration.registered_at.strftime("%b %d, %I:%M %p") %></td>
+                  <% if event_has_passed %>
+                    <td class="py-3 px-4 text-center">
+                      <% if registration.attendance_confirmed? %>
+                        <span class="inline-flex items-center px-3 py-1 bg-cyber-lime text-black text-xs font-bold">
+                          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                          </svg>
+                          Confirmed
+                        </span>
+                      <% else %>
+                        <%= button_to "Confirm Attendance",
+                            confirm_attendance_event_post_event_registration_path(@event_post, registration),
+                            method: :patch,
+                            class: "px-4 py-2 bg-cyber-crimson text-white text-xs font-bold hover:bg-red-400 transition-colors cursor-pointer" %>
+                      <% end %>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-12">
+          <p class="text-cyber-grey text-6xl mb-4">⊘</p>
+          <p class="text-cyber-grey">No confirmed attendees yet</p>
+        </div>
+      <% end %>
+    </div>
   </div>
 
-  <!-- Waitlisted Registrations -->
+  <%# Waitlisted Registrations %>
   <% if @waitlisted_registrations.any? %>
-    <div class="bg-white rounded-lg shadow-lg p-8">
-      <h3 class="text-2xl font-bold text-gray-900 mb-6">Waitlist</h3>
+    <div class="relative">
+      <div class="absolute inset-0 bg-black translate-x-2 translate-y-2"></div>
+      <div class="relative bg-cyber-card border-2 border-black p-8">
+        <h3 class="text-xl text-yellow-500 font-bold mb-6">Waitlist</h3>
 
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b-2 border-gray-200">
-              <th class="text-left py-3 px-4 font-bold text-gray-700">#</th>
-              <th class="text-left py-3 px-4 font-bold text-gray-700">Name</th>
-              <th class="text-left py-3 px-4 font-bold text-gray-700">Email</th>
-              <th class="text-left py-3 px-4 font-bold text-gray-700">Phone</th>
-              <th class="text-left py-3 px-4 font-bold text-gray-700">Registered At</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @waitlisted_registrations.each_with_index do |registration, index| %>
-              <tr class="border-b border-gray-100 hover:bg-gray-50">
-                <td class="py-3 px-4 text-gray-600"><%= index + 1 %></td>
-                <td class="py-3 px-4">
-                  <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-yellow-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                      <%= registration.user.name.first %>
-                    </div>
-                    <%= link_to registration.user.name, user_path(registration.user), class: "font-medium text-gray-900 hover:text-blue-600" %>
-                  </div>
-                </td>
-                <td class="py-3 px-4 text-gray-600"><%= registration.user.email %></td>
-                <td class="py-3 px-4 text-gray-600"><%= registration.user.phone_number || 'N/A' %></td>
-                <td class="py-3 px-4 text-gray-600"><%= registration.registered_at.strftime("%b %d, %Y %I:%M %p") %></td>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b-2 border-cyber-grey/30">
+                <th class="text-left py-3 px-4 text-cyber-grey text-xs font-bold">#</th>
+                <th class="text-left py-3 px-4 text-cyber-grey text-xs font-bold">Name</th>
+                <th class="text-left py-3 px-4 text-cyber-grey text-xs font-bold">Email</th>
+                <th class="text-left py-3 px-4 text-cyber-grey text-xs font-bold">Phone</th>
+                <th class="text-left py-3 px-4 text-cyber-grey text-xs font-bold">Joined Waitlist</th>
               </tr>
-            <% end %>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <% @waitlisted_registrations.each_with_index do |registration, index| %>
+                <tr class="border-b border-cyber-grey/20 hover:bg-white/5">
+                  <td class="py-3 px-4 text-cyber-grey"><%= index + 1 %></td>
+                  <td class="py-3 px-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 bg-yellow-500 flex items-center justify-center text-black font-bold text-sm">
+                        <%= registration.user.name.first %>
+                      </div>
+                      <%= link_to registration.user.name, user_path(registration.user), class: "text-white hover:text-cyber-lime transition-colors" %>
+                    </div>
+                  </td>
+                  <td class="py-3 px-4 text-cyber-grey text-sm"><%= registration.user.email %></td>
+                  <td class="py-3 px-4 text-cyber-grey text-sm"><%= registration.user.phone_number || 'N/A' %></td>
+                  <td class="py-3 px-4 text-cyber-grey text-sm"><%= registration.registered_at.strftime("%b %d, %I:%M %p") %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   <% end %>
-</div>
+</main>
+
+<footer class="text-center text-cyber-grey py-10 border-t border-cyber-grey/30 text-sm mt-12">
+  SYSTEM STATUS: ONLINE /// e_ren SPACE © <%= Time.current.year %>
+</footer>

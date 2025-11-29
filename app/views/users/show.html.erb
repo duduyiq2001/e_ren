@@ -1,189 +1,209 @@
-<div class="container mx-auto px-4 py-8">
-  <!-- User Profile Section -->
-  <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
-    <div class="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
-      <!-- User Avatar -->
-      <div class="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
-        <%= @user.name.first %>
-      </div>
+<%= render 'shared/back_header', title: 'User Profile', back_path: root_path, back_text: 'Back to Events' %>
 
-      <!-- User Info -->
-      <div class="flex-1 text-center md:text-left">
-        <h2 class="text-3xl font-bold text-gray-900 mb-2"><%= @user.name %></h2>
-        <p class="text-lg text-gray-600 mb-4"><%= @user.email %></p>
-
-        <!-- E-Points Score -->
-        <div class="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8">
-          <div class="text-center">
-            <%= link_to leaderboard_path, class: "inline-flex items-center space-x-2 px-6 py-3 rounded-full text-white font-bold text-2xl bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700" do %>
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-              </svg>
-              <span><%= @stats[:e_points] %></span>
-            <% end %>
-            <p class="text-sm text-gray-500 mt-2">Your extrovert energy level!</p>
+<main class="max-w-6xl mx-auto px-4 py-12">
+  <%# Profile Header Card %>
+  <div class="relative mb-8">
+    <div class="absolute inset-0 bg-black skew-card translate-x-3 translate-y-3"></div>
+    <div class="relative bg-cyber-card border-2 border-black skew-card p-8" style="border-width: 3px;">
+      <div class="transform skew-x-[10deg]">
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
+          <%# User Avatar %>
+          <div class="w-24 h-24 bg-cyber-crimson flex items-center justify-center text-white text-3xl font-bold">
+            <%= @user.name.first %>
           </div>
-        </div>
-      </div>
 
-      <% if current_user != @user %>
-        <%= link_to "Back to Events", root_path, class: "px-6 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600" %>
-      <% end %>
-    </div>
-  </div>
+          <%# User Info %>
+          <div class="flex-1 text-center md:text-left">
+            <h2 class="text-3xl text-white font-bold mb-2"><%= @user.name %></h2>
+            <p class="text-cyber-grey mb-6"><%= @user.email %></p>
 
-  <!-- Stats Section -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-    <!-- Stats Cards -->
-    <div class="bg-white rounded-lg shadow-lg p-6">
-      <h3 class="text-xl font-bold text-gray-900 mb-4">Event Statistics</h3>
-      <div class="space-y-4">
-        <div class="flex justify-between items-center">
-          <span class="text-gray-600">Total Events Attended</span>
-          <span class="text-2xl font-bold text-red-600"><%= @stats[:total_attended] %></span>
-        </div>
-        <div class="flex justify-between items-center">
-          <span class="text-gray-600">Total Events Organized</span>
-          <span class="text-2xl font-bold text-green-700"><%= @stats[:total_organized] %></span>
-        </div>
-        <div class="flex justify-between items-center">
-          <span class="text-gray-600">E-Points Earned</span>
-          <span class="text-2xl font-bold text-yellow-500"><%= @stats[:e_points] %></span>
+            <%# E-Points Badge %>
+            <div class="flex flex-col md:flex-row items-center gap-6">
+              <%= link_to leaderboard_path, class: "inline-flex items-center gap-3 px-6 py-3 bg-yellow-500 text-black font-bold text-2xl hover:bg-yellow-400 transition-colors" do %>
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                </svg>
+                <span><%= @stats[:e_points] %> E-Points</span>
+              <% end %>
+              <p class="text-cyber-grey text-sm">Extroversion score</p>
+            </div>
+          </div>
+
+          <% if current_user != @user %>
+            <%= link_to "Back to Events", root_path, class: "skew-btn bg-cyber-grey text-black px-6 py-3 font-bold hover:bg-white transition-colors" %>
+          <% end %>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Events Section with Tabs -->
-  <div class="bg-white rounded-lg shadow-lg p-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">My Events</h3>
-
-    <!-- Tab Buttons -->
-    <div class="mb-6 flex flex-wrap gap-2">
-      <%= link_to "Registered", user_path(@user, filter: 'registered'),
-          class: "px-4 py-2 rounded-lg font-medium #{@event_filter == 'registered' ? 'bg-green-700 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
-      <%= link_to "Organized", user_path(@user, filter: 'organized'),
-          class: "px-4 py-2 rounded-lg font-medium #{@event_filter == 'organized' ? 'bg-green-700 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
-      <%= link_to "Completed", user_path(@user, filter: 'completed'),
-          class: "px-4 py-2 rounded-lg font-medium #{@event_filter == 'completed' ? 'bg-green-700 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+  <%# Stats Section %>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="relative">
+      <div class="absolute inset-0 bg-black translate-x-1 translate-y-1"></div>
+      <div class="relative bg-cyber-card border-2 border-black p-6">
+        <p class="text-cyber-grey text-xs font-bold mb-1">Events Attended</p>
+        <p class="text-3xl font-bold text-cyber-lime"><%= @stats[:total_attended] %></p>
+      </div>
     </div>
 
-    <!-- Events List -->
-    <% if @event_filter == 'registered' %>
-      <!-- Confirmed Registrations -->
-      <% if @confirmed_registrations.any? %>
-        <h4 class="text-lg font-semibold text-gray-900 mb-4">Confirmed Registrations</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <% @confirmed_registrations.each do |event| %>
-            <div class="bg-white rounded-lg shadow-md p-6 border border-green-200 hover:shadow-lg transition-shadow">
-              <div class="flex items-center justify-between mb-4">
-                <span class="bg-green-700 text-white px-3 py-1 rounded-full text-sm font-medium">
-                  <%= event.event_category.name %>
-                </span>
-                <span class="text-sm text-gray-500">
-                  <%= event.event_time.strftime("%b %d") %>
-                </span>
-              </div>
-              <h3 class="text-lg font-bold text-red-600 mb-2">
-                <%= link_to event.name, event_post_path(event), class: "hover:underline" %>
-              </h3>
-              <p class="text-gray-600 text-sm mb-3"><%= event.location_name %></p>
-              <p class="text-gray-500 text-sm"><%= event.event_time.strftime("%I:%M %p") %></p>
-              <div class="mt-3">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                  ✓ Confirmed
-                </span>
-              </div>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
+    <div class="relative">
+      <div class="absolute inset-0 bg-black translate-x-1 translate-y-1"></div>
+      <div class="relative bg-cyber-card border-2 border-black p-6">
+        <p class="text-cyber-grey text-xs font-bold mb-1">Events Organized</p>
+        <p class="text-3xl font-bold text-cyber-crimson"><%= @stats[:total_organized] %></p>
+      </div>
+    </div>
 
-      <!-- Pending Registrations -->
-      <% if @pending_registrations.any? %>
-        <h4 class="text-lg font-semibold text-gray-900 mb-4">Pending Approval</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <% @pending_registrations.each do |event| %>
-            <div class="bg-white rounded-lg shadow-md p-6 border border-yellow-200 hover:shadow-lg transition-shadow">
-              <div class="flex items-center justify-between mb-4">
-                <span class="bg-green-700 text-white px-3 py-1 rounded-full text-sm font-medium">
-                  <%= event.event_category.name %>
-                </span>
-                <span class="text-sm text-gray-500">
-                  <%= event.event_time.strftime("%b %d") %>
-                </span>
-              </div>
-              <h3 class="text-lg font-bold text-red-600 mb-2">
-                <%= link_to event.name, event_post_path(event), class: "hover:underline" %>
-              </h3>
-              <p class="text-gray-600 text-sm mb-3"><%= event.location_name %></p>
-              <p class="text-gray-500 text-sm"><%= event.event_time.strftime("%I:%M %p") %></p>
-              <div class="mt-3">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                  ⏱ Pending Approval
-                </span>
-              </div>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
+    <div class="relative">
+      <div class="absolute inset-0 bg-black translate-x-1 translate-y-1"></div>
+      <div class="relative bg-cyber-card border-2 border-black p-6">
+        <p class="text-cyber-grey text-xs font-bold mb-1">E-Points</p>
+        <p class="text-3xl font-bold text-yellow-500"><%= @stats[:e_points] %></p>
+      </div>
+    </div>
+  </div>
 
-      <!-- No events message -->
-      <% if @confirmed_registrations.empty? && @pending_registrations.empty? %>
-        <div class="text-center py-12">
-          <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <p class="text-gray-500 text-lg">No registered events</p>
-        </div>
-      <% end %>
-    <% elsif @filtered_events.any? %>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <% @filtered_events.each do |event| %>
-          <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-            <div class="flex items-center justify-between mb-4">
-              <span class="bg-green-700 text-white px-3 py-1 rounded-full text-sm font-medium">
-                <%= event.event_category.name %>
-              </span>
-              <span class="text-sm text-gray-500">
-                <%= event.event_time.strftime("%b %d") %>
-              </span>
-            </div>
-            <h3 class="text-lg font-bold text-red-600 mb-2">
-              <%= link_to event.name, event_post_path(event), class: "hover:underline" %>
-            </h3>
-            <p class="text-gray-600 text-sm mb-3"><%= event.location_name %></p>
-            <p class="text-gray-500 text-sm"><%= event.event_time.strftime("%I:%M %p") %></p>
+  <%# Events Section %>
+  <div class="relative">
+    <div class="absolute inset-0 bg-black translate-x-2 translate-y-2"></div>
+    <div class="relative bg-cyber-card border-2 border-black p-8">
+      <h3 class="text-2xl text-white font-bold mb-6">Events</h3>
 
-            <% if @event_filter == 'organized' %>
-              <div class="mt-4 pt-4 border-t border-gray-200">
-                <p class="text-sm text-gray-600">
-                  <strong>Attendees:</strong> <%= event.registrations_count %> / <%= event.capacity %>
-                </p>
-                <div class="mt-2 flex gap-2">
-                  <%= link_to "View Registrations", registrations_event_post_path(event), class: "text-sm text-blue-600 hover:underline" %>
-                  <%= link_to "Edit", edit_event_post_path(event), class: "text-sm text-green-600 hover:underline" %>
+      <%# Tab Buttons %>
+      <div class="mb-8 flex flex-wrap gap-3">
+        <%= link_to user_path(@user, filter: 'registered'),
+            class: "px-4 py-2 font-bold uppercase text-sm transition-colors #{@event_filter == 'registered' ? 'bg-cyber-lime text-black' : 'bg-transparent border-2 border-cyber-grey text-cyber-grey hover:bg-white hover:text-black hover:border-white'}" do %>
+          Registered
+        <% end %>
+        <%= link_to user_path(@user, filter: 'organized'),
+            class: "px-4 py-2 font-bold uppercase text-sm transition-colors #{@event_filter == 'organized' ? 'bg-cyber-lime text-black' : 'bg-transparent border-2 border-cyber-grey text-cyber-grey hover:bg-white hover:text-black hover:border-white'}" do %>
+          Organized
+        <% end %>
+        <%= link_to user_path(@user, filter: 'completed'),
+            class: "px-4 py-2 font-bold uppercase text-sm transition-colors #{@event_filter == 'completed' ? 'bg-cyber-lime text-black' : 'bg-transparent border-2 border-cyber-grey text-cyber-grey hover:bg-white hover:text-black hover:border-white'}" do %>
+          Completed
+        <% end %>
+      </div>
+
+      <%# Events List %>
+      <% if @event_filter == 'registered' %>
+        <%# Confirmed Registrations %>
+        <% if @confirmed_registrations.any? %>
+          <h4 class="text-cyber-lime text-sm font-bold mb-4">Confirmed</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <% @confirmed_registrations.each do |event| %>
+              <div class="bg-cyber-bg border-2 border-cyber-lime/30 p-6 hover:border-cyber-lime transition-colors">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="bg-cyber-lime text-black px-3 py-1 text-xs font-bold uppercase">
+                    <%= event.event_category.name %>
+                  </span>
+                  <span class="text-cyber-grey text-xs">
+                    <%= event.event_time.strftime("%b %d") %>
+                  </span>
+                </div>
+                <h3 class="text-lg text-white font-bold mb-2">
+                  <%= link_to event.name, event_post_path(event), class: "hover:text-cyber-crimson transition-colors" %>
+                </h3>
+                <p class="text-cyber-grey text-sm mb-2"><%= event.location_name %></p>
+                <p class="text-cyber-grey/70 text-xs"><%= event.event_time.strftime("%I:%M %p") %></p>
+                <div class="mt-4">
+                  <span class="inline-flex items-center px-3 py-1 bg-cyber-lime text-black text-xs font-bold uppercase">
+                    ✓ Confirmed
+                  </span>
                 </div>
               </div>
             <% end %>
           </div>
         <% end %>
-      </div>
-    <% else %>
-      <div class="text-center py-12">
-        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        <p class="text-gray-500 text-lg">No <%= @event_filter %> events</p>
-      </div>
-    <% end %>
+
+        <%# Pending Registrations %>
+        <% if @pending_registrations.any? %>
+          <h4 class="text-yellow-500 text-sm font-bold mb-4">Pending Approval</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <% @pending_registrations.each do |event| %>
+              <div class="bg-cyber-bg border-2 border-yellow-500/30 p-6 hover:border-yellow-500 transition-colors">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="bg-yellow-500 text-black px-3 py-1 text-xs font-bold uppercase">
+                    <%= event.event_category.name %>
+                  </span>
+                  <span class="text-cyber-grey text-xs">
+                    <%= event.event_time.strftime("%b %d") %>
+                  </span>
+                </div>
+                <h3 class="text-lg text-white font-bold mb-2">
+                  <%= link_to event.name, event_post_path(event), class: "hover:text-cyber-crimson transition-colors" %>
+                </h3>
+                <p class="text-cyber-grey text-sm mb-2"><%= event.location_name %></p>
+                <p class="text-cyber-grey/70 text-xs"><%= event.event_time.strftime("%I:%M %p") %></p>
+                <div class="mt-4">
+                  <span class="inline-flex items-center px-3 py-1 bg-yellow-500 text-black text-xs font-bold uppercase">
+                    ⏱ Pending
+                  </span>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <% if @confirmed_registrations.empty? && @pending_registrations.empty? %>
+          <div class="text-center py-12">
+            <p class="text-cyber-grey text-6xl mb-4">⊘</p>
+            <p class="text-cyber-grey">No registered events</p>
+          </div>
+        <% end %>
+      <% elsif @filtered_events.any? %>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <% @filtered_events.each do |event| %>
+            <div class="bg-cyber-bg border-2 border-cyber-grey/30 p-6 hover:border-cyber-lime transition-colors">
+              <div class="flex items-center justify-between mb-4">
+                <span class="bg-cyber-crimson text-white px-3 py-1 text-xs font-bold uppercase">
+                  <%= event.event_category.name %>
+                </span>
+                <span class="text-cyber-grey text-xs">
+                  <%= event.event_time.strftime("%b %d") %>
+                </span>
+              </div>
+              <h3 class="text-lg text-white font-bold mb-2">
+                <%= link_to event.name, event_post_path(event), class: "hover:text-cyber-crimson transition-colors" %>
+              </h3>
+              <p class="text-cyber-grey text-sm mb-2"><%= event.location_name %></p>
+              <p class="text-cyber-grey/70 text-xs"><%= event.event_time.strftime("%I:%M %p") %></p>
+
+              <% if @event_filter == 'organized' %>
+                <div class="mt-4 pt-4 border-t border-cyber-grey/20">
+                  <p class="text-cyber-grey text-sm mb-2">
+                    <span class="text-cyber-crimson">Registered:</span> <%= event.registrations_count %> / <%= event.capacity %>
+                  </p>
+                  <div class="flex gap-3 text-xs">
+                    <%= link_to "Registrations", registrations_event_post_path(event), class: "text-cyber-lime hover:underline font-bold" %>
+                    <%= link_to "Edit", edit_event_post_path(event), class: "text-cyber-grey hover:text-white font-bold" %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-12">
+          <p class="text-cyber-grey text-6xl mb-4">⊘</p>
+          <p class="text-cyber-grey">No <%= @event_filter %> events</p>
+        </div>
+      <% end %>
+    </div>
   </div>
 
-  <!-- Bottom Buttons -->
+  <%# Bottom Buttons %>
   <% if current_user == @user %>
-    <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6 mt-12">
-      <%= link_to "View Leaderboard", leaderboard_path, class: "w-full sm:w-auto px-8 py-4 bg-green-700 text-white rounded-lg font-bold text-lg hover:bg-green-800 transition-colors shadow-lg" %>
-      <%= link_to "Back to Events", root_path, class: "w-full sm:w-auto px-8 py-4 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors shadow-lg" %>
+    <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-12">
+      <%= link_to leaderboard_path, class: "skew-btn w-full sm:w-auto bg-yellow-500 text-black px-8 py-4 font-bold text-lg shadow-[5px_5px_0px_black] hover:shadow-[7px_7px_0px_black] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all text-center" do %>
+        View Leaderboard
+      <% end %>
+      <%= link_to "Back to Events", root_path, class: "skew-btn w-full sm:w-auto bg-cyber-grey text-black px-6 py-4 font-bold text-center hover:bg-white transition-colors" %>
     </div>
   <% end %>
-</div>
+</main>
+
+<footer class="text-center text-cyber-grey py-10 border-t border-cyber-grey/30 text-sm mt-12">
+  SYSTEM STATUS: ONLINE /// e_ren SPACE © <%= Time.current.year %>
+</footer>

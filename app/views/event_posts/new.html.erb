@@ -1,153 +1,136 @@
-<style>
-  .form-input {
-    transition: all 0.3s ease;
-  }
-  .form-input:focus {
-    border-color: #BA0C2F;
-    box-shadow: 0 0 0 3px rgba(186, 12, 47, 0.1);
-  }
-  .form-input.error {
-    border-color: #ef4444;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-  }
-</style>
+<%= render 'shared/back_header', title: 'Post New Event', back_path: root_path, back_text: 'Back to Events' %>
 
-<!-- Header Section -->
-<header class="bg-washu-red text-white py-8 relative overflow-hidden">
-  <div class="gothic-pattern absolute inset-0 opacity-20"></div>
-  <div class="container mx-auto px-4 relative z-10">
-    <div class="flex justify-between items-center">
-      <div>
-        <h1 class="text-2xl md:text-3xl font-bold">Post New Event</h1>
-        <p class="text-lg text-gray-100 mt-1">Share your event with the WashU community</p>
-      </div>
-      <%= link_to root_path, class: "bg-white text-washu-red px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors" do %>
-        ← Back to Events
-      <% end %>
-    </div>
+<main class="max-w-3xl mx-auto px-4 py-12">
+  <div class="mb-8">
+    <h2 class="text-3xl text-white font-bold mb-2">Post New Event</h2>
+    <p class="text-cyber-grey border-l-4 border-cyber-lime pl-4">Share your event with the community</p>
   </div>
-</header>
 
-<!-- Main Content -->
-<main class="container mx-auto px-4 py-8">
-  <!-- Event Form -->
-  <div class="bg-white rounded-lg shadow-lg p-8">
-    <%= form_with(model: @event_post, local: true, class: "space-y-8") do |form| %>
-      <!-- Error Messages -->
-      <% if @event_post.errors.any? %>
-        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 slide-in">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-              </svg>
+  <%# Form Card %>
+  <div class="relative">
+    <div class="absolute inset-0 bg-black skew-card translate-x-2 translate-y-2"></div>
+    <div class="relative bg-cyber-card border-2 border-black p-8">
+      <%= form_with(model: @event_post, local: true, class: "space-y-8") do |form| %>
+        <%# Error Messages %>
+        <% if @event_post.errors.any? %>
+          <div class="bg-cyber-crimson/20 border-2 border-cyber-crimson p-4 mb-6">
+            <p class="text-cyber-crimson font-bold text-sm mb-2">
+              <%= pluralize(@event_post.errors.count, "error") %> prohibited this event from being saved:
+            </p>
+            <ul class="text-cyber-crimson text-sm space-y-1">
+              <% @event_post.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <%# Basic Information %>
+        <div>
+          <h3 class="text-lg text-cyber-lime font-bold mb-4">Basic Information</h3>
+          <div class="space-y-4">
+            <div>
+              <%= form.label :name, class: "block text-cyber-grey text-sm font-bold mb-2" do %>
+                Event Name <span class="text-cyber-crimson">*</span>
+              <% end %>
+              <%= form.text_field :name,
+                  class: "w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors",
+                  placeholder: "Enter event name",
+                  required: true %>
             </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-red-800">
-                <%= pluralize(@event_post.errors.count, "error") %> prohibited this event from being saved:
-              </h3>
-              <div class="mt-2 text-sm text-red-700">
-                <ul class="list-disc pl-5 space-y-1">
-                  <% @event_post.errors.full_messages.each do |message| %>
-                    <li><%= message %></li>
-                  <% end %>
-                </ul>
+
+            <div>
+              <%= form.label :description, class: "block text-cyber-grey text-sm font-bold mb-2" %>
+              <%= form.text_area :description,
+                  rows: 4,
+                  class: "w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors",
+                  placeholder: "Describe your event..." %>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <%= form.label :event_category_id, class: "block text-cyber-grey text-sm font-bold mb-2" do %>
+                  Category <span class="text-cyber-crimson">*</span>
+                <% end %>
+                <%= form.collection_select :event_category_id, @event_categories, :id, :name,
+                    { prompt: "Select category" },
+                    { class: "w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors", required: true } %>
+              </div>
+
+              <div>
+                <%= form.label :event_time, class: "block text-cyber-grey text-sm font-bold mb-2" do %>
+                  Date & Time <span class="text-cyber-crimson">*</span>
+                <% end %>
+                <%= form.datetime_local_field :event_time,
+                    class: "w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors",
+                    required: true %>
               </div>
             </div>
           </div>
         </div>
-      <% end %>
 
-      <!-- Basic Information Section -->
-      <div>
-        <h2 class="text-xl font-bold text-washu-gray mb-6">Basic Information</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Event Name -->
-          <div class="lg:col-span-2">
-            <%= form.label :name, "Event Name", class: "block text-sm font-medium text-gray-700 mb-2" do %>
-              Event Name <span class="text-red-500">*</span>
-            <% end %>
-            <%= form.text_field :name, class: "form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none", placeholder: "Enter event name", required: true %>
-          </div>
-
-          <!-- Description -->
-          <div class="lg:col-span-2">
-            <%= form.label :description, class: "block text-sm font-medium text-gray-700 mb-2" %>
-            <%= form.text_area :description, rows: 4, class: "form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none", placeholder: "Describe your event..." %>
-          </div>
-
-          <!-- Event Category -->
-          <div>
-            <%= form.label :event_category_id, "Category", class: "block text-sm font-medium text-gray-700 mb-2" do %>
-              Category <span class="text-red-500">*</span>
-            <% end %>
-            <%= form.collection_select :event_category_id, @event_categories, :id, :name,
-                { prompt: "Select a category" },
-                { class: "form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none", required: true } %>
-          </div>
-
-          <!-- Event Date & Time -->
-          <div>
-            <%= form.label :event_time, "Date & Time", class: "block text-sm font-medium text-gray-700 mb-2" do %>
-              Date & Time <span class="text-red-500">*</span>
-            <% end %>
-            <%= form.datetime_local_field :event_time, class: "form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none", required: true %>
-          </div>
-        </div>
-      </div>
-
-      <!-- Location Details Section -->
-      <div>
-        <h2 class="text-xl font-bold text-washu-gray mb-6">Location Details</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Location Name -->
-          <div>
-            <%= form.label :location_name, "Location", class: "block text-sm font-medium text-gray-700 mb-2" do %>
-              Location <span class="text-red-500">*</span>
-            <% end %>
-            <%= form.text_field :location_name, class: "form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none", placeholder: "e.g., Athletic Complex", required: true %>
-          </div>
-
-          <!-- Capacity -->
-          <div>
-            <%= form.label :capacity, class: "block text-sm font-medium text-gray-700 mb-2" do %>
-              Capacity <span class="text-red-500">*</span>
-            <% end %>
-            <%= form.number_field :capacity, min: 1, class: "form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none", placeholder: "Maximum attendees", required: true %>
-          </div>
-
-          <!-- Google Maps URL -->
-          <div class="lg:col-span-2">
-            <%= form.label :google_maps_url, "Google Maps Link (Optional)", class: "block text-sm font-medium text-gray-700 mb-2" %>
-            <%= form.url_field :google_maps_url, class: "form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none", placeholder: "https://maps.google.com/..." %>
-          </div>
-        </div>
-      </div>
-
-      <!-- Registration Settings Section -->
-      <div>
-        <h2 class="text-xl font-bold text-washu-gray mb-6">Registration Settings</h2>
-        <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
-          <div class="flex items-start space-x-3">
-            <%= form.check_box :requires_approval, class: "mt-1 h-5 w-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500" %>
-            <div class="flex-1">
-              <%= form.label :requires_approval, class: "block text-sm font-medium text-gray-900 cursor-pointer" do %>
-                Require Approval for Registrations
+        <%# Location Details %>
+        <div>
+          <h3 class="text-lg text-cyber-lime font-bold mb-4">Location</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <%= form.label :location_name, class: "block text-cyber-grey text-sm font-bold mb-2" do %>
+                Location <span class="text-cyber-crimson">*</span>
               <% end %>
-              <p class="text-sm text-gray-600 mt-1">
-                When enabled, you must manually approve each registration. Participants will be notified when their registration is approved.
-                Leave unchecked for automatic confirmation.
-              </p>
+              <%= form.text_field :location_name,
+                  class: "w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors",
+                  placeholder: "e.g., Athletic Complex",
+                  required: true %>
+            </div>
+
+            <div>
+              <%= form.label :capacity, class: "block text-cyber-grey text-sm font-bold mb-2" do %>
+                Capacity <span class="text-cyber-crimson">*</span>
+              <% end %>
+              <%= form.number_field :capacity,
+                  min: 1,
+                  class: "w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors",
+                  placeholder: "Maximum attendees",
+                  required: true %>
+            </div>
+
+            <div class="md:col-span-2">
+              <%= form.label :google_maps_url, "Google Maps Link (Optional)", class: "block text-cyber-grey text-sm font-bold mb-2" %>
+              <%= form.url_field :google_maps_url,
+                  class: "w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors",
+                  placeholder: "https://maps.google.com/..." %>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Action Buttons -->
-      <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4 pt-6">
-        <%= form.submit "Create Event", class: "w-full sm:w-auto px-8 py-4 bg-washu-red text-white rounded-lg font-bold text-lg hover:bg-red-700 shadow-lg transition-all duration-300" %>
-        <%= link_to "Cancel", root_path, class: "w-full sm:w-auto px-8 py-4 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 text-center transition-colors" %>
-      </div>
-    <% end %>
+        <%# Registration Settings %>
+        <div>
+          <h3 class="text-lg text-cyber-lime font-bold mb-4">Registration Settings</h3>
+          <div class="bg-purple-900/30 border-2 border-purple-500 p-4">
+            <label class="flex items-start gap-3 cursor-pointer">
+              <%= form.check_box :requires_approval, class: "mt-1 h-5 w-5 accent-purple-500" %>
+              <div>
+                <span class="text-purple-400 font-bold text-sm">Require Approval for Registrations</span>
+                <p class="text-purple-400/70 text-sm mt-1">
+                  When enabled, you must manually approve each registration. Participants will be notified when their registration is approved. Leave unchecked for automatic confirmation.
+                </p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <%# Action Buttons %>
+        <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-white/10">
+          <%= form.submit "Create Event",
+              class: "skew-btn bg-cyber-crimson text-white px-8 py-4 font-bold text-lg shadow-[5px_5px_0px_black] hover:shadow-[7px_7px_0px_black] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all cursor-pointer" %>
+          <%= link_to "Cancel", root_path,
+              class: "skew-btn bg-cyber-grey text-black px-6 py-4 font-bold text-center hover:bg-white transition-colors" %>
+        </div>
+      <% end %>
+    </div>
   </div>
 </main>
+
+<footer class="text-center text-cyber-grey py-10 border-t border-cyber-grey/30 text-sm mt-12">
+  SYSTEM STATUS: ONLINE /// e_ren SPACE © <%= Time.current.year %>
+</footer>
