@@ -133,9 +133,6 @@ EOF
 
         // ========== Build Docker Image (Main Branch Only) ==========
         stage('Build Docker Image') {
-          when {
-            branch 'main'
-          }
           steps {
             echo 'Building production Docker image...'
             sh """
