@@ -9,36 +9,9 @@
   .filter-tag:hover {
     transform: translateY(-1px);
   }
-  .event-card {
-    border: 1px solid #e1c4ac;
-    transition: all 0.3s ease;
-  }
-  .event-card:hover {
-    border-color: #ba0c2f;
-    transform: translateY(-4px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  }
 </style>
 
-<!-- Header Section -->
-<header class="bg-washu-red text-white py-16 relative overflow-hidden">
-  <div class="gothic-pattern absolute inset-0 opacity-20"></div>
-  <div class="container mx-auto px-4 relative z-10">
-    <div class="flex justify-between items-center mb-8">
-      <%= link_to root_path, class: "flex items-center space-x-2 text-white hover:text-gray-200 transition-colors" do %>
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-        <span>Back to Events</span>
-      <% end %>
-    </div>
-
-    <div class="text-center">
-      <h1 class="text-3xl md:text-5xl font-bold mb-4">Search Events</h1>
-      <p class="text-lg md:text-xl text-pink-100">Find your next campus activity</p>
-    </div>
-  </div>
-</header>
+<%= render 'shared/search_header', title: 'Search Events', subtitle: 'Find your next campus activity' %>
 
 <!-- Main Content -->
 <main class="container mx-auto px-4 py-8">
@@ -157,102 +130,7 @@
   <% if @event_posts&.any? %>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <% @event_posts.each do |event| %>
-        <div class="event-card bg-white rounded-lg shadow-md p-6 fade-in">
-          <!-- Event Header -->
-          <div class="flex items-center justify-between mb-4">
-            <span class="bg-washu-green text-white px-3 py-1 rounded-full text-sm font-medium">
-              <%= event.event_category.name %>
-            </span>
-            <span class="text-sm text-gray-500">
-              <%= event.event_time.strftime("%b %d") %>
-            </span>
-          </div>
-
-          <!-- Event Title -->
-          <h3 class="text-lg font-bold text-washu-red mb-2 hover:underline">
-            <%= link_to event.name, event_post_path(event) %>
-          </h3>
-
-          <!-- Event Details -->
-          <div class="space-y-2 mb-4">
-            <div class="flex items-center text-gray-600 text-sm">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-              </svg>
-              <%= event.location_name %>
-            </div>
-            <div class="flex items-center text-gray-600 text-sm">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              <%= event.event_time.strftime("%I:%M %p") %>
-            </div>
-            <div class="flex items-center text-gray-600 text-sm">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-              </svg>
-              <%= event.registrations_count %> / <%= event.capacity %> registered
-            </div>
-
-            <% if event.latitude.present? && event.longitude.present? && params[:latitude].present? && params[:longitude].present? && event.respond_to?(:distance) && event.distance.present? %>
-              <div class="flex items-center text-gray-600 text-sm">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                </svg>
-                <%= event.distance.round(1) %> miles away
-              </div>
-            <% end %>
-          </div>
-
-          <!-- Organizer -->
-          <p class="text-gray-500 text-sm mb-4">
-            <strong>By:</strong> <%= link_to event.organizer.name, user_path(event.organizer), class: "text-washu-red hover:underline" %>
-          </p>
-
-          <!-- Action Buttons -->
-          <div class="flex flex-col space-y-2">
-            <% if @user_registrations && @user_registrations[event.id] %>
-              <% registration = @user_registrations[event.id] %>
-              <div class="flex items-center justify-between">
-                <% if registration.waitlisted? %>
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Waitlisted
-                  </span>
-                <% else %>
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Registered
-                  </span>
-                <% end %>
-                <%= button_to "Unregister",
-                    event_post_event_registration_path(event, registration),
-                    method: :delete,
-                    class: "px-3 py-1 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors",
-                    data: { confirm: "Are you sure?" } %>
-              </div>
-            <% else %>
-              <% if event.full? %>
-                <%= button_to "Join Waitlist",
-                    event_post_event_registrations_path(event),
-                    method: :post,
-                    class: "w-full px-4 py-2 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 transition-colors shadow-sm" %>
-              <% else %>
-                <%= button_to "Register",
-                    event_post_event_registrations_path(event),
-                    method: :post,
-                    class: "w-full px-4 py-2 bg-washu-red text-white rounded-lg font-medium hover:bg-red-700 transition-colors shadow-sm" %>
-              <% end %>
-            <% end %>
-
-            <%= link_to "View Details", event_post_path(event), class: "w-full text-center px-4 py-2 bg-gray-100 text-washu-gray rounded-lg font-medium hover:bg-gray-200 transition-colors" %>
-          </div>
-        </div>
+        <%= render 'shared/event_card', event: event, registration: @user_registrations&.[](event.id) %>
       <% end %>
     </div>
   <% elsif params[:q].present? || params[:category_id].present? || params[:latitude].present? %>

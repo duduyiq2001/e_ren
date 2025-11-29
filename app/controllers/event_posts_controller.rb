@@ -16,6 +16,8 @@ class EventPostsController < ApplicationController
   def show
     @event_post = EventPost.find(params[:id])
     @registration = current_user.event_registrations.find_by(event_post: @event_post) if current_user
+  rescue ActiveRecord::RecordNotFound
+    redirect_to event_posts_path, alert: "Event not found or has been deleted."
   end
 
   def find

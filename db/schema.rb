@@ -10,9 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_16_203625) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_25_180740) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "admin_audit_logs", force: :cascade do |t|
+    t.string "action", null: false
+    t.bigint "admin_user_id", null: false
+    t.datetime "created_at", null: false
+    t.string "ip_address"
+    t.jsonb "metadata", default: {}
+    t.integer "target_id", null: false
+    t.string "target_type", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.index ["action"], name: "index_admin_audit_logs_on_action"
+    t.index ["admin_user_id"], name: "index_admin_audit_logs_on_admin_user_id"
+    t.index ["created_at"], name: "index_admin_audit_logs_on_created_at"
+    t.index ["target_type", "target_id"], name: "index_admin_audit_logs_on_target_type_and_target_id"
+  end
 
   create_table "event_categories", force: :cascade do |t|
     t.string "color"
@@ -77,6 +93,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_16_203625) do
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
+    t.integer "role", default: 0, null: false
     t.integer "sign_in_count", default: 0, null: false
     t.string "unconfirmed_email"
     t.datetime "updated_at", null: false
@@ -84,8 +101,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_16_203625) do
     t.index ["e_score"], name: "index_users_on_e_score"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["role"], name: "index_users_on_role"
   end
 
+  add_foreign_key "admin_audit_logs", "users", column: "admin_user_id"
   add_foreign_key "event_posts", "event_categories"
   add_foreign_key "event_posts", "users", column: "organizer_id"
   add_foreign_key "event_registrations", "event_posts"

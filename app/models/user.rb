@@ -4,9 +4,12 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable,
          :confirmable
 
+  # Role enum
+  enum :role, { student: 0, club_admin: 1, super_admin: 2 }, default: :student
+
   # Associations
-  has_many :organized_events, class_name: 'EventPost', foreign_key: 'organizer_id', dependent: :destroy_async
-  has_many :event_registrations, dependent: :destroy_async
+  has_many :organized_events, class_name: 'EventPost', foreign_key: 'organizer_id', dependent: :destroy
+  has_many :event_registrations, dependent: :destroy
   has_many :attended_events, through: :event_registrations, source: :event_post
 
   # Validations
@@ -18,6 +21,19 @@ class User < ApplicationRecord
   # Scopes
   scope :by_e_score, -> { order(e_score: :desc) }
   scope :top_n, ->(n = 10) { by_e_score.limit(n) }
+
+  # Admin methods
+  def admin?
+    super_admin?
+  end
+
+  def can_delete_user?(target_user)
+    super_admin? && target_user.id != id # Can't delete self
+  end
+
+  def can_delete_event?(event_post)
+    super_admin?
+  end
 
   # Methods
   def attending?(event_post)

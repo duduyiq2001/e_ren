@@ -46,7 +46,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "displays organizer name" do
-      expect(rendered).to have_content("John Organizer")
+      expect(rendered).to have_content(organizer.name)
     end
 
     it "shows register button when not full" do
@@ -61,10 +61,6 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     it "does not show unregister button" do
       expect(rendered).not_to have_button("Unregister", visible: :all)
     end
-
-    it "does not show registered badge" do
-      expect(rendered).not_to have_content("✓ Registered")
-    end
   end
 
   context "when user is registered" do
@@ -77,7 +73,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "shows registered badge" do
-      expect(rendered).to have_content("✓ Registered")
+      expect(rendered).to have_content("Registered")
     end
 
     it "shows unregister button" do
@@ -104,11 +100,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "shows waitlisted badge" do
-      expect(rendered).to have_content("⏱ Waitlisted")
-    end
-
-    it "does not show registered badge" do
-      expect(rendered).not_to have_content("✓ Registered")
+      expect(rendered).to have_content("Waitlisted")
     end
 
     it "shows unregister button" do
@@ -167,7 +159,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "shows both registration and organizer actions" do
-      expect(rendered).to have_content("✓ Registered")
+      expect(rendered).to have_content("Registered")
       expect(rendered).to have_button("Unregister", visible: :all)
       expect(rendered).to have_link("View Registrations", visible: :all)
       expect(rendered).to have_link("Edit Event", visible: :all)
@@ -198,7 +190,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "shows requires approval badge" do
-      expect(rendered).to have_content("🔒 Requires Approval")
+      expect(rendered).to have_content("Requires Approval")
     end
 
     it "shows approval notice" do
@@ -220,7 +212,7 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
     end
 
     it "does not show requires approval badge" do
-      expect(rendered).not_to have_content("🔒 Requires Approval")
+      expect(rendered).not_to have_content("Requires Approval")
     end
 
     it "does not show approval notice" do

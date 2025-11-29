@@ -1,0 +1,232 @@
+#!/usr/bin/env ruby
+# Generate comprehensive test data for Admin Panel testing
+
+puts "🌱 Generating Test Data for Admin Panel..."
+puts ""
+
+# Check if in Rails environment
+unless defined?(Rails)
+  puts "❌ Error: This script must be run in Rails console"
+  puts "   Run: bin/rails runner bin/generate_test_data"
+  exit 1
+end
+
+# Ensure admin user exists
+admin_email = "admin@wustl.edu"
+admin = User.find_or_initialize_by(email: admin_email)
+if admin.new_record?
+  admin.assign_attributes(
+    name: "Admin User",
+    password: "password123",
+    password_confirmation: "password123",
+    role: :super_admin,
+    confirmed_at: Time.current
+  )
+  admin.save!
+  puts "✅ Created admin user: #{admin_email}"
+else
+  admin.update(role: :super_admin) unless admin.super_admin?
+  puts "✅ Admin user exists: #{admin_email}"
+end
+
+# Create multiple regular users
+puts "\n📝 Creating users..."
+user_names = [
+  "Alice Chen", "Bob Martinez", "Charlie Kim", "Diana Patel", "Ethan Brown",
+  "Fiona Zhang", "George Wilson", "Hannah Lee", "Ian Thompson", "Julia Garcia",
+  "Kevin Park", "Lily Anderson", "Mike Johnson", "Nancy Davis", "Oscar White"
+]
+
+users = []
+user_names.each_with_index do |name, index|
+  email = "user#{index + 1}@wustl.edu"
+  user = User.find_or_initialize_by(email: email)
+  if user.new_record?
+    user.assign_attributes(
+      name: name,
+      password: "password123",
+      password_confirmation: "password123",
+      e_score: rand(0..500),
+      phone_number: "555-#{rand(1000..9999)}",
+      confirmed_at: Time.current
+    )
+    user.save!
+    users << user
+    puts "  ✅ Created user: #{name} (#{email})"
+  else
+    users << user
+    puts "  ℹ️  User already exists: #{name} (#{email})"
+  end
+end
+
+# Create event categories if they don't exist
+puts "\n📂 Creating event categories..."
+categories = {
+  sports: EventCategory.find_or_create_by!(name: "Sports & Recreation"),
+  social: EventCategory.find_or_create_by!(name: "Social & Networking"),
+  academic: EventCategory.find_or_create_by!(name: "Academic & Career"),
+  food: EventCategory.find_or_create_by!(name: "Food & Dining"),
+  arts: EventCategory.find_or_create_by!(name: "Arts & Culture"),
+  gaming: EventCategory.find_or_create_by!(name: "Gaming & Esports")
+}
+puts "  ✅ Event categories ready"
+
+# Create multiple events with different organizers
+puts "\n🎉 Creating events..."
+event_data = [
+  {
+    name: "Intramural Soccer Pickup Game",
+    description: "Join us for a fun soccer game! All skill levels welcome.",
+    event_category: categories[:sports],
+    organizer: users[0],
+    capacity: 20,
+    event_time: 3.days.from_now.change(hour: 18),
+    location_name: "Athletic Field"
+  },
+  {
+    name: "Networking Mixer",
+    description: "Meet fellow students and professionals in a relaxed setting.",
+    event_category: categories[:social],
+    organizer: users[1],
+    capacity: 50,
+    event_time: 5.days.from_now.change(hour: 19),
+    location_name: "Student Center"
+  },
+  {
+    name: "Career Development Workshop",
+    description: "Learn resume writing and interview skills.",
+    event_category: categories[:academic],
+    organizer: users[2],
+    capacity: 30,
+    event_time: 7.days.from_now.change(hour: 14),
+    location_name: "Career Center"
+  },
+  {
+    name: "Pizza Night",
+    description: "Free pizza and drinks for all attendees!",
+    event_category: categories[:food],
+    organizer: users[3],
+    capacity: 40,
+    event_time: 2.days.from_now.change(hour: 19),
+    location_name: "Campus Dining Hall"
+  },
+  {
+    name: "Art Gallery Opening",
+    description: "View amazing student artwork and enjoy refreshments.",
+    event_category: categories[:arts],
+    organizer: users[4],
+    capacity: 25,
+    event_time: 4.days.from_now.change(hour: 17),
+    location_name: "Art Building"
+  },
+  {
+    name: "Gaming Tournament",
+    description: "Compete in various video games. Prizes for winners!",
+    event_category: categories[:gaming],
+    organizer: users[5],
+    capacity: 32,
+    event_time: 6.days.from_now.change(hour: 16),
+    location_name: "Gaming Lab"
+  },
+  {
+    name: "Basketball Tournament",
+    description: "3v3 basketball tournament. Sign up your team!",
+    event_category: categories[:sports],
+    organizer: users[6],
+    capacity: 24,
+    event_time: 8.days.from_now.change(hour: 15),
+    location_name: "Gymnasium"
+  },
+  {
+    name: "Study Group Session",
+    description: "Collaborative study session for finals preparation.",
+    event_category: categories[:academic],
+    organizer: users[7],
+    capacity: 15,
+    event_time: 1.day.from_now.change(hour: 10),
+    location_name: "Library Study Room"
+  },
+  {
+    name: "Coffee & Conversation",
+    description: "Casual meetup over coffee. Great for making new friends!",
+    event_category: categories[:social],
+    organizer: users[8],
+    capacity: 20,
+    event_time: 3.days.from_now.change(hour: 11),
+    location_name: "Campus Cafe"
+  },
+  {
+    name: "Movie Night",
+    description: "Watch a popular movie together. Popcorn provided!",
+    event_category: categories[:social],
+    organizer: users[9],
+    capacity: 60,
+    event_time: 5.days.from_now.change(hour: 20),
+    location_name: "Student Theater"
+  }
+]
+
+events = []
+event_data.each do |data|
+  event = EventPost.find_or_initialize_by(name: data[:name])
+  if event.new_record?
+    event.assign_attributes(data.except(:name))
+    event.save!
+    events << event
+    puts "  ✅ Created event: #{event.name} (Organizer: #{event.organizer.name})"
+  else
+    events << event
+    puts "  ℹ️  Event already exists: #{event.name}"
+  end
+end
+
+# Create event registrations
+puts "\n📋 Creating event registrations..."
+registration_count = 0
+
+# Register multiple users for different events
+registrations = [
+  [users[0], events[0]], [users[1], events[0]], [users[2], events[0]], [users[3], events[0]],
+  [users[0], events[1]], [users[4], events[1]], [users[5], events[1]],
+  [users[1], events[2]], [users[6], events[2]], [users[7], events[2]],
+  [users[2], events[3]], [users[8], events[3]], [users[9], events[3]], [users[10], events[3]],
+  [users[3], events[4]], [users[11], events[4]],
+  [users[4], events[5]], [users[12], events[5]], [users[13], events[5]],
+  [users[5], events[6]], [users[14], events[6]],
+  [users[6], events[7]], [users[0], events[7]],
+  [users[7], events[8]], [users[1], events[8]], [users[2], events[8]],
+  [users[8], events[9]], [users[3], events[9]], [users[4], events[9]], [users[5], events[9]]
+]
+
+registrations.each do |user, event|
+  registration = EventRegistration.find_or_initialize_by(user: user, event_post: event)
+  if registration.new_record?
+    registration.assign_attributes(
+      status: [:pending, :confirmed].sample,
+      registered_at: rand(1..7).days.ago
+    )
+    registration.save!
+    registration_count += 1
+  end
+end
+
+puts "  ✅ Created/updated #{registration_count} registrations"
+
+# Summary
+puts "\n" + "="*50
+puts "📊 Test Data Summary:"
+puts "="*50
+puts "  👥 Users: #{User.kept.count} active"
+puts "  🎉 Events: #{EventPost.kept.count} active"
+puts "  📋 Registrations: #{EventRegistration.kept.count} active"
+puts "  📂 Categories: #{EventCategory.count}"
+puts "  👤 Admin: #{admin_email} (password: password123)"
+puts "="*50
+
+puts "\n🎉 Test data generation complete!"
+puts "\nNext steps:"
+puts "1. Visit http://localhost:3000/admin"
+puts "2. Login with: #{admin_email} / password123"
+puts "3. Test deletion and restore functionality"
+puts ""
+

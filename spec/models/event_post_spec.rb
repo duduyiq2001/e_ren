@@ -5,7 +5,7 @@ RSpec.describe EventPost, type: :model do
   describe "associations" do
     it { should belong_to(:event_category) }
     it { should belong_to(:organizer).class_name('User').with_foreign_key('organizer_id') }
-    it { should have_many(:event_registrations).dependent(:destroy_async) }
+    it { should have_many(:event_registrations).dependent(:destroy) }
     it { should have_many(:attendees).through(:event_registrations).source(:user) }
   end
 
@@ -456,6 +456,25 @@ RSpec.describe EventPost, type: :model do
       expect {
         create(:event_post, organizer: nil)
       }.to raise_error(ActiveRecord::RecordInvalid)
+    end
+  end
+
+  describe "destroy with cascade" do
+    let(:event_post) { create(:event_post) }
+    let!(:registration1) { create(:event_registration, event_post: event_post) }
+    let!(:registration2) { create(:event_registration, event_post: event_post) }
+
+    it "destroys event and cascades to registrations" do
+      event_id = event_post.id
+      reg1_id = registration1.id
+      reg2_id = registration2.id
+
+      event_post.destroy
+
+      # Event and registrations should be deleted
+      expect { EventPost.find(event_id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { EventRegistration.find(reg1_id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { EventRegistration.find(reg2_id) }.to raise_error(ActiveRecord::RecordNotFound)
     end
   end
 end

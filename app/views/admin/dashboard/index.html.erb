@@ -1,0 +1,334 @@
+<!-- Header Section -->
+<header class="bg-washu-red text-white py-12 relative overflow-hidden">
+  <div class="gothic-pattern absolute inset-0 opacity-20"></div>
+  <div class="container mx-auto px-4 relative z-10">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold mb-2">Admin Panel</h1>
+        <p class="text-pink-100">Manage users and events</p>
+      </div>
+      <div>
+        <%= link_to root_path, class: "bg-white text-washu-red px-6 py-3 rounded-lg font-medium shadow-lg hover:bg-gray-100 transition-all duration-300" do %>
+          &larr; Back to Home
+        <% end %>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="container mx-auto px-4 py-8" data-controller="tabs category-modal" data-tabs-default-value="active">
+  <!-- Flash Messages -->
+  <% if notice %>
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 fade-in">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          <span class="text-green-700 font-medium"><%= notice %></span>
+        </div>
+        <button onclick="this.parentElement.parentElement.remove()" class="text-green-500 hover:text-green-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  <% end %>
+
+  <% if alert %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 fade-in">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="text-red-700 font-medium"><%= alert %></span>
+        </div>
+        <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Tabs -->
+  <div class="mb-6 border-b border-gray-200">
+    <nav class="flex space-x-8">
+      <button data-tabs-target="tab" data-tab="active" data-action="click->tabs#switch"
+              class="tab-button py-4 px-1 border-b-2 border-washu-red font-medium text-sm text-washu-red">
+        Active Items
+      </button>
+      <button data-tabs-target="tab" data-tab="categories" data-action="click->tabs#switch"
+              class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+        Categories
+      </button>
+      <button data-tabs-target="tab" data-tab="audit" data-action="click->tabs#switch"
+              class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+        Audit Log
+      </button>
+    </nav>
+  </div>
+
+  <!-- Active Items Tab -->
+  <div data-tabs-target="panel" data-tab="active">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Users Section -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-washu-gray">Users (<%= @users.count %>)</h2>
+        </div>
+        <div class="space-y-3 max-h-96 overflow-y-auto">
+          <% @users.each do |user| %>
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div class="flex-1">
+                <div class="font-medium text-gray-900"><%= user.name %></div>
+                <div class="text-sm text-gray-500"><%= user.email %></div>
+                <div class="text-xs text-gray-400 mt-1">
+                  Role: <%= user.role.humanize %> | E-Score: <%= user.e_score %>
+                </div>
+              </div>
+              <button
+                data-controller="deletion-modal"
+                data-deletion-modal-type-value="user"
+                data-deletion-modal-id-value="<%= user.id %>"
+                data-deletion-modal-title-value="<%= user.name %>"
+                data-action="click->deletion-modal#open"
+                class="px-3 py-1 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 transition-colors">
+                Delete
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Events Section -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-washu-gray">Events (<%= @event_posts.count %>)</h2>
+        </div>
+        <div class="space-y-3 max-h-96 overflow-y-auto">
+          <% @event_posts.each do |event| %>
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div class="flex-1">
+                <div class="font-medium text-gray-900"><%= event.name %></div>
+                <div class="text-sm text-gray-500">By: <%= event.organizer.name %></div>
+                <div class="text-xs text-gray-400 mt-1">
+                  <%= event.event_time.strftime("%b %d, %Y at %I:%M %p") %> | <%= event.registrations_count %> registrations
+                </div>
+              </div>
+              <button
+                data-controller="deletion-modal"
+                data-deletion-modal-type-value="event_post"
+                data-deletion-modal-id-value="<%= event.id %>"
+                data-deletion-modal-title-value="<%= event.name %>"
+                data-action="click->deletion-modal#open"
+                class="px-3 py-1 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 transition-colors">
+                Delete
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories Tab -->
+  <div data-tabs-target="panel" data-tab="categories" class="hidden">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-washu-gray">Event Categories (<%= @event_categories.count %>)</h2>
+        <button data-action="click->category-modal#open"
+                class="px-4 py-2 bg-washu-red text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
+          + Add Category
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="categories-grid">
+        <% @event_categories.each do |category| %>
+          <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow" id="category-<%= category.id %>">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center">
+                <% if category.color.present? %>
+                  <span class="w-4 h-4 rounded-full mr-2" style="background-color: <%= category.color %>"></span>
+                <% end %>
+                <span class="font-medium text-gray-900"><%= category.name %></span>
+              </div>
+              <span class="text-xs text-gray-500"><%= category.event_posts.count %> events</span>
+            </div>
+            <div class="flex space-x-2 mt-3">
+              <button data-action="click->category-modal#open"
+                      data-id="<%= category.id %>"
+                      data-name="<%= category.name %>"
+                      data-color="<%= category.color %>"
+                      class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm font-medium hover:bg-gray-200 transition-colors">
+                Edit
+              </button>
+              <% if category.event_posts.count == 0 %>
+                <button data-action="click->category-modal#delete"
+                        data-id="<%= category.id %>"
+                        data-name="<%= category.name %>"
+                        class="px-3 py-1 bg-red-100 text-red-700 rounded text-sm font-medium hover:bg-red-200 transition-colors">
+                  Delete
+                </button>
+              <% else %>
+                <span class="px-3 py-1 bg-gray-50 text-gray-400 rounded text-sm" title="Cannot delete - has events">
+                  Delete
+                </span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit Log Tab -->
+  <div data-tabs-target="panel" data-tab="audit" class="hidden">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-2xl font-bold text-washu-gray mb-4">Recent Audit Logs</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% @recent_audit_logs.each do |log| %>
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= log.action == 'delete' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' %>">
+                    <%= log.action.capitalize %>
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <%= log.target_type %> #<%= log.target_id %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= log.admin_user.name %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= log.created_at.strftime("%b %d, %Y %I:%M %p") %>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500">
+                  <%= log.metadata['reason'] || '-' %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deletion Modal -->
+  <div id="deletion-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" data-controller="deletion-modal">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold text-gray-900">&#9888;&#65039; Confirm Deletion</h3>
+          <button data-action="click->deletion-modal#close" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div id="modal-content" class="space-y-4">
+          <div class="text-gray-700">
+            <p class="mb-2">You are about to delete: <strong id="modal-title"></strong></p>
+            <div id="deletion-preview" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              <h4 class="font-semibold text-yellow-800 mb-2">This will delete:</h4>
+              <ul id="preview-list" class="list-disc list-inside text-sm text-yellow-700 space-y-1"></ul>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Reason for deletion (optional):</label>
+            <textarea id="deletion-reason" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-washu-red" placeholder="e.g., Spam, inappropriate content, user request"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Type <strong>DELETE</strong> to confirm:
+            </label>
+            <input type="text" id="deletion-confirmation" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-washu-red" placeholder="DELETE">
+          </div>
+
+          <div class="flex justify-end space-x-3 pt-4">
+            <button data-action="click->deletion-modal#close" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors">
+              Cancel
+            </button>
+            <button id="confirm-delete-btn" data-action="click->deletion-modal#confirmDelete" disabled class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+              Confirm Deletion
+            </button>
+          </div>
+
+          <p class="text-xs text-gray-500 text-center">
+            &#128161; Deletion is permanent
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div data-category-modal-target="modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+       data-action="click->category-modal#closeOnBackdrop">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 data-category-modal-target="title" class="text-lg font-bold text-gray-900">Add Category</h3>
+          <button data-action="click->category-modal#close" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <form data-category-modal-target="form" data-action="submit->category-modal#submit" class="space-y-4">
+          <input type="hidden" data-category-modal-target="id" value="">
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Category Name</label>
+            <input type="text" data-category-modal-target="name" required
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-washu-red"
+                   placeholder="e.g., Sports, Music, Academic">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Color (optional)</label>
+            <div class="flex items-center space-x-2">
+              <input type="color" data-category-modal-target="colorPicker" value="#9D2235"
+                     class="w-12 h-10 border border-gray-300 rounded cursor-pointer">
+              <input type="text" data-category-modal-target="colorHex"
+                     class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-washu-red"
+                     placeholder="#9D2235" pattern="^#[0-9A-Fa-f]{6}$">
+            </div>
+          </div>
+
+          <div data-category-modal-target="error" class="hidden bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm"></div>
+
+          <div class="flex justify-end space-x-3 pt-4">
+            <button type="button" data-action="click->category-modal#close"
+                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors">
+              Cancel
+            </button>
+            <button type="submit"
+                    class="px-4 py-2 bg-washu-red text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
+              Save Category
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>

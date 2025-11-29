@@ -29,6 +29,7 @@ class UsersController < ApplicationController
       # Show past organized events
       @filtered_events = @organized_events.where('event_time <= ?', Time.current)
     else
+      # Show attended events
       @filtered_events = @attended_events.where('event_time > ?', Time.current)
     end
 

@@ -16,47 +16,11 @@
   }
 </style>
 
-<!-- Header Section -->
-<header class="bg-washu-red text-white py-6 relative overflow-hidden">
-  <div class="gothic-pattern absolute inset-0 opacity-20"></div>
-  <div class="container mx-auto px-4 relative z-10">
-    <div class="flex justify-between items-center">
-      <%= link_to root_path, class: "flex items-center space-x-2 text-white hover:text-gray-200 transition-colors" do %>
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-        <span>Back to Events</span>
-      <% end %>
-      <h1 class="text-xl font-bold">Event Details</h1>
-      <div class="w-20"></div>
-    </div>
-  </div>
-</header>
+<%= render 'shared/back_header', title: 'Event Details', back_path: root_path, back_text: 'Back to Events' %>
 
 <!-- Main Content -->
 <main class="container mx-auto px-4 py-8">
-  <!-- Flash Messages -->
-  <% if notice %>
-    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 fade-in">
-      <div class="flex items-center">
-        <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
-        <span class="text-green-700 font-medium"><%= notice %></span>
-      </div>
-    </div>
-  <% end %>
-
-  <% if alert %>
-    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 fade-in">
-      <div class="flex items-center">
-        <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        <span class="text-red-700 font-medium"><%= alert %></span>
-      </div>
-    </div>
-  <% end %>
+  <%= render 'shared/flash_messages' %>
 
   <!-- Event Information -->
   <div class="bg-white rounded-lg shadow-lg p-8 mb-8 fade-in">
@@ -129,7 +93,7 @@
 
       <% if @event_post.requires_approval %>
         <span class="inline-block bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium">
-          🔒 Requires Approval
+          Requires Approval
         </span>
       <% end %>
     </div>
@@ -223,11 +187,11 @@
       <div class="flex items-center space-x-3">
         <% if @registration.waitlisted? %>
           <div class="px-4 py-2 rounded-full bg-yellow-500 text-white font-medium">
-            ⏱ Waitlisted
+            Waitlisted
           </div>
         <% else %>
           <div class="registered-badge px-4 py-2 rounded-full text-white font-medium">
-            ✓ Registered
+            Registered
           </div>
         <% end %>
       </div>

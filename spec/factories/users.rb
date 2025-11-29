@@ -46,6 +46,7 @@ FactoryBot.define do
     trait :admin do
       sequence(:name) { |n| "Admin #{n}" }
       sequence(:email) { |n| "admin#{n}@wustl.edu" }
+      role { :super_admin }
     end
   end
 end

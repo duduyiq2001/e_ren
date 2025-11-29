@@ -34,6 +34,28 @@ Rails.application.routes.draw do
   get 'users/search', to: 'users#search', as: :search_users
   resources :users, only: [:show]
 
+  # Admin namespace
+  namespace :admin do
+    root to: 'dashboard#index'
+
+    get 'debug/deletion_test', to: 'debug#deletion_test'
+
+    resources :users, only: [] do
+      member do
+        get :deletion_preview, to: 'deletions#preview'
+        delete :destroy, to: 'deletions#destroy'
+      end
+    end
+
+    resources :event_posts, only: [] do
+      member do
+        get :deletion_preview, to: 'deletions#preview'
+        delete :destroy, to: 'deletions#destroy'
+      end
+    end
+
+    resources :event_categories, only: [:index, :show, :create, :update, :destroy]
+  end
   # Email confirmation pending page
   get 'confirmations/pending', to: 'confirmations#pending', as: :confirmations_pending
 

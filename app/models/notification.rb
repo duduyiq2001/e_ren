@@ -4,7 +4,7 @@ class Notification < ApplicationRecord
   belongs_to :user
   belongs_to :event_registration
 
-  enum notification_type: {
+  enum :notification_type, {
     enrollment_confirmation: 'enrollment_confirmation',
     event_reminder: 'event_reminder',
     event_cancelled: 'event_cancelled',

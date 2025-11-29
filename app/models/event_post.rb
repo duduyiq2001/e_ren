@@ -2,7 +2,7 @@ class EventPost < ApplicationRecord
   # Associations
   belongs_to :event_category
   belongs_to :organizer, class_name: 'User', foreign_key: 'organizer_id'
-  has_many :event_registrations, dependent: :destroy_async
+  has_many :event_registrations, dependent: :destroy
   has_many :attendees, through: :event_registrations, source: :user
 
   # Filtered associations by registration status

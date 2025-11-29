@@ -1,0 +1,17 @@
+<%# Simplified header with back navigation %>
+<%# Usage: <%= render 'shared/back_header', title: 'Event Details', back_path: root_path, back_text: 'Back to Events' %>
+<header class="bg-washu-red text-white py-6 relative overflow-hidden">
+  <div class="gothic-pattern absolute inset-0 opacity-20"></div>
+  <div class="container mx-auto px-4 relative z-10">
+    <div class="flex justify-between items-center">
+      <%= link_to (local_assigns[:back_path] || root_path), class: "flex items-center space-x-2 text-white hover:text-gray-200 transition-colors" do %>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        <span><%= local_assigns[:back_text] || 'Back to Events' %></span>
+      <% end %>
+      <h1 class="text-xl font-bold"><%= local_assigns[:title] || 'Page' %></h1>
+      <div class="w-20"></div>
+    </div>
+  </div>
+</header>

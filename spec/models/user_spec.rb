@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe User, type: :model do
   describe "associations" do
-    it { should have_many(:organized_events).class_name('EventPost').with_foreign_key('organizer_id').dependent(:destroy_async) }
-    it { should have_many(:event_registrations).dependent(:destroy_async) }
+    it { should have_many(:organized_events).class_name('EventPost').with_foreign_key('organizer_id').dependent(:destroy) }
+    it { should have_many(:event_registrations).dependent(:destroy) }
     it { should have_many(:attended_events).through(:event_registrations).source(:event_post) }
   end
 
@@ -111,6 +111,68 @@ RSpec.describe User, type: :model do
       it "returns false if user is not organizing the event" do
         expect(user.organizing?(attended_event)).to be false
       end
+    end
+  end
+
+  describe "role and admin methods" do
+    let(:student) { create(:user, role: :student) }
+    let(:admin) { create(:user, :admin) }
+
+    describe "#admin?" do
+      it "returns true for super_admin" do
+        expect(admin.admin?).to be true
+      end
+
+      it "returns false for student" do
+        expect(student.admin?).to be false
+      end
+    end
+
+    describe "#can_delete_user?" do
+      let(:target_user) { create(:user) }
+
+      it "allows admin to delete other users" do
+        expect(admin.can_delete_user?(target_user)).to be true
+      end
+
+      it "prevents admin from deleting themselves" do
+        expect(admin.can_delete_user?(admin)).to be false
+      end
+
+      it "prevents non-admin from deleting users" do
+        expect(student.can_delete_user?(target_user)).to be false
+      end
+    end
+
+    describe "#can_delete_event?" do
+      let(:event_post) { create(:event_post) }
+
+      it "allows admin to delete events" do
+        expect(admin.can_delete_event?(event_post)).to be true
+      end
+
+      it "prevents non-admin from deleting events" do
+        expect(student.can_delete_event?(event_post)).to be false
+      end
+    end
+  end
+
+  describe "destroy with cascade" do
+    let(:target_user) { create(:user) }
+    let!(:event_post) { create(:event_post, organizer: target_user) }
+    let!(:registration) { create(:event_registration, user: target_user, event_post: event_post) }
+
+    it "destroys user and cascades to associations" do
+      user_id = target_user.id
+      event_id = event_post.id
+      reg_id = registration.id
+
+      target_user.destroy
+
+      # User and associated records should be deleted
+      expect { User.find(user_id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { EventPost.find(event_id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { EventRegistration.find(reg_id) }.to raise_error(ActiveRecord::RecordNotFound)
     end
   end
 end
