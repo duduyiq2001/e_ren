@@ -52,7 +52,7 @@ RSpec.describe "users/show.html.erb", type: :view do
     end
 
     it "displays confirmed registrations header" do
-      expect(rendered).to have_content("Confirmed Registrations")
+      expect(rendered).to have_content("Confirmed")
     end
 
     it "displays confirmed event names" do
@@ -113,11 +113,13 @@ RSpec.describe "users/show.html.erb", type: :view do
     end
 
     it "shows pending approval badges" do
-      expect(rendered).to have_content("⏱ Pending Approval")
+      expect(rendered).to have_content("⏱ Pending")
     end
 
-    it "does not show confirmed registrations header" do
-      expect(rendered).not_to have_content("Confirmed Registrations")
+    it "does not show confirmed registrations header when no confirmed registrations" do
+      # The "Confirmed" header won't appear when there are no confirmed registrations
+      # but "Confirmed" may appear in other contexts, so we check the specific section
+      expect(rendered).not_to have_selector("h4", text: "Confirmed")
     end
   end
 
@@ -155,7 +157,7 @@ RSpec.describe "users/show.html.erb", type: :view do
     end
 
     it "displays both confirmed and pending headers" do
-      expect(rendered).to have_content("Confirmed Registrations")
+      expect(rendered).to have_selector("h4", text: "Confirmed")
       expect(rendered).to have_content("Pending Approval")
     end
 
@@ -166,7 +168,7 @@ RSpec.describe "users/show.html.erb", type: :view do
 
     it "shows correct badges for each type" do
       expect(rendered).to have_content("✓ Confirmed")
-      expect(rendered).to have_content("⏱ Pending Approval")
+      expect(rendered).to have_content("⏱ Pending")
     end
   end
 
@@ -184,7 +186,7 @@ RSpec.describe "users/show.html.erb", type: :view do
     end
 
     it "does not show confirmed header" do
-      expect(rendered).not_to have_content("Confirmed Registrations")
+      expect(rendered).not_to have_selector("h4", text: "Confirmed")
     end
 
     it "does not show pending header" do
@@ -216,11 +218,11 @@ RSpec.describe "users/show.html.erb", type: :view do
     end
 
     it "shows attendee count" do
-      expect(rendered).to have_content("Attendees: 10 / 50")
+      expect(rendered).to have_content("Registered: 10 / 50")
     end
 
     it "shows view registrations link" do
-      expect(rendered).to have_link("View Registrations")
+      expect(rendered).to have_link("Registrations")
     end
 
     it "shows edit link" do

@@ -40,7 +40,7 @@ RSpec.describe "event_posts/index.html.erb", type: :view do
     end
 
     it "displays page title" do
-      expect(rendered).to have_content("Discover Campus Events")
+      expect(rendered).to have_content("Upcoming Events")
     end
 
     it "displays all event names" do
@@ -49,11 +49,11 @@ RSpec.describe "event_posts/index.html.erb", type: :view do
     end
 
     it "displays event count" do
-      expect(rendered).to have_content("Upcoming Events (2)")
+      expect(rendered).to have_content("2 events found")
     end
 
     it "shows post event button" do
-      expect(rendered).to have_link("Post Event")
+      expect(rendered).to have_link("Post New Event")
     end
 
     it "shows search link" do
@@ -73,12 +73,12 @@ RSpec.describe "event_posts/index.html.erb", type: :view do
     end
 
     it "displays zero count" do
-      expect(rendered).to have_content("Upcoming Events (0)")
+      expect(rendered).to have_content("0 events found")
     end
 
     it "still shows navigation elements" do
-      expect(rendered).to have_link("Post Event")
-      expect(rendered).to have_content("Discover Campus Events")
+      expect(rendered).to have_link("Post New Event")
+      expect(rendered).to have_content("Upcoming Events")
     end
   end
 end

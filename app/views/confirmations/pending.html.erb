@@ -1,61 +1,74 @@
-<!-- Header Section -->
-<header class="bg-washu-red text-white py-16 relative overflow-hidden">
-  <div class="gothic-pattern absolute inset-0 opacity-20"></div>
-  <div class="container mx-auto px-4 relative z-10 text-center">
-    <h1 class="text-4xl md:text-5xl font-bold mb-4">Check Your Email</h1>
-    <p class="text-xl text-pink-100">One more step to complete your registration</p>
+<%# Cyberpunk Email Confirmation Pending Page %>
+<header class="border-b-2 border-cyber-grey bg-cyber-bg/95 backdrop-blur sticky top-0 z-50 py-4">
+  <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+    <%= link_to root_path, class: "flex items-center gap-2 text-cyber-grey hover:text-cyber-lime transition-colors" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+      <span class="text-sm font-bold uppercase">< Home</span>
+    <% end %>
+
+    <h1 class="font-display text-xl text-white uppercase">Verification</h1>
+
+    <div class="w-24"></div>
   </div>
 </header>
 
-<!-- Main Content -->
-<main class="container mx-auto px-4 py-12">
-  <div class="max-w-2xl mx-auto">
-    <!-- Confirmation Card -->
-    <div class="bg-white rounded-lg shadow-lg p-8 md:p-12 fade-in text-center">
-      <!-- Email Icon -->
-      <div class="mb-6">
-        <svg class="w-24 h-24 mx-auto text-washu-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<main class="max-w-2xl mx-auto px-4 py-16">
+  <%# Confirmation Card %>
+  <div class="relative">
+    <div class="absolute inset-0 bg-black skew-card translate-x-3 translate-y-3"></div>
+    <div class="relative bg-cyber-card border-2 border-black p-12 text-center">
+      <%# Email Icon %>
+      <div class="mb-8">
+        <svg class="w-24 h-24 mx-auto text-cyber-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
         </svg>
       </div>
 
-      <!-- Message -->
-      <h2 class="text-3xl font-bold text-washu-gray mb-4">
-        Confirmation Email Sent!
+      <%# Message %>
+      <h2 class="font-display text-3xl text-white uppercase mb-4 text-shadow-cyber">
+        Verification Signal Sent
       </h2>
 
-      <div class="space-y-4 text-lg text-gray-700">
-        <p>
-          We've sent a confirmation link to:
+      <div class="space-y-4 text-lg">
+        <p class="text-cyber-grey">
+          // Confirmation link transmitted to:
         </p>
 
         <% if @email.present? %>
-          <p class="text-xl font-semibold text-washu-red">
+          <p class="font-display text-xl text-cyber-lime">
             <%= @email %>
           </p>
         <% else %>
-          <p class="text-xl font-semibold text-washu-red">
-            your email address
+          <p class="font-display text-xl text-cyber-lime">
+            your registered address
           </p>
         <% end %>
 
-        <p class="pt-4">
-          Please click the link in the email to activate your account.
+        <p class="text-cyber-grey pt-4">
+          Click the link in the transmission to activate your agent profile.
         </p>
 
-        <p class="text-base text-gray-600">
-          <strong>Didn't receive the email?</strong> Check your spam folder or contact support.
+        <p class="text-cyber-grey/70 text-sm">
+          <span class="text-cyber-crimson font-bold">// TIP:</span> Check spam folder if not received within 5 minutes
         </p>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="mt-8 space-y-3">
-        <%= link_to "Go to Sign In Page", new_user_session_path,
-            class: "block w-full px-6 py-3 bg-washu-red text-white rounded-lg font-bold text-lg hover:bg-red-700 shadow-lg transition-all duration-300" %>
+      <%# Action Buttons %>
+      <div class="mt-10 space-y-4">
+        <%= link_to new_user_session_path,
+            class: "skew-btn block w-full bg-cyber-crimson text-white px-8 py-4 font-display text-lg uppercase shadow-[5px_5px_0px_black] hover:shadow-[7px_7px_0px_black] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all" do %>
+          Access Login >>
+        <% end %>
 
-        <%= link_to "Back to Home", root_path,
-            class: "block w-full px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-300" %>
+        <%= link_to "Return to Base", root_path,
+            class: "skew-btn block w-full bg-cyber-grey text-black px-6 py-4 font-bold uppercase hover:bg-white transition-colors" %>
       </div>
     </div>
   </div>
 </main>
+
+<footer class="text-center text-cyber-grey py-10 border-t border-cyber-grey/30 text-sm mt-12">
+  SYSTEM STATUS: ONLINE /// e_ren SPACE © <%= Time.current.year %>
+</footer>

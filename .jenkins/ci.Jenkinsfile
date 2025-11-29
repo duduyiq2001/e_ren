@@ -131,20 +131,6 @@ EOF
           }
         }
 
-        // ========== Build Docker Image (Main Branch Only) ==========
-        stage('Build Docker Image') {
-          steps {
-            echo 'Building production Docker image...'
-            sh """
-              docker build -t e_ren:\${GIT_COMMIT:0:7} .
-              docker tag e_ren:\${GIT_COMMIT:0:7} e_ren:latest
-              echo "✅ Image built: e_ren:\${GIT_COMMIT:0:7}"
-            """
-
-            // TODO: Push to registry when ready
-            // sh "docker push your-registry/e_ren:\${GIT_COMMIT:0:7}"
-          }
-        }
       }
     }
   }

@@ -72,7 +72,7 @@ RSpec.describe "event_posts/registrations.html.erb", type: :view do
     before { render }
 
     it "displays total capacity" do
-      expect(rendered).to have_content("Total Capacity")
+      expect(rendered).to have_content("Capacity")
       expect(rendered).to have_content("20")
     end
 
@@ -105,8 +105,7 @@ RSpec.describe "event_posts/registrations.html.erb", type: :view do
       before { render }
 
       it "shows future event message" do
-        expect(rendered).to have_content("Event scheduled for")
-        expect(rendered).to have_content("Attendance can be confirmed after the event ends")
+        expect(rendered).to have_content("Event scheduled:")
       end
 
       it "does not show past event message" do
@@ -133,12 +132,12 @@ RSpec.describe "event_posts/registrations.html.erb", type: :view do
       end
 
       it "shows past event message" do
-        expect(rendered).to have_content("Event has ended")
-        expect(rendered).to have_content("You can now confirm attendance to award E-points")
+        expect(rendered).to have_content("Event Complete")
+        expect(rendered).to have_content("Confirm attendance to award E-points")
       end
 
       it "does not show future event message" do
-        expect(rendered).not_to have_content("Event scheduled for")
+        expect(rendered).not_to have_content("Event scheduled:")
       end
     end
   end

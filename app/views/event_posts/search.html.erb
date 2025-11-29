@@ -1,155 +1,144 @@
-<style>
-  .search-focus:focus {
-    border-color: #ba0c2f;
-    box-shadow: 0 0 0 3px rgba(186, 12, 47, 0.1);
-  }
-  .filter-tag {
-    transition: all 0.2s ease;
-  }
-  .filter-tag:hover {
-    transform: translateY(-1px);
-  }
-</style>
+<%= render 'shared/search_header', title: 'Search Events', subtitle: 'Find events matching your criteria' %>
 
-<%= render 'shared/search_header', title: 'Search Events', subtitle: 'Find your next campus activity' %>
-
-<!-- Main Content -->
-<main class="container mx-auto px-4 py-8">
-  <!-- Search Form -->
-  <div class="bg-white rounded-lg shadow-lg p-8 mb-8 fade-in">
-    <%= form_with(url: search_event_posts_path, method: :get, class: "space-y-6") do |f| %>
-      <!-- Search by Name -->
-      <div>
-        <label for="q" class="block text-sm font-medium text-gray-700 mb-2">Event Name</label>
-        <input type="text"
-               id="q"
-               name="q"
-               placeholder="Search events by name..."
-               value="<%= params[:q] %>"
-               class="search-focus w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none transition-all" />
-      </div>
-
-      <!-- Filters Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Category Filter -->
+<main class="max-w-7xl mx-auto px-4 py-12">
+  <%# Search Form Card %>
+  <div class="relative mb-12">
+    <div class="absolute inset-0 bg-black skew-card translate-x-2 translate-y-2"></div>
+    <div class="relative bg-cyber-card border-2 border-black p-8">
+      <%= form_with(url: search_event_posts_path, method: :get, class: "space-y-8") do |f| %>
+        <%# Search by Name %>
         <div>
-          <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-          <select id="category_id"
-                  name="category_id"
-                  class="search-focus w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none transition-all">
-            <option value="">All Categories</option>
-            <% @event_categories&.each do |category| %>
-              <option value="<%= category.id %>" <%= 'selected' if params[:category_id] == category.id.to_s %>>
-                <%= category.name %>
-              </option>
-            <% end %>
-          </select>
+          <label for="q" class="block text-cyber-grey text-sm font-bold mb-2">Event Name</label>
+          <input type="text"
+                 id="q"
+                 name="q"
+                 placeholder="Search events..."
+                 value="<%= params[:q] %>"
+                 class="w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors" />
         </div>
 
-        <!-- Time Filter -->
-        <div>
-          <label for="time_filter" class="block text-sm font-medium text-gray-700 mb-2">When</label>
-          <select id="time_filter"
-                  name="time_filter"
-                  class="search-focus w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none transition-all">
-            <option value="upcoming" <%= 'selected' if params[:time_filter] == 'upcoming' || params[:time_filter].blank? %>>Upcoming Events</option>
-            <option value="today" <%= 'selected' if params[:time_filter] == 'today' %>>Today</option>
-            <option value="this_week" <%= 'selected' if params[:time_filter] == 'this_week' %>>This Week</option>
-            <option value="custom" <%= 'selected' if params[:time_filter] == 'custom' %>>Custom Date Range</option>
-          </select>
+        <%# Filters Grid %>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <%# Category Filter %>
+          <div>
+            <label for="category_id" class="block text-cyber-grey text-sm font-bold mb-2">Category</label>
+            <select id="category_id"
+                    name="category_id"
+                    class="w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors">
+              <option value="">All Categories</option>
+              <% @event_categories&.each do |category| %>
+                <option value="<%= category.id %>" <%= 'selected' if params[:category_id] == category.id.to_s %>>
+                  <%= category.name %>
+                </option>
+              <% end %>
+            </select>
+          </div>
+
+          <%# Time Filter %>
+          <div>
+            <label for="time_filter" class="block text-cyber-grey text-sm font-bold mb-2">Time</label>
+            <select id="time_filter"
+                    name="time_filter"
+                    class="w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors">
+              <option value="upcoming" <%= 'selected' if params[:time_filter] == 'upcoming' || params[:time_filter].blank? %>>Upcoming</option>
+              <option value="today" <%= 'selected' if params[:time_filter] == 'today' %>>Today</option>
+              <option value="this_week" <%= 'selected' if params[:time_filter] == 'this_week' %>>This Week</option>
+              <option value="custom" <%= 'selected' if params[:time_filter] == 'custom' %>>Custom Range</option>
+            </select>
+          </div>
+
+          <%# Radius Filter %>
+          <div>
+            <label for="radius" class="block text-cyber-grey text-sm font-bold mb-2">Radius (mi)</label>
+            <select id="radius"
+                    name="radius"
+                    class="w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors">
+              <option value="5" <%= 'selected' if params[:radius] == '5' %>>5 miles</option>
+              <option value="10" <%= 'selected' if params[:radius] == '10' || params[:radius].blank? %>>10 miles</option>
+              <option value="25" <%= 'selected' if params[:radius] == '25' %>>25 miles</option>
+              <option value="50" <%= 'selected' if params[:radius] == '50' %>>50 miles</option>
+            </select>
+          </div>
+
+          <%# Requires Approval Filter %>
+          <div>
+            <label for="requires_approval" class="block text-cyber-grey text-sm font-bold mb-2">Registration Type</label>
+            <select id="requires_approval"
+                    name="requires_approval"
+                    class="w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors">
+              <option value="">All Events</option>
+              <option value="false" <%= 'selected' if params[:requires_approval] == 'false' %>>Open Registration</option>
+              <option value="true" <%= 'selected' if params[:requires_approval] == 'true' %>>Approval Required</option>
+            </select>
+          </div>
         </div>
 
-        <!-- Radius Filter -->
-        <div>
-          <label for="radius" class="block text-sm font-medium text-gray-700 mb-2">Within (miles)</label>
-          <select id="radius"
-                  name="radius"
-                  class="search-focus w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none transition-all">
-            <option value="5" <%= 'selected' if params[:radius] == '5' %>>5 miles</option>
-            <option value="10" <%= 'selected' if params[:radius] == '10' || params[:radius].blank? %>>10 miles</option>
-            <option value="25" <%= 'selected' if params[:radius] == '25' %>>25 miles</option>
-            <option value="50" <%= 'selected' if params[:radius] == '50' %>>50 miles</option>
-          </select>
+        <%# Custom Date Range %>
+        <div id="date-range-inputs" class="grid grid-cols-1 md:grid-cols-2 gap-6" style="display: none;">
+          <div>
+            <label for="start_date" class="block text-cyber-grey text-sm font-bold mb-2">From</label>
+            <input type="date"
+                   id="start_date"
+                   name="start_date"
+                   value="<%= params[:start_date] %>"
+                   class="w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors" />
+          </div>
+          <div>
+            <label for="end_date" class="block text-cyber-grey text-sm font-bold mb-2">To</label>
+            <input type="date"
+                   id="end_date"
+                   name="end_date"
+                   value="<%= params[:end_date] %>"
+                   class="w-full bg-cyber-bg border-2 border-cyber-grey text-white px-4 py-3 focus:border-cyber-lime focus:outline-none transition-colors" />
+          </div>
         </div>
 
-        <!-- Requires Approval Filter -->
-        <div>
-          <label for="requires_approval" class="block text-sm font-medium text-gray-700 mb-2">Registration Type</label>
-          <select id="requires_approval"
-                  name="requires_approval"
-                  class="search-focus w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none transition-all">
-            <option value="">All Events</option>
-            <option value="false" <%= 'selected' if params[:requires_approval] == 'false' %>>Open Registration</option>
-            <option value="true" <%= 'selected' if params[:requires_approval] == 'true' %>>Approval Required</option>
-          </select>
-        </div>
-      </div>
+        <%# Hidden Location Fields %>
+        <input type="hidden" id="latitude" name="latitude" value="<%= params[:latitude] %>" />
+        <input type="hidden" id="longitude" name="longitude" value="<%= params[:longitude] %>" />
 
-      <!-- Custom Date Range -->
-      <div id="date-range-inputs" class="grid grid-cols-1 md:grid-cols-2 gap-6" style="display: none;">
-        <div>
-          <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">From</label>
-          <input type="date"
-                 id="start_date"
-                 name="start_date"
-                 value="<%= params[:start_date] %>"
-                 class="search-focus w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none transition-all" />
+        <%# Action Buttons %>
+        <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-white/10">
+          <button type="submit" class="skew-btn flex-1 bg-cyber-crimson text-white px-8 py-4 font-bold text-lg shadow-[5px_5px_0px_black] hover:shadow-[7px_7px_0px_black] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all cursor-pointer">
+            Search
+          </button>
+          <%= link_to "Clear Filters", search_event_posts_path, class: "skew-btn flex-1 text-center bg-cyber-grey text-black px-6 py-4 font-bold hover:bg-white transition-colors" %>
         </div>
-        <div>
-          <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">To</label>
-          <input type="date"
-                 id="end_date"
-                 name="end_date"
-                 value="<%= params[:end_date] %>"
-                 class="search-focus w-full px-4 py-3 border-2 border-gray-300 rounded-lg outline-none transition-all" />
-        </div>
-      </div>
-
-      <!-- Location Search (Hidden fields for now) -->
-      <input type="hidden" id="latitude" name="latitude" value="<%= params[:latitude] %>" />
-      <input type="hidden" id="longitude" name="longitude" value="<%= params[:longitude] %>" />
-
-      <!-- Action Buttons -->
-      <div class="flex flex-col sm:flex-row gap-4">
-        <button type="submit" class="flex-1 px-6 py-3 bg-washu-red text-white rounded-lg font-bold text-lg hover:bg-red-700 shadow-lg transition-all duration-300">
-          Search Events
-        </button>
-        <%= link_to "Clear Filters", search_event_posts_path, class: "flex-1 text-center px-6 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors" %>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
   </div>
 
-  <!-- Results Section -->
+  <%# Results Section %>
   <div class="mb-6">
-    <h2 class="text-2xl font-bold text-washu-gray">
-      Results (<%= @event_posts&.count || 0 %>)
+    <h2 class="text-cyber-grey text-sm font-bold">
+      <%= @event_posts&.count || 0 %> events found
     </h2>
   </div>
 
-  <!-- Events Grid -->
+  <%# Events Grid %>
   <% if @event_posts&.any? %>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
       <% @event_posts.each do |event| %>
         <%= render 'shared/event_card', event: event, registration: @user_registrations&.[](event.id) %>
       <% end %>
     </div>
   <% elsif params[:q].present? || params[:category_id].present? || params[:latitude].present? %>
-    <div class="text-center py-12 bg-white rounded-lg shadow-lg">
-      <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-      </svg>
-      <p class="text-gray-500 text-lg mb-4">No events found matching your criteria</p>
-      <p class="text-gray-400">Try adjusting your filters or search terms</p>
+    <div class="text-center py-20 bg-cyber-card border-2 border-cyber-grey">
+      <p class="text-cyber-grey text-6xl mb-4">⊘</p>
+      <p class="text-cyber-grey text-lg mb-2">No events found</p>
+      <p class="text-cyber-grey/70 text-sm">Try adjusting your search filters</p>
     </div>
   <% else %>
-    <div class="text-center py-12 bg-white rounded-lg shadow-lg">
-      <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-      </svg>
-      <p class="text-gray-500 text-lg">Use the filters above to search for events</p>
+    <div class="text-center py-20 bg-cyber-card border-2 border-cyber-grey">
+      <p class="text-cyber-grey text-6xl mb-4">⌕</p>
+      <p class="text-cyber-grey text-lg">Use filters above to search for events</p>
     </div>
   <% end %>
 </main>
+
+<footer class="text-center text-cyber-grey py-10 border-t border-cyber-grey/30 text-sm mt-12">
+  SYSTEM STATUS: ONLINE /// e_ren SPACE © <%= Time.current.year %>
+</footer>
 
 <script>
   // Show/hide date range inputs based on time filter selection

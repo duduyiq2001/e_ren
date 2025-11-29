@@ -1,232 +1,167 @@
-<style>
-  .register-btn {
-    transition: all 0.3s ease;
-  }
-  .register-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(186, 12, 47, 0.3);
-  }
-  .registered-badge {
-    background: linear-gradient(135deg, #10b981, #059669);
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.8; }
-  }
-</style>
-
 <%= render 'shared/back_header', title: 'Event Details', back_path: root_path, back_text: 'Back to Events' %>
 
-<!-- Main Content -->
-<main class="container mx-auto px-4 py-8">
+<main class="max-w-4xl mx-auto px-4 py-12">
   <%= render 'shared/flash_messages' %>
 
-  <!-- Event Information -->
-  <div class="bg-white rounded-lg shadow-lg p-8 mb-8 fade-in">
-    <!-- Event Title -->
-    <h1 class="text-3xl md:text-4xl font-bold text-washu-red mb-6">
-      <%= @event_post.name %>
-    </h1>
+  <%# Main Info Card %>
+  <div class="relative mb-8">
+    <div class="absolute inset-0 bg-black skew-card translate-x-3 translate-y-3"></div>
+    <div class="relative bg-cyber-card border-2 border-black skew-card p-8" style="border-width: 3px;">
+      <div class="transform skew-x-[10deg]">
+        <%# Category Badge %>
+        <div class="mb-6 flex flex-wrap items-center gap-3">
+          <span class="bg-cyber-lime text-black text-sm font-bold px-4 py-2 border-2 border-black">
+            <%= @event_post.event_category.name %>
+          </span>
 
-    <!-- Event Details Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <!-- Location -->
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 bg-washu-red rounded-full flex items-center justify-center">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-          </svg>
+          <% if @event_post.requires_approval %>
+            <span class="bg-purple-600 text-white text-sm font-bold px-4 py-2 border-2 border-black">
+              Requires Approval
+            </span>
+          <% end %>
         </div>
-        <div>
-          <div class="text-sm text-gray-500">Location</div>
-          <div class="font-medium text-gray-900"><%= @event_post.location_name %></div>
-        </div>
-      </div>
 
-      <!-- Date -->
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 bg-washu-red rounded-full flex items-center justify-center">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-          </svg>
-        </div>
-        <div>
-          <div class="text-sm text-gray-500">Date</div>
-          <div class="font-medium text-gray-900"><%= @event_post.event_time.strftime("%b %d, %Y") %></div>
-        </div>
-      </div>
+        <%# Event Title %>
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-8">
+          <%= @event_post.name %>
+        </h1>
 
-      <!-- Time -->
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 bg-washu-red rounded-full flex items-center justify-center">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-        </div>
-        <div>
-          <div class="text-sm text-gray-500">Time</div>
-          <div class="font-medium text-gray-900"><%= @event_post.event_time.strftime("%I:%M %p") %></div>
-        </div>
-      </div>
-
-      <!-- Capacity -->
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 bg-washu-red rounded-full flex items-center justify-center">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-          </svg>
-        </div>
-        <div>
-          <div class="text-sm text-gray-500">Capacity</div>
-          <div class="font-medium text-gray-900"><%= @event_post.registrations_count %> / <%= @event_post.capacity %></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Category Tags -->
-    <div class="mb-6 flex flex-wrap items-center gap-3">
-      <span class="inline-block bg-washu-red text-white px-4 py-2 rounded-full text-sm font-medium">
-        <%= @event_post.event_category.name %>
-      </span>
-
-      <% if @event_post.requires_approval %>
-        <span class="inline-block bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium">
-          Requires Approval
-        </span>
-      <% end %>
-    </div>
-
-    <% if @event_post.requires_approval %>
-      <!-- Approval Notice -->
-      <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
-        <div class="flex items-start">
-          <svg class="w-5 h-5 text-purple-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-          </svg>
+        <%# Event Details Grid %>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           <div>
-            <p class="text-purple-800 font-semibold">Registration Requires Approval</p>
-            <p class="text-purple-700 text-sm mt-1">Your registration will be pending until the organizer reviews and approves it.</p>
-          </div>
-        </div>
-      </div>
-    <% end %>
-
-    <!-- Organizer -->
-    <div class="mb-6">
-      <p class="text-gray-600">
-        <strong>Organized by:</strong>
-        <%= link_to @event_post.organizer.name, user_path(@event_post.organizer), class: "text-washu-red hover:underline font-medium" %>
-      </p>
-    </div>
-
-    <% if @event_post.google_maps_url.present? %>
-      <p class="mb-6">
-        <%= link_to "View on Google Maps", @event_post.google_maps_url, target: "_blank", class: "inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm" %>
-      </p>
-    <% end %>
-  </div>
-
-  <!-- Description Section -->
-  <% if @event_post.description.present? %>
-    <div class="bg-white rounded-lg shadow-lg p-8 mb-8 fade-in">
-      <h2 class="text-2xl font-bold text-washu-gray mb-4">Event Description</h2>
-      <p class="text-gray-700 leading-relaxed whitespace-pre-wrap"><%= @event_post.description %></p>
-    </div>
-  <% end %>
-
-  <!-- Organizer Contact Section -->
-  <div class="bg-white rounded-lg shadow-lg p-8 mb-8 fade-in">
-    <h2 class="text-2xl font-bold text-washu-gray mb-4">Organizer Information</h2>
-
-    <% if @registration %>
-      <!-- Registered View -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 bg-washu-green rounded-full flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-            </svg>
+            <span class="text-cyber-grey text-xs font-bold block mb-1">Location</span>
+            <span class="text-white"><%= @event_post.location_name %></span>
           </div>
           <div>
-            <div class="text-sm text-gray-500">Phone</div>
-            <div class="font-medium text-gray-900"><%= @event_post.organizer.phone_number || 'N/A' %></div>
-          </div>
-        </div>
-
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 bg-washu-green rounded-full flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-            </svg>
+            <span class="text-cyber-grey text-xs font-bold block mb-1">Date</span>
+            <span class="text-white"><%= @event_post.event_time.strftime("%b %d, %Y") %></span>
           </div>
           <div>
-            <div class="text-sm text-gray-500">Email</div>
-            <div class="font-medium text-gray-900"><%= @event_post.organizer.email %></div>
+            <span class="text-cyber-grey text-xs font-bold block mb-1">Time</span>
+            <span class="text-white"><%= @event_post.event_time.strftime("%I:%M %p") %></span>
+          </div>
+          <div>
+            <span class="text-cyber-grey text-xs font-bold block mb-1">Capacity</span>
+            <span class="text-white"><%= @event_post.registrations_count %> / <%= @event_post.capacity %></span>
           </div>
         </div>
-      </div>
-    <% else %>
-      <!-- Not Registered View -->
-      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <div class="flex items-center">
-          <svg class="w-5 h-5 text-yellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-          </svg>
-          <span class="text-yellow-700 font-medium">Register to view organizer contact</span>
-        </div>
-      </div>
-    <% end %>
-  </div>
 
-  <!-- Action Buttons -->
-  <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
-    <% if @registration %>
-      <!-- User is registered -->
-      <div class="flex items-center space-x-3">
-        <% if @registration.waitlisted? %>
-          <div class="px-4 py-2 rounded-full bg-yellow-500 text-white font-medium">
-            Waitlisted
-          </div>
-        <% else %>
-          <div class="registered-badge px-4 py-2 rounded-full text-white font-medium">
-            Registered
+        <%# Organizer %>
+        <div class="border-t border-white/20 pt-6">
+          <span class="text-cyber-grey text-sm">Organized by: </span>
+          <%= link_to @event_post.organizer.name, user_path(@event_post.organizer), class: "text-cyber-lime hover:underline font-bold" %>
+        </div>
+
+        <% if @event_post.google_maps_url.present? %>
+          <div class="mt-4">
+            <%= link_to @event_post.google_maps_url, target: "_blank", class: "inline-flex items-center gap-2 text-cyber-grey hover:text-cyber-lime text-sm" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              </svg>
+              View on Map
+            <% end %>
           </div>
         <% end %>
       </div>
+    </div>
+  </div>
+
+  <% if @event_post.requires_approval %>
+    <%# Approval Notice %>
+    <div class="bg-purple-900/30 border-2 border-purple-500 p-4 mb-8">
+      <p class="text-purple-400 text-sm">
+        <span class="font-bold">Registration Requires Approval:</span> Your registration will be pending until the organizer reviews and approves it.
+      </p>
+    </div>
+  <% end %>
+
+  <%# Description Section %>
+  <% if @event_post.description.present? %>
+    <div class="bg-cyber-card border-2 border-cyber-grey p-6 mb-8">
+      <h2 class="text-xl text-white font-bold mb-4">Description</h2>
+      <p class="text-cyber-grey leading-relaxed whitespace-pre-wrap"><%= @event_post.description %></p>
+    </div>
+  <% end %>
+
+  <%# Organizer Contact Section %>
+  <div class="bg-cyber-card border-2 border-cyber-grey p-6 mb-8">
+    <h2 class="text-xl text-white font-bold mb-4">Organizer Contact</h2>
+
+    <% if @registration %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <span class="text-cyber-grey text-xs font-bold block mb-1">Phone</span>
+          <span class="text-white"><%= @event_post.organizer.phone_number || 'N/A' %></span>
+        </div>
+        <div>
+          <span class="text-cyber-grey text-xs font-bold block mb-1">Email</span>
+          <span class="text-white"><%= @event_post.organizer.email %></span>
+        </div>
+      </div>
+    <% else %>
+      <div class="bg-yellow-500/20 border border-yellow-500 p-4">
+        <span class="text-yellow-500 text-sm font-medium">Register to view organizer contact</span>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Action Buttons %>
+  <div class="flex flex-wrap justify-center gap-4">
+    <% if @registration %>
+      <%# User is registered %>
+      <% if @registration.waitlisted? %>
+        <span class="skew-btn bg-yellow-500 text-black px-6 py-3 font-bold">
+          Waitlisted
+        </span>
+      <% else %>
+        <span class="skew-btn bg-cyber-lime text-black px-6 py-3 font-bold">
+          Registered
+        </span>
+      <% end %>
+
       <%= button_to "Unregister",
           event_post_event_registration_path(@event_post, @registration),
           method: :delete,
-          class: "w-full sm:w-auto px-8 py-4 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 shadow-lg transition-all duration-300",
+          class: "skew-btn bg-cyber-grey text-black px-6 py-3 font-bold hover:bg-white transition-colors",
           data: { confirm: "Are you sure you want to unregister?" } %>
 
       <% if current_user == @event_post.organizer %>
-        <%= link_to "View Registrations", registrations_event_post_path(@event_post), class: "w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow-lg transition-colors" %>
-        <%= link_to "Edit Event", edit_event_post_path(@event_post), class: "w-full sm:w-auto px-8 py-4 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-lg transition-colors" %>
-        <%= button_to "Delete Event", event_post_path(@event_post), method: :delete, class: "w-full sm:w-auto px-8 py-4 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 shadow-lg transition-colors", data: { confirm: "Are you sure you want to delete this event? This action cannot be undone." } %>
+        <%= link_to "View Registrations", registrations_event_post_path(@event_post), class: "skew-btn bg-blue-600 text-white px-6 py-3 font-bold hover:bg-blue-500 transition-colors" %>
+        <%= link_to "Edit Event", edit_event_post_path(@event_post), class: "skew-btn bg-green-600 text-white px-6 py-3 font-bold hover:bg-green-500 transition-colors" %>
+        <%= button_to "Delete Event", event_post_path(@event_post),
+            method: :delete,
+            class: "skew-btn bg-cyber-crimson text-white px-6 py-3 font-bold hover:bg-red-400 transition-colors",
+            data: { confirm: "Are you sure you want to delete this event? This action cannot be undone." } %>
       <% end %>
     <% else %>
-      <!-- User is not registered -->
+      <%# User is not registered %>
       <% if @event_post.full? %>
         <%= button_to "Join Waitlist",
             event_post_event_registrations_path(@event_post),
             method: :post,
-            class: "register-btn w-full sm:w-auto px-8 py-4 bg-yellow-500 text-white rounded-lg font-bold text-lg hover:bg-yellow-600 shadow-lg" %>
+            class: "skew-btn bg-yellow-500 text-black px-8 py-4 font-bold text-lg shadow-[5px_5px_0px_black] hover:shadow-[7px_7px_0px_black] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all" %>
       <% else %>
         <%= button_to "Register for Event",
             event_post_event_registrations_path(@event_post),
             method: :post,
-            class: "register-btn w-full sm:w-auto px-8 py-4 bg-washu-red text-white rounded-lg font-bold text-lg hover:bg-red-700 shadow-lg" %>
+            class: "skew-btn bg-cyber-crimson text-white px-8 py-4 font-bold text-lg shadow-[5px_5px_0px_black] hover:shadow-[7px_7px_0px_black] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all" %>
       <% end %>
 
       <% if current_user == @event_post.organizer %>
-        <%= link_to "View Registrations", registrations_event_post_path(@event_post), class: "w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow-lg transition-colors" %>
-        <%= link_to "Edit Event", edit_event_post_path(@event_post), class: "w-full sm:w-auto px-8 py-4 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-lg transition-colors" %>
-        <%= button_to "Delete Event", event_post_path(@event_post), method: :delete, class: "w-full sm:w-auto px-8 py-4 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 shadow-lg transition-colors", data: { confirm: "Are you sure you want to delete this event? This action cannot be undone." } %>
+        <%= link_to "View Registrations", registrations_event_post_path(@event_post), class: "skew-btn bg-blue-600 text-white px-6 py-3 font-bold hover:bg-blue-500 transition-colors" %>
+        <%= link_to "Edit Event", edit_event_post_path(@event_post), class: "skew-btn bg-green-600 text-white px-6 py-3 font-bold hover:bg-green-500 transition-colors" %>
+        <%= button_to "Delete Event", event_post_path(@event_post),
+            method: :delete,
+            class: "skew-btn bg-cyber-crimson text-white px-6 py-3 font-bold hover:bg-red-400 transition-colors",
+            data: { confirm: "Are you sure you want to delete this event? This action cannot be undone." } %>
       <% end %>
     <% end %>
 
-    <%= link_to "Back to Events", root_path, class: "w-full sm:w-auto px-8 py-4 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 shadow-lg transition-colors" %>
+    <%= link_to "Back to Events", root_path, class: "skew-btn bg-cyber-card border-2 border-cyber-grey text-cyber-grey px-6 py-3 font-bold hover:border-cyber-lime hover:text-cyber-lime transition-colors" %>
   </div>
 </main>
+
+<%# Footer %>
+<footer class="text-center text-cyber-grey py-10 border-t border-cyber-grey/30 text-sm mt-12">
+  SYSTEM STATUS: ONLINE /// e_ren SPACE © <%= Time.current.year %>
+</footer>

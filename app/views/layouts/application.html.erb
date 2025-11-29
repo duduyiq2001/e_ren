@@ -2,37 +2,47 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title><%= content_for(:title) || "WashU ESpace - Campus Events" %></title>
+    <title><%= content_for(:title) || "e_ren SPACE - Campus Events" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="WashU ESpace">
+    <meta name="application-name" content="e_ren SPACE">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Tailwind CSS CDN %>
+    <%# Google Fonts for Cyberpunk style %>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+
+    <%# Tailwind CSS CDN with cyberpunk theme %>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              'washu-red': '#BA0C2F',
-              'washu-green': '#215732',
-              'washu-gray': '#3D3D3D',
-              'washu-tan': '#E1C4AC'
+              'cyber': {
+                'bg': '#121214',
+                'card': '#1e1e24',
+                'crimson': '#ff1f4b',
+                'lime': '#ccff00',
+                'grey': '#a0a0a0',
+              }
             },
             fontFamily: {
-              'sans': ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+              'mono': ['JetBrains Mono', 'monospace'],
+              'display': ['Archivo Black', 'sans-serif']
+            },
+            backgroundImage: {
+              'cyber-grid': 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)'
+            },
+            backgroundSize: {
+              'grid': '40px 40px'
             }
           }
         }
@@ -40,78 +50,54 @@
     </script>
 
     <style>
-      .gothic-pattern {
-        background-image:
-          linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
-          linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
-          linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%),
-          linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
-        background-size: 20px 20px;
-        background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+      /* Only custom styles Tailwind can't handle */
+      body {
+        background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
       }
 
-      .card-hover {
-        transition: all 0.3s ease;
-      }
+      .skew-card { transform: skewX(-10deg); }
+      .skew-card > * { transform: skewX(10deg); }
 
-      .card-hover:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-      }
+      .skew-btn { transform: skewX(-10deg); }
+      .skew-btn:hover { transform: skewX(-10deg) translate(-2px, -2px); }
+      .skew-btn:active { transform: skewX(-10deg) translate(2px, 2px); }
 
-      .fade-in {
-        animation: fadeIn 0.5s ease-in;
-      }
+      .text-shadow-cyber { text-shadow: 2px 2px 0px #ff1f4b; }
+      .text-shadow-cyber:hover { text-shadow: 3px 3px 0px #ff1f4b, -1px -1px 0px #ccff00; }
 
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      .slide-in {
-        animation: slideIn 0.3s ease-out;
-      }
-
-      @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
-      }
+      .glow-lime { box-shadow: 0 0 10px #ccff00; }
     </style>
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="bg-gray-50 font-sans">
+  <body class="bg-cyber-bg text-white font-mono overflow-x-hidden">
     <%
-      # Skip annoying Devise "You need to sign in" alert
       show_alert = alert.present? && alert != "You need to sign in or sign up before continuing."
     %>
     <% if notice.present? || show_alert %>
       <div class="fixed top-4 right-4 z-50 space-y-2" data-turbo-temporary>
         <% if notice.present? %>
-          <div class="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg shadow-lg fade-in max-w-md">
+          <div class="bg-cyber-card border-2 border-cyber-lime text-cyber-lime px-6 py-4 rounded max-w-md animate-pulse">
             <div class="flex items-start">
-              <svg class="w-6 h-6 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-              </svg>
+              <span class="mr-3">✓</span>
               <div>
-                <p class="font-semibold">Success</p>
-                <p class="text-sm"><%= notice %></p>
+                <p class="font-bold uppercase text-sm">Success</p>
+                <p class="text-sm opacity-80"><%= notice %></p>
               </div>
             </div>
           </div>
         <% end %>
         <% if show_alert %>
-          <div class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-lg fade-in max-w-md">
+          <div class="bg-cyber-card border-2 border-cyber-crimson text-cyber-crimson px-6 py-4 rounded max-w-md">
             <div class="flex items-start">
-              <svg class="w-6 h-6 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-              </svg>
+              <span class="mr-3">✕</span>
               <div>
-                <p class="font-semibold">Error</p>
-                <p class="text-sm"><%= alert %></p>
+                <p class="font-bold uppercase text-sm">Error</p>
+                <p class="text-sm opacity-80"><%= alert %></p>
               </div>
             </div>
           </div>
