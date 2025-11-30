@@ -21,8 +21,13 @@ RSpec.describe EventRegistration, type: :model do
 
   describe "attendance confirmation and E-score" do
     let(:user) { create(:user, e_score: 0) }
-    let(:event_post) { create(:event_post).tap { |e| e.update_column(:event_time, 2.hours.ago) } }
-    let(:registration) { create(:event_registration, user: user, event_post: event_post, attendance_confirmed: false) }
+    # Create event in future, register, then make it past
+    let(:event_post) { create(:event_post, event_time: 2.hours.from_now) }
+    let(:registration) do
+      reg = create(:event_registration, user: user, event_post: event_post, attendance_confirmed: false)
+      event_post.update_column(:event_time, 2.hours.ago)  # Now make event past
+      reg
+    end
 
     it "awards 10 E-points when attendance is confirmed" do
       expect {

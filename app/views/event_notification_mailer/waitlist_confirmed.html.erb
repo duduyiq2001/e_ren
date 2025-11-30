@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  <style>
+    .event-details {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border-left: 4px solid #28a745;
+    }
+    .success-notice {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 15px 0;
+    }
+    .event-title {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+    .info-item {
+      margin: 10px 0;
+    }
+    .map-button {
+      background: #28a745;
+      color: white;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 4px;
+      display: inline-block;
+      margin: 10px 0;
+    }
+    .footer {
+      color: #666;
+      font-size: 12px;
+      margin-top: 20px;
+      padding-top: 10px;
+      border-top: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h2>You're In!</h2>
+
+  <p>Dear <%= @user.name %>,</p>
+
+  <div class="success-notice">
+    <strong>Great news! A spot has opened up and you've been confirmed for the event.</strong>
+  </div>
+
+  <div class="event-details">
+    <h3 class="event-title"><%= @event.name %></h3>
+
+    <div class="info-item">
+      <strong>Event Time:</strong> <%= @event.event_time.strftime('%B %d, %Y at %H:%M') %>
+    </div>
+
+    <% if @event.location_name.present? %>
+      <div class="info-item">
+        <strong>Location:</strong> <%= @event.location_name %>
+      </div>
+    <% end %>
+
+    <% if @event.formatted_address.present? %>
+      <div class="info-item">
+        <strong>Address:</strong> <%= @event.formatted_address %>
+      </div>
+    <% end %>
+
+    <% if @organizer.phone_number.present? %>
+      <div class="info-item">
+        <strong>Organizer Phone:</strong> <%= @organizer.phone_number %>
+      </div>
+    <% end %>
+
+    <div class="info-item">
+      <strong>Organizer:</strong> <%= @organizer.name %>
+    </div>
+
+    <% if @event.description.present? %>
+      <div class="info-item">
+        <strong>Event Description:</strong><br>
+        <%= simple_format(@event.description) %>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @event.google_maps_url.present? %>
+    <p>
+      <a href="<%= @event.google_maps_url %>" class="map-button">
+        View on Google Maps
+      </a>
+    </p>
+  <% end %>
+
+  <p>If you have any questions, please contact the event organizer.</p>
+
+  <p>We look forward to seeing you at the event!</p>
+
+  <div class="footer">
+    <p>This is an automated message, please do not reply directly to this email.</p>
+  </div>
+</body>
+</html>

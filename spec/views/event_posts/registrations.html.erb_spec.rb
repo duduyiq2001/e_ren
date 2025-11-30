@@ -225,23 +225,27 @@ RSpec.describe "event_posts/registrations.html.erb", type: :view do
     end
 
     context "when event has passed" do
+      # Create event in future first, register, then make it past
       let(:past_approval_event) do
         create(:event_post,
           name: "Past Approval Event",
           organizer: organizer,
           capacity: 20,
           event_category: category,
+          event_time: 2.days.from_now,
           requires_approval: true
-        ).tap { |e| e.update_column(:event_time, 2.hours.ago) }
+        )
       end
 
       let!(:pending_reg_past) do
-        create(:event_registration,
+        reg = create(:event_registration,
           user: pending_user,
           event_post: past_approval_event,
           status: :pending,
           attendance_confirmed: false
         )
+        past_approval_event.update_column(:event_time, 2.hours.ago)  # Now make event past
+        reg
       end
 
       before do

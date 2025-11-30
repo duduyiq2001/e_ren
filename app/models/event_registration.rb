@@ -5,6 +5,7 @@ class EventRegistration < ApplicationRecord
   enum :status, { pending: 0, confirmed: 1, waitlisted: 3 }, default: :pending
 
   validates :user_id, uniqueness: { scope: :event_post_id, message: "has already registered for this event" }
+  validate :event_not_past, on: :create
   validate :event_not_full, on: :create
 
   before_validation :set_registered_at, on: :create
@@ -16,7 +17,8 @@ class EventRegistration < ApplicationRecord
   before_destroy :promote_potential_candidate
   after_update :update_confirmed_count, if: :saved_change_to_status?
 
-  after_create :send_enrollment_notification
+  after_create :send_enrollment_notification, unless: :pending?
+  after_update :send_pending_to_confirmed_notification, if: -> { saved_change_to_status? && confirmed? && status_before_last_save == 'pending' }
   after_update :send_waitlist_to_confirmed_notification, if: -> { saved_change_to_status? && confirmed? && status_before_last_save == 'waitlisted' }
   after_update :award_e_score, if: -> { saved_change_to_attendance_confirmed? && attendance_confirmed? }
 
@@ -56,6 +58,13 @@ class EventRegistration < ApplicationRecord
     end
   end
 
+  def event_not_past
+    return unless event_post
+    if event_post.event_time < Time.current
+      errors.add(:base, "Cannot register for an event that has already started")
+    end
+  end
+
   def event_not_full
     return unless event_post
     return if !confirmed? && !event_post.requires_approval? # Only check capacity for confirmed registrations
@@ -88,9 +97,12 @@ class EventRegistration < ApplicationRecord
     EnrollmentNotificationJob.perform_later(id)
   end
 
+  def send_pending_to_confirmed_notification
+    EventNotificationMailer.enrollment_confirmation(self).deliver_later
+  end
+
   def send_waitlist_to_confirmed_notification
-    # TODO: Implement notification when user promoted from waitlist
-    # EventNotificationService.send_waitlist_confirmation(self)
+    EventNotificationMailer.waitlist_confirmed(self).deliver_later
   end
 
   def award_e_score

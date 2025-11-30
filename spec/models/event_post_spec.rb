@@ -175,17 +175,29 @@ RSpec.describe EventPost, type: :model do
       end
     end
 
-    describe ".this_week" do
-      let!(:this_week_event) { create(:event_post, :this_week, event_category: sports_category) }
-      let!(:next_week_event) { create(:event_post, :next_week, event_category: sports_category) }
 
+    describe ".this_week" do
       it "returns only events happening this week" do
+        # Skip if we're too close to end of week to create a valid future event
+        skip "Too close to end of week" if Time.current > Time.current.end_of_week - 1.hour
+
+        # Calculate times relative to current week
+        week_start = Time.current.beginning_of_week
+        week_end = Time.current.end_of_week
+
+        # Create an event in the middle of this week (use a time that's definitely in range)
+        this_week_time = week_start + 3.days + 12.hours
+        # If that time is in the past, use end of week minus 1 hour
+        this_week_time = week_end - 1.hour if this_week_time < Time.current
+
+        this_week_event = create(:event_post, event_time: this_week_time, event_category: sports_category)
+        next_week_event = create(:event_post, event_time: week_end + 2.days, event_category: sports_category)
+
         results = EventPost.this_week
         expect(results).to include(this_week_event)
         expect(results).not_to include(next_week_event)
       end
-
-          end
+    end
 
     describe ".between_dates" do
       before do

@@ -170,6 +170,21 @@ RSpec.describe EventRegistrationsController, type: :controller do
         expect(flash[:alert]).to eq("You need to sign in or sign up before continuing.")
       end
     end
+
+    context "when event has already started" do
+      let(:past_event) { create(:event_post).tap { |e| e.update_column(:event_time, 2.hours.ago) } }
+
+      it "does not create a registration" do
+        expect {
+          post :create, params: { event_post_id: past_event.id }
+        }.not_to change(EventRegistration, :count)
+      end
+
+      it "sets an error alert" do
+        post :create, params: { event_post_id: past_event.id }
+        expect(flash[:alert]).to include("Cannot register for an event that has already started")
+      end
+    end
   end
 
   describe "DELETE #destroy" do
@@ -236,9 +251,14 @@ RSpec.describe EventRegistrationsController, type: :controller do
   describe "PATCH #confirm_attendance" do
     let(:organizer) { create(:user) }
     let(:attendee) { create(:user, e_score: 0) }
-    let(:past_event) { create(:event_post, organizer: organizer).tap { |e| e.update_column(:event_time, 2.hours.ago) } }
+    # Create event in the future first, then register, then make it past
+    let(:past_event) { create(:event_post, organizer: organizer, event_time: 2.hours.from_now) }
     let(:future_event) { create(:event_post, organizer: organizer, event_time: 2.hours.from_now) }
-    let!(:registration) { create(:event_registration, user: attendee, event_post: past_event, attendance_confirmed: false) }
+    let!(:registration) do
+      reg = create(:event_registration, user: attendee, event_post: past_event, attendance_confirmed: false)
+      past_event.update_column(:event_time, 2.hours.ago)  # Now make event past
+      reg
+    end
 
     context "when organizer confirms attendance for a past event" do
       before do
