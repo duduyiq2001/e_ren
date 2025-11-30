@@ -166,19 +166,8 @@ RSpec.describe 'EventPosts', type: :request do
     end
 
     context 'with location filter' do
-      before do
-        # Mock Geocoder to avoid actual API calls
-        allow(EventPost).to receive(:near).and_return(EventPost.all)
-      end
-
+      # Using SQL-based Haversine distance calculation (geocoder gem disabled)
       it 'filters events by proximity when lat/lng provided' do
-        # Mock near scope to return only nearby events
-        nearby_scope = double('ActiveRecord::Relation')
-        allow(nearby_scope).to receive(:where).and_return(nearby_scope)
-        allow(nearby_scope).to receive(:order).and_return([soccer_event, pizza_event])
-        allow(EventPost).to receive(:includes).and_return(EventPost.all)
-        allow(EventPost.all).to receive(:near_location).with('37.7749', '-122.4194', '10').and_return(nearby_scope)
-
         get '/event_posts/search', params: {
           latitude: '37.7749',
           longitude: '-122.4194',
