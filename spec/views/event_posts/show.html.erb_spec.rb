@@ -219,4 +219,45 @@ RSpec.describe "event_posts/show.html.erb", type: :view do
       expect(rendered).not_to have_content("Registration Requires Approval")
     end
   end
+
+  context "when event has google_maps_url" do
+    let(:current_user) { attendee }
+    let(:event_with_map) do
+      create(:event_post,
+        name: "Mapped Event",
+        location_name: "Test Location",
+        google_maps_url: "https://maps.google.com/?q=37.7749,-122.4194",
+        event_category: category,
+        organizer: organizer
+      )
+    end
+
+    before do
+      assign(:event_post, event_with_map)
+      assign(:registration, nil)
+      render
+    end
+
+    it "displays View on Map link" do
+      expect(rendered).to have_link("View on Map", href: "https://maps.google.com/?q=37.7749,-122.4194")
+    end
+
+    it "opens link in new tab" do
+      expect(rendered).to have_css('a[target="_blank"]', text: "View on Map")
+    end
+  end
+
+  context "when event does not have google_maps_url" do
+    let(:current_user) { attendee }
+
+    before do
+      event_post.update!(google_maps_url: nil)
+      assign(:registration, nil)
+      render
+    end
+
+    it "does not display View on Map link" do
+      expect(rendered).not_to have_link("View on Map")
+    end
+  end
 end
