@@ -23,10 +23,10 @@ gem "devise"
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ mingw mswin x64_mingw jruby ]
 
-# Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
-gem "solid_cache"
-gem "solid_queue"
-gem "solid_cable"
+# Solid adapters disabled - using memory/async instead to avoid separate databases
+# gem "solid_cache"
+# gem "solid_queue"
+# gem "solid_cable"
 gem "rails-controller-testing"
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false

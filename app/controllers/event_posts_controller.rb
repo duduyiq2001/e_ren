@@ -143,6 +143,7 @@ class EventPostsController < ApplicationController
 
     @confirmed_registrations = @registrations.where(status: :confirmed)
     @waitlisted_registrations = @registrations.where(status: :waitlisted)
+    @pending_registrations = @registrations.where(status: :pending)
   end
 
   private

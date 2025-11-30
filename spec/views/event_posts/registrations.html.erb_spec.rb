@@ -50,6 +50,7 @@ RSpec.describe "event_posts/registrations.html.erb", type: :view do
     assign(:registrations, [confirmed_reg1, confirmed_reg2, waitlisted_reg])
     assign(:confirmed_registrations, [confirmed_reg1, confirmed_reg2])
     assign(:waitlisted_registrations, [waitlisted_reg])
+    assign(:pending_registrations, [])
   end
 
   describe "page header" do
@@ -138,6 +139,126 @@ RSpec.describe "event_posts/registrations.html.erb", type: :view do
 
       it "does not show future event message" do
         expect(rendered).not_to have_content("Event scheduled:")
+      end
+    end
+  end
+
+  describe "pending registrations" do
+    let!(:pending_user) { create(:user, name: "Pending User") }
+    let!(:pending_reg) do
+      create(:event_registration,
+        user: pending_user,
+        event_post: event_post,
+        status: :pending,
+        attendance_confirmed: false
+      )
+    end
+
+    context "when event requires approval" do
+      let(:approval_event) do
+        create(:event_post,
+          name: "Approval Required Event",
+          organizer: organizer,
+          capacity: 20,
+          event_category: category,
+          event_time: 2.days.from_now,
+          requires_approval: true
+        )
+      end
+
+      let!(:pending_reg_for_approval) do
+        create(:event_registration,
+          user: pending_user,
+          event_post: approval_event,
+          status: :pending,
+          attendance_confirmed: false
+        )
+      end
+
+      before do
+        assign(:event_post, approval_event)
+        assign(:registrations, [pending_reg_for_approval])
+        assign(:confirmed_registrations, [])
+        assign(:waitlisted_registrations, [])
+        assign(:pending_registrations, [pending_reg_for_approval])
+        render
+      end
+
+      it "displays pending count in stats" do
+        expect(rendered).to have_content("Pending")
+      end
+
+      it "displays pending approval section" do
+        expect(rendered).to have_content("Pending Approval")
+      end
+
+      it "displays pending user name" do
+        expect(rendered).to have_content("Pending User")
+      end
+
+      it "displays approve button" do
+        expect(rendered).to have_button("Approve")
+      end
+
+      it "has correct approve path" do
+        expect(rendered).to have_selector(
+          "form[action='#{approve_registration_event_post_event_registration_path(approval_event, pending_reg_for_approval)}']"
+        )
+      end
+    end
+
+    context "when event does not require approval" do
+      before do
+        assign(:event_post, event_post)
+        assign(:pending_registrations, [])
+        render
+      end
+
+      it "does not display pending stats" do
+        # The pending stat card should not be shown
+        expect(rendered).not_to have_selector(".text-orange-500", text: "Pending")
+      end
+
+      it "does not display pending approval section" do
+        expect(rendered).not_to have_content("Pending Approval")
+      end
+    end
+
+    context "when event has passed" do
+      let(:past_approval_event) do
+        create(:event_post,
+          name: "Past Approval Event",
+          organizer: organizer,
+          capacity: 20,
+          event_category: category,
+          requires_approval: true
+        ).tap { |e| e.update_column(:event_time, 2.hours.ago) }
+      end
+
+      let!(:pending_reg_past) do
+        create(:event_registration,
+          user: pending_user,
+          event_post: past_approval_event,
+          status: :pending,
+          attendance_confirmed: false
+        )
+      end
+
+      before do
+        assign(:event_post, past_approval_event)
+        assign(:registrations, [pending_reg_past])
+        assign(:confirmed_registrations, [])
+        assign(:waitlisted_registrations, [])
+        assign(:pending_registrations, [pending_reg_past])
+        render
+      end
+
+      it "does not show approve button for past events" do
+        expect(rendered).not_to have_button("Approve")
+      end
+
+      it "shows event ended message instead" do
+        expect(rendered).to have_content("Event ended")
       end
     end
   end
