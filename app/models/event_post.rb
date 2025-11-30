@@ -10,9 +10,8 @@ class EventPost < ApplicationRecord
   has_many :pending_registrations, -> { where(status: :pending) }, class_name: 'EventRegistration'
   has_many :waitlisted_registrations, -> { where(status: :waitlisted) }, class_name: 'EventRegistration'
 
-  # Geocoding
-  geocoded_by :location_name
-  after_validation :geocode, if: :should_geocode?
+  # Default coordinates (disabled geocoding - using dummy values until free service found)
+  before_validation :set_default_coordinates, if: -> { latitude.blank? || longitude.blank? }
 
   # Scopes for filtering
   scope :search_by_name, ->(query) { where("name ILIKE ?", "%#{query}%") if query.present? }
@@ -29,8 +28,14 @@ class EventPost < ApplicationRecord
       where("event_time <= ?", end_date.to_date.end_of_day)
     end
   }
-  scope :near_location, ->(latitude, longitude, radius_miles = 10) {
-    near([latitude, longitude], radius_miles) if latitude.present? && longitude.present?
+  # Disabled until free geocoding service found - use simple distance calculation
+  scope :near_location, ->(lat, lng, radius_miles = 10) {
+    return none unless lat.present? && lng.present?
+    # Haversine approximation in SQL (using 3959 miles as Earth's radius)
+    where(
+      "(3959 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) <= ?",
+      lat, lng, lat, radius_miles
+    )
   }
 
   # Validations
@@ -87,8 +92,11 @@ class EventPost < ApplicationRecord
 
   private
 
-  def should_geocode?
-    location_name.present? && (location_name_changed? || latitude.blank?)
+  def set_default_coordinates
+    # Default to WashU campus center (Danforth University Center)
+    # until a free geocoding service is found
+    self.latitude ||= 38.6488
+    self.longitude ||= -90.3108
   end
 
   def event_time_cannot_be_in_the_past
