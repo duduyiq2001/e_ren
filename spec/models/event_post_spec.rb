@@ -238,16 +238,9 @@ RSpec.describe EventPost, type: :model do
     end
 
     describe ".near_location" do
+      # Using SQL-based Haversine distance calculation (geocoder gem disabled)
       let!(:sf_event) { create(:event_post, :near_location, event_category: sports_category) }
       let!(:ny_event) { create(:event_post, :far_location, event_category: sports_category) }
-
-      before do
-        # Mock Geocoder to avoid actual API calls
-        Geocoder::Lookup::Test.add_stub(
-          [37.7749, -122.4194],
-          [{ 'latitude' => 37.7749, 'longitude' => -122.4194 }]
-        )
-      end
 
       it "returns events near the specified location" do
         results = EventPost.near_location(37.7749, -122.4194, 10)
@@ -261,14 +254,14 @@ RSpec.describe EventPost, type: :model do
         expect(results).to include(sf_event, ny_event)
       end
 
-      it "returns all events when latitude is nil" do
+      it "returns empty results when latitude is nil" do
         results = EventPost.near_location(nil, -122.4194, 10)
-        expect(results).to match_array([sf_event, ny_event])
+        expect(results).to be_empty
       end
 
-      it "returns all events when longitude is nil" do
+      it "returns empty results when longitude is nil" do
         results = EventPost.near_location(37.7749, nil, 10)
-        expect(results).to match_array([sf_event, ny_event])
+        expect(results).to be_empty
       end
     end
 
@@ -393,49 +386,26 @@ RSpec.describe EventPost, type: :model do
   end
 
   describe "callbacks" do
-    describe "geocoding" do
-      before do
-        # Mock Geocoder to avoid actual API calls
-        Geocoder::Lookup::Test.set_default_stub(
-          [{ 'latitude' => 37.7749, 'longitude' => -122.4194 }]
-        )
+    describe "default coordinates" do
+      # Geocoding disabled - using default WashU campus coordinates until free service found
+      it "sets default coordinates when latitude is blank" do
+        event = build(:event_post, latitude: nil, longitude: nil)
+        event.valid?
+        expect(event.latitude).to eq(38.6488)
+        expect(event.longitude).to eq(-90.3108)
       end
 
-      after do
-        Geocoder::Lookup::Test.reset
+      it "preserves existing coordinates when present" do
+        event = build(:event_post, latitude: 40.7128, longitude: -74.0060)
+        event.valid?
+        expect(event.latitude).to eq(40.7128)
+        expect(event.longitude).to eq(-74.0060)
       end
 
-      it "geocodes location_name after validation" do
-        event = build(:event_post, location_name: "San Francisco", latitude: nil, longitude: nil)
-        event.save
-        expect(event.latitude).to be_present
-        expect(event.longitude).to be_present
-      end
-
-      it "does not geocode when location_name is blank" do
-        event = build(:event_post, location_name: nil)
-        expect(event).not_to receive(:geocode)
-        event.save
-      end
-
-      it "does not geocode when location_name hasn't changed and latitude exists" do
-        event = create(:event_post, location_name: "San Francisco", latitude: 37.7749, longitude: -122.4194)
-        expect(event).not_to receive(:geocode)
-        event.update(name: "Updated Name")
-      end
-
-      it "geocodes when location_name changes" do
-        event = create(:event_post, location_name: "San Francisco", latitude: 37.7749, longitude: -122.4194)
-        original_lat = event.latitude
-
-        Geocoder::Lookup::Test.add_stub(
-          "New York",
-          [{ 'latitude' => 40.7128, 'longitude' => -74.0060 }]
-        )
-
-        event.update(location_name: "New York")
-        event.reload
-        expect(event.latitude).not_to eq(original_lat)
+      it "sets default coordinates on create if not provided" do
+        event = create(:event_post, latitude: nil, longitude: nil)
+        expect(event.latitude).to eq(38.6488)
+        expect(event.longitude).to eq(-90.3108)
       end
     end
   end

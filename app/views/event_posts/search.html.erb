@@ -141,13 +141,17 @@
 </footer>
 
 <script>
-  // Show/hide date range inputs based on time filter selection
-  document.getElementById('time_filter').addEventListener('change', function() {
+  (function() {
+    const timeFilterEl = document.getElementById('time_filter');
     const dateRangeInputs = document.getElementById('date-range-inputs');
-    dateRangeInputs.style.display = this.value === 'custom' ? 'grid' : 'none';
-  });
 
-  // Initialize date range visibility
-  const timeFilter = document.getElementById('time_filter').value;
-  document.getElementById('date-range-inputs').style.display = timeFilter === 'custom' ? 'grid' : 'none';
+    if (!timeFilterEl || !dateRangeInputs) return;
+
+    function toggleDateRange() {
+      dateRangeInputs.style.display = timeFilterEl.value === 'custom' ? 'grid' : 'none';
+    }
+
+    timeFilterEl.addEventListener('change', toggleDateRange);
+    toggleDateRange();
+  })();
 </script>

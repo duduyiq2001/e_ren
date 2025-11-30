@@ -12,7 +12,13 @@ class ApplicationController < ActionController::Base
 
   # Custom redirect paths after sign in/out
   def after_sign_in_path_for(resource)
-    root_path
+    # First-time login: redirect to about page
+    # sign_in_count is 1 after first successful login
+    if resource.sign_in_count == 1
+      about_path
+    else
+      root_path
+    end
   end
 
   def after_sign_out_path_for(resource_or_scope)

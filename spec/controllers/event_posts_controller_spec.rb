@@ -211,6 +211,64 @@ RSpec.describe EventPostsController, type: :controller do
         expect(events).not_to include(study_event)
       end
 
+      it "filters events with time_filter custom and date range" do
+        start_date = Date.today
+        end_date = 2.days.from_now.to_date
+
+        get :search, params: {
+          time_filter: 'custom',
+          start_date: start_date,
+          end_date: end_date
+        }
+
+        events = assigns(:event_posts)
+        expect(events).to include(soccer_event, pizza_event)
+        expect(events).not_to include(study_event)
+      end
+
+      it "includes events at the boundary of start_date (beginning of day)" do
+        # Event at midnight on start_date should be included
+        start_date = 1.day.from_now.to_date
+        end_date = 1.day.from_now.to_date
+
+        get :search, params: {
+          start_date: start_date,
+          end_date: end_date
+        }
+
+        events = assigns(:event_posts)
+        # pizza_event is 1.day.from_now at 18:00
+        expect(events).to include(pizza_event)
+      end
+
+      it "includes events at the boundary of end_date (end of day)" do
+        start_date = Date.today
+        end_date = 2.days.from_now.to_date
+
+        get :search, params: {
+          start_date: start_date,
+          end_date: end_date
+        }
+
+        events = assigns(:event_posts)
+        # soccer_event is 2.days.from_now
+        expect(events).to include(soccer_event)
+      end
+
+      it "returns empty when date range has no events" do
+        # Far future date range
+        start_date = 100.days.from_now.to_date
+        end_date = 101.days.from_now.to_date
+
+        get :search, params: {
+          start_date: start_date,
+          end_date: end_date
+        }
+
+        events = assigns(:event_posts)
+        expect(events).to be_empty
+      end
+
       it "falls back to upcoming when only start_date provided" do
         get :search, params: { start_date: Date.today }
         events = assigns(:event_posts)
@@ -221,6 +279,16 @@ RSpec.describe EventPostsController, type: :controller do
         get :search, params: { end_date: 10.days.from_now }
         events = assigns(:event_posts)
         expect(events).to include(soccer_event, pizza_event, study_event)
+      end
+
+      it "handles string date formats" do
+        get :search, params: {
+          start_date: Date.today.to_s,
+          end_date: 3.days.from_now.to_date.to_s
+        }
+
+        events = assigns(:event_posts)
+        expect(events).to include(soccer_event, pizza_event)
       end
     end
 

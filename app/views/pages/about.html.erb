@@ -1,0 +1,163 @@
+<%= render 'shared/navbar', title: 'About E-Ren', subtitle: 'Your campus social platform', show_search: false %>
+
+<main class="max-w-4xl mx-auto px-4 pb-24">
+
+  <%# Hero Section %>
+  <section class="text-center py-12 border-b-4 border-cyber-grey/30 mb-12">
+    <h1 class="text-5xl md:text-7xl font-black text-white mb-4 tracking-tight">
+      Welcome to <span class="text-cyber-lime">E-Ren</span>
+    </h1>
+    <p class="text-cyber-grey text-xl max-w-2xl mx-auto">
+      The campus social platform that rewards you for being social.
+      Discover events, meet people, and climb the leaderboard.
+    </p>
+  </section>
+
+  <%# What is E-Score Section %>
+  <section class="mb-16">
+    <div class="bg-black border-4 border-cyber-lime p-8 shadow-[8px_8px_0px_theme(colors.cyber-lime)]">
+      <h2 class="text-3xl font-black text-cyber-lime mb-6 flex items-center gap-3">
+        <span class="text-4xl">E</span>
+        <span class="text-white">What is E-Score?</span>
+      </h2>
+
+      <div class="space-y-4 text-cyber-grey">
+        <p class="text-lg">
+          The <span class="text-white font-bold">"E"</span> in E-Score stands for
+          <span class="text-cyber-lime font-bold">Extraversion</span> - one of the Big Five personality traits
+          (also found in MBTI as the E/I dimension).
+        </p>
+
+        <p class="text-lg">
+          Extraversion measures how energized you get from social interactions.
+          Your <span class="text-cyber-lime font-bold">E-Score</span> tracks your campus social engagement -
+          the more events you attend and host, the higher you climb!
+        </p>
+
+        <div class="mt-6 p-4 bg-cyber-grey/10 border-2 border-cyber-grey/30">
+          <p class="text-white font-bold mb-2">Think of it as:</p>
+          <p class="text-cyber-lime font-mono text-lg">
+            E-Score = Your Campus Social XP
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# How to Earn E-Score %>
+  <section class="mb-16">
+    <h2 class="text-3xl font-black text-white mb-8 border-b-4 border-white pb-4">
+      How to Earn E-Score
+    </h2>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <%# Attend Events %>
+      <div class="bg-black border-4 border-white p-6 shadow-[6px_6px_0px_white]">
+        <div class="text-5xl mb-4">+10</div>
+        <h3 class="text-xl font-bold text-white mb-2">Attend Events</h3>
+        <p class="text-cyber-grey">
+          Show up, check in, and earn points. Each confirmed attendance boosts your E-Score.
+        </p>
+      </div>
+
+      <%# Host Events %>
+      <div class="bg-black border-4 border-cyber-crimson p-6 shadow-[6px_6px_0px_theme(colors.cyber-crimson)]">
+        <div class="text-5xl text-cyber-crimson mb-4">+25</div>
+        <h3 class="text-xl font-bold text-white mb-2">Host Events</h3>
+        <p class="text-cyber-grey">
+          Organize and host your own events. Leading social activities earns bonus points.
+        </p>
+      </div>
+
+      <%# Confirm Attendance %>
+      <div class="bg-black border-4 border-cyber-purple p-6 shadow-[6px_6px_0px_theme(colors.cyber-purple)]">
+        <div class="text-5xl text-cyber-purple mb-4">+10</div>
+        <h3 class="text-xl font-bold text-white mb-2">Confirm Attendance</h3>
+        <p class="text-cyber-grey">
+          Organizers: after the event ends, confirm your attendees' attendance to give them E-Score points!
+        </p>
+      </div>
+
+      <%# Climb Leaderboard %>
+      <div class="bg-black border-4 border-cyber-lime p-6 shadow-[6px_6px_0px_theme(colors.cyber-lime)]">
+        <div class="text-5xl text-cyber-lime mb-4">#1</div>
+        <h3 class="text-xl font-bold text-white mb-2">Top the Leaderboard</h3>
+        <p class="text-cyber-grey">
+          Compete with other students. The most social users get featured on the campus leaderboard.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <%# How Events Work %>
+  <section class="mb-16">
+    <h2 class="text-3xl font-black text-white mb-8 border-b-4 border-white pb-4">
+      How Events Work
+    </h2>
+
+    <div class="space-y-6">
+      <div class="flex gap-6 items-start">
+        <div class="w-12 h-12 bg-cyber-lime text-black font-black text-xl flex items-center justify-center flex-shrink-0">
+          1
+        </div>
+        <div>
+          <h3 class="text-xl font-bold text-white mb-1">Browse or Create</h3>
+          <p class="text-cyber-grey">
+            Find events on the main feed or create your own. Anyone can host - students, clubs, organizations.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex gap-6 items-start">
+        <div class="w-12 h-12 bg-cyber-lime text-black font-black text-xl flex items-center justify-center flex-shrink-0">
+          2
+        </div>
+        <div>
+          <h3 class="text-xl font-bold text-white mb-1">Register</h3>
+          <p class="text-cyber-grey">
+            Sign up for events you want to attend. Some events have limited capacity, so register early!
+          </p>
+        </div>
+      </div>
+
+      <div class="flex gap-6 items-start">
+        <div class="w-12 h-12 bg-cyber-lime text-black font-black text-xl flex items-center justify-center flex-shrink-0">
+          3
+        </div>
+        <div>
+          <h3 class="text-xl font-bold text-white mb-1">Get Approved</h3>
+          <p class="text-cyber-grey">
+            Organizers review and approve registrations. You'll be notified when you're in.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex gap-6 items-start">
+        <div class="w-12 h-12 bg-cyber-lime text-black font-black text-xl flex items-center justify-center flex-shrink-0">
+          4
+        </div>
+        <div>
+          <h3 class="text-xl font-bold text-white mb-1">Attend & Earn</h3>
+          <p class="text-cyber-grey">
+            Show up, have fun, and get your attendance confirmed. Watch your E-Score grow!
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# CTA %>
+  <section class="text-center py-12 border-t-4 border-cyber-grey/30">
+    <h2 class="text-2xl font-bold text-white mb-6">Ready to get started?</h2>
+    <div class="flex flex-wrap justify-center gap-4">
+      <%= link_to "Browse Events", root_path, class: "skew-btn inline-block bg-cyber-lime text-black px-8 py-4 font-bold shadow-[5px_5px_0px_black] hover:shadow-[7px_7px_0px_black] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all" %>
+      <%= link_to "View Leaderboard", leaderboard_path, class: "skew-btn inline-block bg-transparent border-4 border-white text-white px-8 py-4 font-bold hover:bg-white hover:text-black transition-colors" %>
+    </div>
+  </section>
+
+</main>
+
+<%# Footer %>
+<footer class="text-center text-cyber-grey py-10 border-t border-cyber-grey/30 text-sm">
+  SYSTEM STATUS: ONLINE /// e_ren SPACE &copy; <%= Time.current.year %>
+</footer>

@@ -30,6 +30,9 @@ Rails.application.routes.draw do
   # Leaderboard
   get '/leaderboard', to: 'leaderboard#index'
 
+  # Static pages
+  get '/about', to: 'pages#about'
+
   # User profiles
   get 'users/search', to: 'users#search', as: :search_users
   resources :users, only: [:show]

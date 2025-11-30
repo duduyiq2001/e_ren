@@ -4,13 +4,14 @@
   <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
     <%# Logo %>
     <%= link_to root_path, class: "font-display text-2xl text-white italic text-shadow-cyber" do %>
-      e_ren /// SPACE
+      e人の空间
     <% end %>
 
     <%# Nav Links %>
     <nav class="hidden md:flex gap-8">
       <%= link_to "Events", event_posts_path, class: "text-cyber-grey font-bold text-sm hover:text-cyber-crimson transition-colors #{request.path == event_posts_path ? 'text-cyber-crimson border-b-2 border-cyber-lime pb-1' : ''}" %>
-      <%= link_to "Leaderboard", leaderboard_path, class: "text-cyber-grey font-bold text-sm hover:text-cyber-crimson transition-colors" %>
+      <%= link_to "Leaderboard", leaderboard_path, class: "text-cyber-grey font-bold text-sm hover:text-cyber-crimson transition-colors #{request.path == leaderboard_path ? 'text-cyber-crimson border-b-2 border-cyber-lime pb-1' : ''}" %>
+      <%= link_to "About", about_path, class: "text-cyber-grey font-bold text-sm hover:text-cyber-crimson transition-colors #{request.path == about_path ? 'text-cyber-crimson border-b-2 border-cyber-lime pb-1' : ''}" %>
     </nav>
 
     <%# User Profile %>
