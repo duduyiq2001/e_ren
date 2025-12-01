@@ -78,6 +78,11 @@ EOF
 
                 sh '''
                   cd $WORKSPACE
+
+                  # Remove DATABASE_URL from docker-compose so RAILS_ENV controls db selection
+                  sed -i '/DATABASE_URL/d' hext/docker-compose.yml
+                  echo "✅ Removed DATABASE_URL from docker-compose (will use RAILS_ENV instead)"
+
                   ./hext/hext up
                   echo "✅ Rails and Postgres containers started"
 
@@ -86,6 +91,9 @@ EOF
 
                   echo "=== Setting up test database ==="
                   docker exec e_ren_rails sh -c "cd /rails && RAILS_ENV=test bin/rails db:drop db:create db:schema:load"
+
+                  echo "=== Verifying test database ==="
+                  docker exec e_ren_rails sh -c "cd /rails && RAILS_ENV=test bin/rails runner 'puts \"Test DB: #{ActiveRecord::Base.connection.current_database}\"'"
 
                   echo "=== Verifying installation ==="
                   docker ps | grep e_ren_rails && echo "✅ Rails container is running" || echo "❌ Rails container is NOT running"
