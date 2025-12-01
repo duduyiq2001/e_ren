@@ -1,5 +1,6 @@
-// E-Ren CD Pipeline - Continuous Deployment
-// Runs on: Push to 'release' branch (automatic deployment to production)
+// E-Ren CD Pipeline
+// Runs on: Push to release branch
+// Stages: Build & Push → Check Migrations → Deploy to EKS
 
 pipeline {
   agent any
@@ -8,14 +9,14 @@ pipeline {
     githubPush()
   }
 
-  options {
-    timeout(time: 20, unit: 'MINUTES')
-    buildDiscarder(logRotator(numToKeepStr: '20'))
+  environment {
+    AWS_REGION = 'us-east-1'
+    EKS_CLUSTER = 'e-ren-cluster'
   }
 
-  environment {
-    DEPLOYMENT_NAME = 'e-ren'
-    PRODUCTION_NAMESPACE = 'e-ren-prod'
+  options {
+    timeout(time: 30, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '10'))
   }
 
   stages {
@@ -25,81 +26,106 @@ pipeline {
         branch 'release'
       }
       stages {
-        // ========== Stage 1: Build & Push Docker Image ==========
-        stage('Build Production Image') {
+        // ========== Stage 1: Initialize ==========
+        stage('Initialize') {
           steps {
-            echo 'Building production Docker image...'
+            echo "🚀 CD Pipeline starting..."
+            echo "Branch: ${env.BRANCH_NAME}"
+            echo "Commit: ${env.GIT_COMMIT}"
+
+            // Verify tools
+            sh '''
+              echo "=== Verifying tools ==="
+              docker --version
+              aws --version
+              kubectl version --client
+              helm version
+            '''
+
+            // Clone hext repo (contains helm charts + CLI)
+            sh '''
+              cd $WORKSPACE
+              rm -rf hext
+              git clone https://github.com/duduyiq2001/hext.git
+              chmod +x hext/hext
+              echo "✅ Hext CLI cloned"
+            '''
+
+            // Configure kubectl for EKS
+            sh '''
+              aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER}
+              echo "✅ kubectl configured for EKS"
+              kubectl get nodes
+            '''
+          }
+        }
+
+        // ========== Stage 2: Build & Push Image ==========
+        stage('Build & Push') {
+          steps {
+            echo '🔨 Building and pushing Docker image...'
 
             withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-              script {
-                // Generate semantic version tag from commit
-                def imageTag = sh(
-                  script: "git describe --tags --always --abbrev=7",
-                  returnStdout: true
-                ).trim()
+              sh '''
+                echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                $WORKSPACE/hext/hext push
+              '''
+            }
+          }
+        }
 
-                env.IMAGE_TAG = imageTag
-                env.DOCKER_IMAGE = "${DOCKER_USER}/e_ren"
+        // ========== Stage 3: Check for Migrations ==========
+        stage('Check Migrations') {
+          steps {
+            script {
+              // Check if commit message contains [migrate]
+              def commitMsg = sh(
+                script: "git log -1 --pretty=%B",
+                returnStdout: true
+              ).trim()
 
-                echo "Building image: ${env.DOCKER_IMAGE}:${imageTag}"
+              echo "Commit message: ${commitMsg}"
 
-                // Login to DockerHub
-                sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-
-                // Build and tag
-                sh """
-                  docker build -t ${env.DOCKER_IMAGE}:${imageTag} .
-                  docker tag ${env.DOCKER_IMAGE}:${imageTag} ${env.DOCKER_IMAGE}:latest
-                """
-
-                // Push to DockerHub
-                sh """
-                  docker push ${env.DOCKER_IMAGE}:${imageTag}
-                  docker push ${env.DOCKER_IMAGE}:latest
-                """
-
-                echo "✅ Image built and pushed: ${env.DOCKER_IMAGE}:${imageTag}"
+              if (commitMsg.contains('[migrate]')) {
+                echo "📦 [migrate] tag found in commit message - will run migrations"
+                env.HAS_MIGRATIONS = 'true'
+                env.MIGRATION_REVISION = "v${env.BUILD_NUMBER}"
+              } else {
+                echo "✅ No [migrate] tag - skipping migrations"
+                env.HAS_MIGRATIONS = 'false'
               }
             }
           }
         }
 
-        // ========== Stage 2: Deploy to Production ==========
-        stage('Deploy to Production') {
+        // ========== Stage 4: Deploy to EKS ==========
+        stage('Deploy') {
           steps {
-            echo "============================================="
-            echo "🚀 DEPLOYING TO PRODUCTION"
-            echo "Image: ${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
-            echo "Namespace: ${env.PRODUCTION_NAMESPACE}"
-            echo "============================================="
+            script {
+              if (env.HAS_MIGRATIONS == 'true') {
+                echo "🚀 Deploying with migrations (revision: ${env.MIGRATION_REVISION})..."
+                sh "$WORKSPACE/hext/hext deploy --migrate ${env.MIGRATION_REVISION}"
 
-            // Update deployment
-            sh """
-              kubectl set image deployment/${env.DEPLOYMENT_NAME} \
-                ${env.DEPLOYMENT_NAME}=${env.DOCKER_IMAGE}:${env.IMAGE_TAG} \
-                --namespace=${env.PRODUCTION_NAMESPACE} \
-                --record
+                // Wait for migration job to complete
+                echo "⏳ Waiting for migration job to complete..."
+                sh "kubectl wait --for=condition=complete job/e-ren-migrate-${env.MIGRATION_REVISION} --timeout=300s"
+              } else {
+                echo "🚀 Deploying without migrations..."
+                sh "$WORKSPACE/hext/hext deploy"
+              }
 
-              # Wait for rollout to complete
-              kubectl rollout status deployment/${env.DEPLOYMENT_NAME} \
-                --namespace=${env.PRODUCTION_NAMESPACE} \
-                --timeout=10m
-            """
+            }
+          }
+        }
 
-            echo "✅ Deployment successful!"
-
-            // Show deployment status
-            sh """
-              echo ""
-              echo "Current deployment status:"
-              kubectl get deployment ${env.DEPLOYMENT_NAME} \
-                --namespace=${env.PRODUCTION_NAMESPACE}
-
-              echo ""
-              echo "Pod status:"
-              kubectl get pods -l app=${env.DEPLOYMENT_NAME} \
-                --namespace=${env.PRODUCTION_NAMESPACE}
-            """
+        // ========== Stage 5: Verify Deployment ==========
+        stage('Verify') {
+          steps {
+            echo '📊 Verifying deployment...'
+            sh '''
+              kubectl get pods -l app=e-ren
+              echo "✅ Deployment complete!"
+            '''
           }
         }
       }
@@ -108,17 +134,13 @@ pipeline {
 
   post {
     success {
-      echo '✅ CD Pipeline succeeded - Production deployed!'
+      echo '✅ CD Pipeline succeeded! Deployment complete.'
     }
     failure {
-      echo '❌ CD Pipeline failed - Production deployment failed!'
-      // TODO: Add alerting (Slack, PagerDuty, etc.)
+      echo '❌ CD Pipeline failed!'
     }
     aborted {
-      echo '⚠️ CD Pipeline skipped (not release branch)'
-    }
-    cleanup {
-      echo 'Pipeline cleanup complete'
+      echo '⚠️ CD Pipeline aborted'
     }
   }
 }
